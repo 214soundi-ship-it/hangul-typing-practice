@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>타이핑 기반 사전학습 프로그램</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --paper:#F6F1E7;
+    --card:#FFFDF8;
+    --ink:#1E2A38;
+    --ink-soft:#57657A;
+    --teal:#2C6E63;
+    --teal-light:#E4F0EC;
+    --border:rgba(30,42,56,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans KR', -apple-system, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:48px 16px 64px;
+  }
+  .app{width:100%;max-width:560px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:28px;
+    margin:0 0 10px;
+  }
+  .lede{
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 32px;
+  }
+  .card{
+    display:block;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:24px 26px;
+    margin-bottom:16px;
+    text-decoration:none;
+    color:inherit;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .card:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .badge{
+    display:inline-block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .card h2{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:19px;
+    margin:0 0 6px;
+  }
+  .card p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0;
+  }
+  .arrow{float:right; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">연구용 웹 프로그램</div>
+  <h1>타이핑 기반 사전학습 프로그램</h1>
+  <p class="lede">외국인 유학생 대상 한국어 글쓰기 수업을 위한 사전학습 도구입니다. 아래에서 진행할 단계를 선택하세요.</p>
+
+  <a class="card" href="stage0_jari_practice.html">
+    <span class="arrow">→</span>
+    <span class="badge">0단계</span>
+    <h2>자판 자리 연습</h2>
+    <p>한글 타이핑이 처음인 학습자를 위한 키보드 자판 위치·손가락 사용법 연습 (6단계 + 보너스 게임)</p>
+  </a>
+
+  <a class="card" href="week1_hangul_typing.html">
+    <span class="arrow">→</span>
+    <span class="badge">1주차</span>
+    <h2>한글 자판 익히기</h2>
+    <p>자모 위치·받침·쌍자음·띄어쓰기·문장부호가 섞인 짧은 문장 타이핑 연습</p>
+  </a>
+</div>
+</body>
+</html>
