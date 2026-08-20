@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>0단계 · 자판 자리 연습</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --paper:#F6F1E7;
+    --card:#FFFDF8;
+    --ink:#1E2A38;
+    --ink-soft:#57657A;
+    --teal:#2C6E63;
+    --teal-light:#E4F0EC;
+    --brick:#A6432F;
+    --brick-light:#F6E7E3;
+    --border:rgba(30,42,56,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans KR', -apple-system, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .app{width:100%;max-width:640px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:30px;
+    margin:0 0 8px;
+  }
+  .lede{
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 28px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:34px 36px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input[type="text"]{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+  }
+  input[type="text"]:focus{border-color:var(--teal);}
+  .error-text{
+    font-size:12px;
+    color:var(--brick);
+    margin-top:6px;
+    display:none;
+  }
+  .btn{
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 18px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-primary{background:var(--ink); color:var(--paper);}
+  .btn-primary:hover{background:var(--teal);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1.5px solid var(--border);
+    margin-top:10px;
+  }
+  .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+  .btn-row{display:flex; gap:10px; margin-top:10px;}
+  .btn-row .btn{margin-top:0;}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+  }
+  .type-badge{
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .prog-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .progress-track{
+    height:4px;
+    background:var(--border);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--teal);
+    width:0%;
+    transition:width .35s ease;
+  }
+
+  /* 단계 로드맵 */
+  .roadmap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:22px;
+  }
+  .chip{
+    flex:1 1 12%;
+    min-width:72px;
+    text-align:center;
+    padding:8px 2px;
+    border-radius:9px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink-soft);
+    font-size:12px;
+    font-weight:600;
+    line-height:1.4;
+  }
+  .chip .chip-n{font-family:'IBM Plex Mono', monospace; font-size:13px; display:block;}
+  .chip.locked{opacity:.45;}
+  .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
+  .chip.current{background:var(--card); border-color:var(--ink); color:var(--ink);}
+  .chip.bonus{border-style:dashed;}
+
+  .stage-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin:-8px 0 16px;
+  }
+
+  .target-wrap{
+    text-align:center;
+    min-height:130px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:6px;
+    transition:background-color .2s ease;
+    border-radius:14px;
+  }
+  .target-text{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:76px;
+    line-height:1.2;
+  }
+  .target-wrap.success{background:var(--teal-light);}
+  .target-wrap.error{background:var(--brick-light);}
+
+  .legend{font-size:11px; color:var(--ink-soft); text-align:center; margin:0 0 18px;}
+  .legend .legend-ok{color:var(--teal); font-weight:600;}
+  .legend .legend-bad{color:var(--brick); font-weight:600;}
+
+  .instructions{
+    background:var(--paper);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:18px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+  .instructions b{color:var(--ink);}
+
+  /* 키보드 다이어그램 */
+  .kbd{margin:0 0 24px;}
+  .kbd-row{display:flex; justify-content:center; gap:7px; margin-bottom:7px;}
+  .kbd-row.row-top{margin-left:20px;}
+  .kbd-row.row-bottom{margin-left:40px;}
+  .key{
+    width:38px; height:38px;
+    border-radius:8px;
+    border:1.5px solid var(--border);
+    background:var(--card);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink-soft);
+    opacity:1;
+    transition:all .15s ease;
+  }
+  .kbd-row.dim .key{opacity:.32;}
+  .key.key-active{
+    background:var(--teal);
+    color:#fff;
+    border-color:var(--teal);
+    opacity:1;
+    box-shadow:0 0 0 5px var(--teal-light);
+    transform:scale(1.1);
+  }
+
+  /* 손가락 다이어그램 */
+  .hands{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:8px;
+    margin:0 0 26px;
+  }
+  .hand{
+    display:flex;
+    align-items:flex-end;
+    gap:7px;
+  }
+  .spacebar{
+    width:220px;
+    height:16px;
+    border-radius:8px;
+    background:var(--border);
+    opacity:.55;
+    margin:6px auto 0;
+  }
+  .finger{
+    width:20px;
+    border-radius:9px 9px 5px 5px;
+    background:var(--border);
+    position:relative;
+    transition:background-color .15s ease;
+  }
+  .finger.f-pinky{height:42px;}
+  .finger.f-ring{height:58px;}
+  .finger.f-middle{height:66px;}
+  .finger.f-index{height:56px;}
+  .finger.f-thumb{height:30px; width:22px;}
+  .finger.active{
+    background:var(--teal);
+    box-shadow:0 0 0 4px var(--teal-light);
+  }
+  .finger.reach.active::before{
+    content:'↕';
+    position:absolute;
+    top:-19px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:14px;
+    color:var(--brick);
+    font-weight:700;
+  }
+
+  .type-input{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px;
+    text-align:center;
+    padding:16px 15px;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    margin-bottom:24px;
+  }
+  .type-input:focus{border-color:var(--teal);}
+
+  .stats-bar{
+    display:flex;
+    justify-content:space-between;
+    border-top:1px dashed var(--border);
+    padding-top:16px;
+  }
+  .stat{display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .stat-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:19px;
+  }
+  .stat-label{font-size:12px; color:var(--ink-soft);}
+
+  /* 소나기 게임 */
+  .game-stats{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .hearts{display:flex; gap:4px; font-size:18px;}
+  .heart.lost{opacity:.2;}
+  .game-score{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .game-area{
+    position:relative;
+    height:300px;
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .falling{
+    position:absolute;
+    top:0;
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:22px;
+    color:var(--ink);
+    transform:translateX(-50%);
+  }
+  .falling.caught{color:var(--teal); opacity:0;}
+  .game-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(246,241,231,.94);
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+    border-radius:14px;
+  }
+  .game-overlay.show{display:flex;}
+  .game-overlay .go-title{font-family:'Noto Serif KR', serif; font-weight:700; font-size:18px;}
+  .game-overlay .go-score{font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft);}
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin:20px 0 24px;
+  }
+  .summary-box{
+    background:var(--paper);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+  }
+  .summary-box .val{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:20px;
+    color:var(--ink);
+  }
+  .summary-box .lab{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{text-align:left; padding:8px 6px; border-bottom:1px solid var(--border);}
+  th{color:var(--ink-soft); font-weight:600; font-size:11px;}
+  .empty-note{font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0;}
+
+  .code-pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">타이핑 기반 사전학습 프로그램</div>
+  <h1>0단계 · 자판 자리 연습</h1>
+  <p class="lede">키보드 자판 위치와 손가락 짚는 법을 그림으로 보고 그대로 따라 입력하며 한글 타이핑 기초를 익힙니다.</p>
+
+  <!-- 시작 화면 -->
+  <div id="screen-start" class="screen active">
+    <div class="card">
+      <div class="instructions">
+        <b>이렇게 진행됩니다</b><br/>
+        1. 참여자 코드를 입력하고 연습을 시작하세요.<br/>
+        2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
+        3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.
+      </div>
+      <div class="field">
+        <label for="codeInput">참여자 코드</label>
+        <input type="text" id="codeInput" placeholder="예: P01" autocomplete="off" />
+        <div class="error-text" id="codeError">참여자 코드를 입력해 주세요.</div>
+      </div>
+      <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
+      <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
+    </div>
+  </div>
+
+  <!-- 연습 화면 -->
+  <div id="screen-practice" class="screen">
+    <div class="card">
+      <div class="roadmap" id="roadmap"></div>
+
+      <div class="card-head">
+        <span class="type-badge" id="typeBadge">기본자리</span>
+        <span class="prog-label" id="progLabel">1 / 9</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+      <div class="stage-note" id="stageNote"></div>
+      <div class="legend"><span class="legend-ok">초록</span> = 맞음 · <span class="legend-bad">빨강</span> = 틀림</div>
+
+      <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
+
+      <div class="kbd" id="kbd"></div>
+      <div class="hands" id="hands"></div>
+      <div class="spacebar"></div>
+
+      <input type="text" class="type-input" id="typeInput" placeholder="강조된 자리를 입력하세요" autocomplete="off" />
+
+      <div class="stats-bar">
+        <div class="stat"><span class="stat-value" id="statTime">0.0초</span><span class="stat-label">진행 시간</span></div>
+        <div class="stat"><span class="stat-value" id="statAcc">100%</span><span class="stat-label">정확도</span></div>
+        <div class="stat"><span class="stat-value" id="statFix">0</span><span class="stat-label">오타 수</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 소나기 게임 화면 -->
+  <div id="screen-game" class="screen">
+    <div class="card">
+      <div class="type-badge" style="margin-bottom:14px;">보너스 · 소나기 게임</div>
+      <p class="lede" style="margin-bottom:16px;">방금 배운 기본자리 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요.</p>
+      <div class="game-stats">
+        <div class="hearts" id="hearts"></div>
+        <div class="game-score" id="gameScore">점수 0</div>
+      </div>
+      <div class="game-area" id="gameArea">
+        <div class="game-overlay" id="gameOverlay">
+          <div class="go-title">게임 종료</div>
+          <div class="go-score" id="goScore">점수 0</div>
+        </div>
+      </div>
+      <input type="text" class="type-input" id="gameInput" placeholder="떨어지는 글자를 입력하세요" autocomplete="off" />
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="retryGameBtn">다시하기</button>
+        <button class="btn btn-primary" id="continueGameBtn">다음 단계로 계속하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전체 완료 요약 화면 -->
+  <div id="screen-summary" class="screen">
+    <div class="card">
+      <div class="type-badge" style="margin-bottom:14px;">자리연습 완료</div>
+      <div class="summary-grid">
+        <div class="summary-box"><div class="val" id="sumTime">-</div><div class="lab">총 소요 시간</div></div>
+        <div class="summary-box"><div class="val" id="sumAcc">-</div><div class="lab">평균 정확도</div></div>
+        <div class="summary-box"><div class="val" id="sumFix">-</div><div class="lab">총 오타 수</div></div>
+        <div class="summary-box"><div class="val" id="sumStages">-</div><div class="lab">완료 단계</div></div>
+      </div>
+      <div id="sumTableWrap"></div>
+      <button class="btn btn-primary" id="toWeek1Btn" style="margin-top:16px;">1주차 문장 타이핑으로 이동</button>
+      <button class="btn btn-ghost" id="retryAllBtn">처음부터 다시 연습하기</button>
+      <button class="btn btn-ghost" id="toHistoryBtn">내 기록 보기</button>
+    </div>
+  </div>
+
+  <!-- 기록 화면 -->
+  <div id="screen-history" class="screen">
+    <div class="card">
+      <div class="code-pill" id="historyCodeLabel"></div>
+      <div id="historyContent"></div>
+      <button class="btn btn-ghost" id="backFromHistoryBtn">처음으로</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  /* ---------- Supabase 연결 정보 ---------- */
+  var SUPABASE_URL = 'https://lkimtjqooxzvlbnigqyk.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP';
+
+  /* ---------- 자판 데이터 ---------- */
+  var KEY_TO_JAMO = {
+    q:'ㅂ', w:'ㅈ', e:'ㄷ', r:'ㄱ', t:'ㅅ', y:'ㅛ', u:'ㅕ', i:'ㅑ', o:'ㅐ', p:'ㅔ',
+    a:'ㅁ', s:'ㄴ', d:'ㅇ', f:'ㄹ', g:'ㅎ', h:'ㅗ', j:'ㅓ', k:'ㅏ', l:'ㅣ',
+    z:'ㅋ', x:'ㅌ', c:'ㅊ', v:'ㅍ', b:'ㅠ', n:'ㅜ', m:'ㅡ'
+  };
+  var KEY_META = {
+    a:{hand:'left',finger:'pinky',reach:false},   s:{hand:'left',finger:'ring',reach:false},
+    d:{hand:'left',finger:'middle',reach:false},  f:{hand:'left',finger:'index',reach:false},
+    g:{hand:'left',finger:'index',reach:true},    h:{hand:'right',finger:'index',reach:true},
+    j:{hand:'right',finger:'index',reach:false},  k:{hand:'right',finger:'middle',reach:false},
+    l:{hand:'right',finger:'ring',reach:false},
+    q:{hand:'left',finger:'pinky',reach:false},   w:{hand:'left',finger:'ring',reach:false},
+    e:{hand:'left',finger:'middle',reach:false},  r:{hand:'left',finger:'index',reach:false},
+    t:{hand:'left',finger:'index',reach:true},
+    y:{hand:'right',finger:'index',reach:true},   u:{hand:'right',finger:'index',reach:false},
+    i:{hand:'right',finger:'middle',reach:false}, o:{hand:'right',finger:'ring',reach:false},
+    p:{hand:'right',finger:'pinky',reach:false},
+    z:{hand:'left',finger:'pinky',reach:false},   x:{hand:'left',finger:'ring',reach:false},
+    c:{hand:'left',finger:'middle',reach:false},  v:{hand:'left',finger:'index',reach:false},
+    b:{hand:'left',finger:'index',reach:true},
+    n:{hand:'right',finger:'index',reach:true},   m:{hand:'right',finger:'index',reach:false}
+  };
+  var TOP_ROW = ['q','w','e','r','t','y','u','i','o','p'];
+  var HOME_ROW = ['a','s','d','f','g','h','j','k','l'];
+  var BOTTOM_ROW = ['z','x','c','v','b','n','m'];
+
+  var STAGE_DEFS = [
+    {id:1, name:'기본자리', keys:['a','s','d','f','g','h','j','k','l'], hasGame:true},
+    {id:2, name:'왼손 윗자리', keys:['q','w','e','r','t']},
+    {id:3, name:'오른손 윗자리', keys:['y','u','i','o','p']},
+    {id:4, name:'왼손 아랫자리', keys:['z','x','c','v','b']},
+    {id:5, name:'오른손 아랫자리', keys:['n','m']},
+    {id:6, name:'전체자리', keys:null},
+    {id:7, name:'가운데자리', bonus:true, keys:['t','g','b','y','h','n']}
+  ];
+  var ALL_KEYS = STAGE_DEFS.slice(0,5).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
+  STAGE_DEFS[5].keys = ALL_KEYS.slice();
+
+  var GAME_CHARS = STAGE_DEFS[0].keys.map(function(k){ return KEY_TO_JAMO[k]; });
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* ---------- 화면 전환 ---------- */
+  var screens = {
+    start: document.getElementById('screen-start'),
+    practice: document.getElementById('screen-practice'),
+    game: document.getElementById('screen-game'),
+    summary: document.getElementById('screen-summary'),
+    history: document.getElementById('screen-history')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('active', k === name); });
+  }
+
+  /* ---------- DOM 참조 ---------- */
+  var codeInput = document.getElementById('codeInput');
+  var codeError = document.getElementById('codeError');
+  var startBtn = document.getElementById('startBtn');
+  var historyBtn = document.getElementById('historyBtn');
+
+  var roadmapEl = document.getElementById('roadmap');
+  var typeBadge = document.getElementById('typeBadge');
+  var progLabel = document.getElementById('progLabel');
+  var progFill = document.getElementById('progFill');
+  var stageNote = document.getElementById('stageNote');
+  var targetEl = document.getElementById('target');
+  var targetWrap = document.getElementById('targetWrap');
+  var kbdEl = document.getElementById('kbd');
+  var handsEl = document.getElementById('hands');
+  var typeInput = document.getElementById('typeInput');
+  var statTime = document.getElementById('statTime');
+  var statAcc = document.getElementById('statAcc');
+  var statFix = document.getElementById('statFix');
+
+  var heartsEl = document.getElementById('hearts');
+  var gameScoreEl = document.getElementById('gameScore');
+  var gameArea = document.getElementById('gameArea');
+  var gameOverlay = document.getElementById('gameOverlay');
+  var goScore = document.getElementById('goScore');
+  var gameInput = document.getElementById('gameInput');
+  var retryGameBtn = document.getElementById('retryGameBtn');
+  var continueGameBtn = document.getElementById('continueGameBtn');
+
+  var sumTime = document.getElementById('sumTime');
+  var sumAcc = document.getElementById('sumAcc');
+  var sumFix = document.getElementById('sumFix');
+  var sumStages = document.getElementById('sumStages');
+  var sumTableWrap = document.getElementById('sumTableWrap');
+  var toWeek1Btn = document.getElementById('toWeek1Btn');
+  var retryAllBtn = document.getElementById('retryAllBtn');
+  var toHistoryBtn = document.getElementById('toHistoryBtn');
+
+  var historyCodeLabel = document.getElementById('historyCodeLabel');
+  var historyContent = document.getElementById('historyContent');
+  var backFromHistoryBtn = document.getElementById('backFromHistoryBtn');
+
+  /* ---------- 상태 ---------- */
+  var currentCode = '';
+  var completedStages = {};
+  var stageIdx = 0;
+  var STAGE = null;
+  var itemIdx = 0;
+  var stageStartTime = null;
+  var totalAttempts = 0;
+  var correctAttempts = 0;
+  var typoCount = 0;
+  var feedbackTimeout = null;
+  var tickHandle = null;
+  var sessionRecords = [];
+
+  function getCode(){ return codeInput.value.trim(); }
+
+  codeInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') startBtn.click();
+  });
+
+  if (tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(function(){
+    if (!screens.practice.classList.contains('active')) return;
+    if (!stageStartTime) return;
+    statTime.textContent = ((Date.now() - stageStartTime) / 1000).toFixed(1) + '초';
+  }, 100);
+
+  /* ---------- 저장소 (Supabase) ---------- */
+  var sb = (window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  async function loadProgress(code){
+    if (sb){
+      try{
+        var res = await sb.from('stage0_progress')
+          .select('completed_stages, next_stage')
+          .eq('participant_code', code)
+          .maybeSingle();
+        if (res.error) throw res.error;
+        if (res.data) return {
+          completedStages: res.data.completed_stages || [],
+          nextStage: res.data.next_stage || 1
+        };
+        return {completedStages: [], nextStage: 1};
+      } catch (err){ console.error('진행 상태 불러오기 실패:', err); return {completedStages: [], nextStage: 1}; }
+    }
+    try{
+      var got = await window.storage.get('stage0:progress:' + code, false);
+      if (got && got.value) return JSON.parse(got.value);
+    } catch (err){ console.error('진행 상태 불러오기 실패:', err); }
+    return {completedStages: [], nextStage: 1};
+  }
+
+  async function saveProgress(code, progress){
+    if (sb){
+      try{
+        var res = await sb.from('stage0_progress').upsert({
+          participant_code: code,
+          completed_stages: progress.completedStages,
+          next_stage: progress.nextStage,
+          updated_at: new Date().toISOString()
+        }, {onConflict: 'participant_code'});
+        if (res.error) throw res.error;
+      } catch (err){ console.error('진행 상태 저장 실패:', err); }
+      return;
+    }
+    try{
+      await window.storage.set('stage0:progress:' + code, JSON.stringify(progress), false);
+    } catch (err){ console.error('진행 상태 저장 실패:', err); }
+  }
+
+  async function saveStageRecord(code, record){
+    if (sb){
+      try{
+        var res = await sb.from('stage0_records').insert({
+          participant_code: code,
+          stage_id: record.stageId,
+          stage_name: record.stageName,
+          item_count: record.itemCount,
+          time_sec: record.timeSec,
+          accuracy: record.accuracy,
+          typo_count: record.typoCount,
+          total_attempts: record.totalAttempts,
+          correct_attempts: record.correctAttempts,
+          recorded_at: record.date
+        });
+        if (res.error) throw res.error;
+      } catch (err){ console.error('단계 기록 저장 실패:', err); }
+      return;
+    }
+    try{
+      var key = 'stage0:record:' + code + ':' + record.stageId + ':' + Date.now();
+      await window.storage.set(key, JSON.stringify(record), false);
+    } catch (err){ console.error('단계 기록 저장 실패:', err); }
+  }
+
+  async function fetchAllRecords(code){
+    if (sb){
+      try{
+        var res = await sb.from('stage0_records')
+          .select('*')
+          .eq('participant_code', code)
+          .order('recorded_at', {ascending: false});
+        if (res.error) throw res.error;
+        return (res.data || []).map(function(row){
+          return {
+            stageId: row.stage_id,
+            stageName: row.stage_name,
+            itemCount: row.item_count,
+            timeSec: row.time_sec,
+            accuracy: row.accuracy,
+            typoCount: row.typo_count,
+            totalAttempts: row.total_attempts,
+            correctAttempts: row.correct_attempts,
+            date: row.recorded_at
+          };
+        });
+      } catch (err){ console.error('기록 목록 조회 실패:', err); return []; }
+    }
+    var records = [];
+    try{
+      var listResult = await window.storage.list('stage0:record:' + code + ':', false);
+      var keys = (listResult && listResult.keys) ? listResult.keys : [];
+      for (var i = 0; i < keys.length; i++){
+        try{
+          var got = await window.storage.get(keys[i], false);
+          if (got && got.value) records.push(JSON.parse(got.value));
+        } catch (innerErr){ console.error('기록 불러오기 실패:', keys[i], innerErr); }
+      }
+    } catch (err){ console.error('기록 목록 조회 실패:', err); }
+    return records;
+  }
+
+  /* ---------- 시작 / 기록 버튼 ---------- */
+  startBtn.addEventListener('click', async function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    currentCode = code;
+
+    var progress = await loadProgress(code);
+    completedStages = {};
+    (progress.completedStages || []).forEach(function(id){ completedStages[id] = true; });
+
+    if (progress.nextStage > STAGE_DEFS.length){
+      showFinalSummary();
+      return;
+    }
+    var idx = STAGE_DEFS.findIndex(function(s){ return s.id === progress.nextStage; });
+    stageIdx = idx >= 0 ? idx : 0;
+    showScreen('practice');
+    loadStage(stageIdx);
+  });
+
+  historyBtn.addEventListener('click', function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    currentCode = code;
+    openHistory();
+  });
+
+  /* ---------- 로드맵 ---------- */
+  function renderRoadmap(currentId){
+    roadmapEl.innerHTML = STAGE_DEFS.map(function(s){
+      var cls = 'chip' + (s.bonus ? ' bonus' : '');
+      if (completedStages[s.id]) cls += ' done';
+      else if (s.id === currentId) cls += ' current';
+      else if (s.id > currentId) cls += ' locked';
+      var numLabel = s.bonus ? '보너스' : (s.id + '단계');
+      var mark = completedStages[s.id] ? '✓' : (s.id > currentId ? '🔒' : numLabel);
+      return '<div class="' + cls + '"><span class="chip-n">' + mark + '</span>' + s.name + '</div>';
+    }).join('');
+  }
+
+  /* ---------- 자판 / 손가락 다이어그램 ---------- */
+  function renderKeyboard(activeKey){
+    function rowHtml(keys){
+      return keys.map(function(k){
+        var active = (k === activeKey);
+        return '<div class="key' + (active ? ' key-active' : '') + '">' + KEY_TO_JAMO[k] + '</div>';
+      }).join('');
+    }
+    kbdEl.innerHTML =
+      '<div class="kbd-row row-top dim">' + rowHtml(TOP_ROW) + '</div>' +
+      '<div class="kbd-row row-home">' + rowHtml(HOME_ROW) + '</div>' +
+      '<div class="kbd-row row-bottom dim">' + rowHtml(BOTTOM_ROW) + '</div>';
+  }
+
+  function renderHands(hand, finger, reach){
+    var leftOrder = ['pinky','ring','middle','index','thumb'];
+    var rightOrder = ['thumb','index','middle','ring','pinky'];
+    function fingerHtml(order, side){
+      return order.map(function(f){
+        var active = (hand === side && f === finger);
+        var cls = 'finger f-' + f + (active ? ' active' : '') + (active && reach ? ' reach' : '');
+        return '<div class="' + cls + '"></div>';
+      }).join('');
+    }
+    handsEl.innerHTML =
+      '<div class="hand hand-left">' + fingerHtml(leftOrder, 'left') + '</div>' +
+      '<div class="hand hand-right">' + fingerHtml(rightOrder, 'right') + '</div>';
+  }
+
+  /* ---------- 단계 / 문항 진행 ---------- */
+  function loadStage(idx){
+    STAGE = STAGE_DEFS[idx];
+    STAGE.runtimeKeys = (STAGE.id === 6) ? shuffle(ALL_KEYS) : STAGE.keys;
+    itemIdx = 0;
+    stageStartTime = null;
+    totalAttempts = 0;
+    correctAttempts = 0;
+    typoCount = 0;
+    statTime.textContent = '0.0초';
+    statAcc.textContent = '100%';
+    statFix.textContent = '0';
+    stageNote.textContent = STAGE.bonus ? '검지가 위·아래로 뻗어 나가는 자리만 모아 다시 연습합니다.' : '';
+    renderRoadmap(STAGE.id);
+    loadKeyItem();
+  }
+
+  function loadKeyItem(){
+    var key = STAGE.runtimeKeys[itemIdx];
+    var meta = KEY_META[key];
+    var ch = KEY_TO_JAMO[key];
+
+    targetWrap.classList.remove('success', 'error');
+    typeBadge.textContent = STAGE.name;
+    progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
+    progFill.style.width = Math.round((itemIdx / STAGE.runtimeKeys.length) * 100) + '%';
+    targetEl.textContent = ch;
+    renderKeyboard(key);
+    renderHands(meta.hand, meta.finger, meta.reach);
+
+    typeInput.value = '';
+    typeInput.disabled = false;
+    typeInput.focus();
+  }
+
+  typeInput.addEventListener('input', function(){
+    if (typeInput.disabled) return;
+    var val = typeInput.value;
+    if (!val) return;
+    if (!stageStartTime) stageStartTime = Date.now();
+
+    var key = STAGE.runtimeKeys[itemIdx];
+    var target = KEY_TO_JAMO[key];
+    var typedChar = val[val.length - 1];
+    totalAttempts++;
+
+    if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+
+    if (typedChar === target){
+      correctAttempts++;
+      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+      statFix.textContent = typoCount;
+      targetWrap.classList.add('success');
+      typeInput.disabled = true;
+      feedbackTimeout = setTimeout(function(){
+        itemIdx++;
+        if (itemIdx < STAGE.runtimeKeys.length){
+          loadKeyItem();
+        } else {
+          progFill.style.width = '100%';
+          finishStage();
+        }
+      }, 450);
+    } else {
+      typoCount++;
+      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+      statFix.textContent = typoCount;
+      targetWrap.classList.add('error');
+      typeInput.disabled = true;
+      feedbackTimeout = setTimeout(function(){
+        targetWrap.classList.remove('error');
+        typeInput.value = '';
+        typeInput.disabled = false;
+        typeInput.focus();
+      }, 320);
+    }
+  });
+
+  async function finishStage(){
+    var timeSec = stageStartTime ? (Date.now() - stageStartTime) / 1000 : 0;
+    var accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
+    var record = {
+      stageId: STAGE.id,
+      stageName: STAGE.name,
+      itemCount: STAGE.runtimeKeys.length,
+      timeSec: Math.round(timeSec * 10) / 10,
+      accuracy: accuracy,
+      typoCount: typoCount,
+      totalAttempts: totalAttempts,
+      correctAttempts: correctAttempts,
+      date: new Date().toISOString()
+    };
+    sessionRecords.push(record);
+    completedStages[STAGE.id] = true;
+
+    await saveStageRecord(currentCode, record);
+    await saveProgress(currentCode, {
+      completedStages: Object.keys(completedStages).map(Number),
+      nextStage: STAGE.id + 1
+    });
+
+    if (STAGE.hasGame){
+      showScreen('game');
+      startGame();
+    } else {
+      proceedAfterStage();
+    }
+  }
+
+  function proceedAfterStage(){
+    var nextIdx = STAGE_DEFS.findIndex(function(s){ return s.id === STAGE.id + 1; });
+    if (nextIdx >= 0){
+      stageIdx = nextIdx;
+      showScreen('practice');
+      loadStage(stageIdx);
+    } else {
+      showFinalSummary();
+    }
+  }
+
+  /* ---------- 소나기 게임 ---------- */
+  var gameHearts = 3;
+  var gameScore = 0;
+  var gameActive = false;
+  var fallingItems = [];
+  var gameSpawnHandle = null;
+  var gameRAF = null;
+
+  function renderHearts(){
+    heartsEl.innerHTML = '';
+    for (var i = 0; i < 3; i++){
+      var span = document.createElement('span');
+      span.className = 'heart' + (i < gameHearts ? '' : ' lost');
+      span.textContent = '❤';
+      heartsEl.appendChild(span);
+    }
+  }
+
+  function startGame(){
+    gameHearts = 3;
+    gameScore = 0;
+    gameActive = true;
+    fallingItems.forEach(function(it){ if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); });
+    fallingItems = [];
+    gameOverlay.classList.remove('show');
+    renderHearts();
+    gameScoreEl.textContent = '점수 0';
+    gameInput.value = '';
+    gameInput.disabled = false;
+    gameInput.focus();
+
+    if (gameSpawnHandle) clearInterval(gameSpawnHandle);
+    gameSpawnHandle = setInterval(spawnFalling, 1600);
+    if (gameRAF) cancelAnimationFrame(gameRAF);
+    gameRAF = requestAnimationFrame(gameLoop);
+  }
+
+  function spawnFalling(){
+    if (!gameActive) return;
+    var ch = GAME_CHARS[Math.floor(Math.random() * GAME_CHARS.length)];
+    var el = document.createElement('div');
+    el.className = 'falling';
+    el.textContent = ch;
+    var leftPct = 10 + Math.random() * 78;
+    el.style.left = leftPct + '%';
+    el.style.top = '0%';
+    gameArea.appendChild(el);
+    fallingItems.push({el: el, char: ch, top: 0, speed: 0.09 + Math.random() * 0.06});
+  }
+
+  function gameLoop(){
+    if (!gameActive){ return; }
+    for (var i = fallingItems.length - 1; i >= 0; i--){
+      var it = fallingItems[i];
+      it.top += it.speed;
+      it.el.style.top = it.top + '%';
+      if (it.top >= 90){
+        it.el.parentNode && it.el.parentNode.removeChild(it.el);
+        fallingItems.splice(i, 1);
+        gameHearts--;
+        renderHearts();
+        if (gameHearts <= 0){
+          endGame();
+          return;
+        }
+      }
+    }
+    gameRAF = requestAnimationFrame(gameLoop);
+  }
+
+  gameInput.addEventListener('input', function(){
+    if (!gameActive) return;
+    var val = gameInput.value;
+    gameInput.value = '';
+    if (!val) return;
+    var ch = val[val.length - 1];
+    var bestIdx = -1, bestTop = -1;
+    for (var i = 0; i < fallingItems.length; i++){
+      if (fallingItems[i].char === ch && fallingItems[i].top > bestTop){
+        bestTop = fallingItems[i].top;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx >= 0){
+      var it = fallingItems[bestIdx];
+      it.el.classList.add('caught');
+      gameScore++;
+      gameScoreEl.textContent = '점수 ' + gameScore;
+      fallingItems.splice(bestIdx, 1);
+      setTimeout(function(){ it.el.parentNode && it.el.parentNode.removeChild(it.el); }, 200);
+    }
+  });
+
+  function endGame(){
+    gameActive = false;
+    if (gameSpawnHandle) clearInterval(gameSpawnHandle);
+    if (gameRAF) cancelAnimationFrame(gameRAF);
+    gameInput.disabled = true;
+    goScore.textContent = '점수 ' + gameScore;
+    gameOverlay.classList.add('show');
+  }
+
+  retryGameBtn.addEventListener('click', function(){ startGame(); });
+  continueGameBtn.addEventListener('click', function(){
+    gameActive = false;
+    if (gameSpawnHandle) clearInterval(gameSpawnHandle);
+    if (gameRAF) cancelAnimationFrame(gameRAF);
+    proceedAfterStage();
+  });
+
+  /* ---------- 전체 완료 요약 ---------- */
+  async function showFinalSummary(){
+    var records = await fetchAllRecords(currentCode);
+    var latestByStage = {};
+    records.forEach(function(r){
+      var prev = latestByStage[r.stageId];
+      if (!prev || new Date(r.date) > new Date(prev.date)) latestByStage[r.stageId] = r;
+    });
+    var list = STAGE_DEFS.map(function(s){ return latestByStage[s.id]; }).filter(Boolean);
+
+    var totalTime = 0, totalCorrect = 0, totalAll = 0, totalTypo = 0;
+    list.forEach(function(r){
+      totalTime += r.timeSec;
+      totalCorrect += r.correctAttempts || 0;
+      totalAll += r.totalAttempts || 0;
+      totalTypo += r.typoCount;
+    });
+    var overallAcc = totalAll ? Math.round((totalCorrect / totalAll) * 100) : 100;
+
+    sumTime.textContent = totalTime.toFixed(1) + '초';
+    sumAcc.textContent = overallAcc + '%';
+    sumFix.textContent = totalTypo;
+    sumStages.textContent = list.length + ' / ' + STAGE_DEFS.length;
+
+    var rows = list.map(function(r){
+      return '<tr><td>' + r.stageName + '</td><td>' + r.accuracy + '%</td><td>' + r.typoCount + '</td><td>' + r.timeSec + '초</td></tr>';
+    }).join('');
+    sumTableWrap.innerHTML = list.length ?
+      '<table><thead><tr><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th></tr></thead><tbody>' + rows + '</tbody></table>' :
+      '<p class="empty-note">기록이 없습니다.</p>';
+
+    showScreen('summary');
+  }
+
+  toWeek1Btn.addEventListener('click', function(){
+    window.location.href = 'week1_hangul_typing.html';
+  });
+
+  retryAllBtn.addEventListener('click', async function(){
+    completedStages = {};
+    sessionRecords = [];
+    await saveProgress(currentCode, {completedStages: [], nextStage: 1});
+    stageIdx = 0;
+    showScreen('practice');
+    loadStage(0);
+  });
+
+  toHistoryBtn.addEventListener('click', function(){ openHistory(); });
+  backFromHistoryBtn.addEventListener('click', function(){ showScreen('start'); });
+
+  async function openHistory(){
+    historyCodeLabel.textContent = currentCode;
+    historyContent.innerHTML = '<p class="empty-note">기록을 불러오는 중입니다...</p>';
+    showScreen('history');
+
+    var records = await fetchAllRecords(currentCode);
+    if (records.length === 0){
+      historyContent.innerHTML = '<p class="empty-note">아직 저장된 연습 기록이 없습니다.</p>';
+      return;
+    }
+    records.sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+
+    var rows = records.map(function(r){
+      var d = new Date(r.date);
+      var dateLabel = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      return '<tr>' +
+        '<td>' + dateLabel + '</td>' +
+        '<td>' + r.stageName + '</td>' +
+        '<td>' + r.accuracy + '%</td>' +
+        '<td>' + r.typoCount + '</td>' +
+        '<td>' + r.timeSec + '초</td>' +
+      '</tr>';
+    }).join('');
+
+    historyContent.innerHTML =
+      '<table>' +
+        '<thead><tr><th>날짜</th><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>';
+  }
+})();
+</script>
+</body>
+</html>
