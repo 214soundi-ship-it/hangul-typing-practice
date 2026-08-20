@@ -39,7 +39,8 @@
   h1{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:28px;
+    font-size:34px;
+    color:var(--teal);
     margin:0 0 10px;
   }
   .lede{
@@ -51,29 +52,33 @@
   .card{
     display:block;
     background:var(--card);
-    border:1px solid var(--border);
+    border:2px solid var(--border);
     border-radius:18px;
-    padding:24px 26px;
+    padding:26px 28px;
     margin-bottom:16px;
     text-decoration:none;
     color:inherit;
-    transition:border-color .15s ease, transform .15s ease;
+    transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
   }
-  .card:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .card:hover{
+    border-color:var(--teal);
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(44,110,99,.16);
+  }
   .badge{
     display:inline-block;
     font-size:12px;
-    font-weight:600;
-    color:var(--teal);
-    background:var(--teal-light);
-    padding:3px 10px;
+    font-weight:700;
+    color:#fff;
+    background:var(--teal);
+    padding:4px 12px;
     border-radius:999px;
     margin-bottom:10px;
   }
   .card h2{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:19px;
+    font-size:21px;
     margin:0 0 6px;
   }
   .card p{
@@ -82,7 +87,7 @@
     line-height:1.6;
     margin:0;
   }
-  .arrow{float:right; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+  .arrow{float:right; color:var(--teal); font-family:'IBM Plex Mono', monospace; font-size:20px; font-weight:700;}
 </style>
 </head>
 <body>

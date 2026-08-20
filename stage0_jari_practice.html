@@ -41,7 +41,8 @@
   h1{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:30px;
+    font-size:34px;
+    color:var(--teal);
     margin:0 0 8px;
   }
   .lede{
@@ -84,16 +85,18 @@
   }
   .btn{
     font-family:'Noto Sans KR', sans-serif;
-    font-weight:600;
-    font-size:14px;
-    padding:12px 18px;
-    border-radius:10px;
+    font-weight:700;
+    font-size:16px;
+    padding:16px 20px;
+    border-radius:12px;
     border:none;
     cursor:pointer;
     width:100%;
+    transition:transform .1s ease, box-shadow .15s ease;
   }
-  .btn-primary{background:var(--ink); color:var(--paper);}
-  .btn-primary:hover{background:var(--teal);}
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 4px 14px rgba(44,110,99,.28);}
+  .btn-primary:hover{background:#245a51; transform:translateY(-1px); box-shadow:0 6px 18px rgba(44,110,99,.34);}
+  .btn-primary:active{transform:translateY(0);}
   .btn-ghost{
     background:transparent;
     color:var(--ink-soft);
@@ -163,7 +166,8 @@
   .chip .chip-n{font-family:'IBM Plex Mono', monospace; font-size:13px; display:block;}
   .chip.locked{opacity:.45;}
   .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
-  .chip.current{background:var(--card); border-color:var(--ink); color:var(--ink);}
+  .chip.current{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
+  .chip.current .chip-n{color:#fff;}
   .chip.bonus{border-style:dashed;}
 
   .stage-note{
@@ -197,13 +201,20 @@
   .legend .legend-bad{color:var(--brick); font-weight:600;}
 
   .instructions{
-    background:var(--paper);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:18px;
-    font-size:13px;
+    background:var(--teal-light);
+    border:1.5px solid var(--teal);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:20px;
+    font-size:13.5px;
     color:var(--ink-soft);
-    line-height:1.7;
+    line-height:1.75;
+  }
+  .instructions .instructions-title{
+    font-weight:700;
+    color:var(--teal);
+    font-size:14px;
+    margin-bottom:4px;
   }
   .instructions b{color:var(--ink);}
 
@@ -404,7 +415,7 @@
   <div id="screen-start" class="screen active">
     <div class="card">
       <div class="instructions">
-        <b>이렇게 진행됩니다</b><br/>
+        <div class="instructions-title">📋 이렇게 진행됩니다</div>
         1. 참여자 코드를 입력하고 연습을 시작하세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
         3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.

@@ -29,10 +29,10 @@
     justify-content:center;
     padding:32px 16px 64px;
   }
-  .app{width:100%;max-width:460px;}
+  .app{width:100%;max-width:640px;}
   .eyebrow{
     font-family:'IBM Plex Mono', monospace;
-    font-size:12px;
+    font-size:13px;
     letter-spacing:.04em;
     color:var(--ink-soft);
     text-transform:uppercase;
@@ -41,11 +41,12 @@
   h1{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:24px;
+    font-size:34px;
+    color:var(--teal);
     margin:0 0 8px;
   }
   .lede{
-    font-size:14px;
+    font-size:15px;
     color:var(--ink-soft);
     line-height:1.6;
     margin:0 0 28px;
@@ -54,7 +55,7 @@
     background:var(--card);
     border:1px solid var(--border);
     border-radius:18px;
-    padding:26px 24px;
+    padding:34px 36px;
   }
   .field{margin-bottom:16px;}
   .field label{
@@ -84,16 +85,18 @@
   }
   .btn{
     font-family:'Noto Sans KR', sans-serif;
-    font-weight:600;
-    font-size:14px;
-    padding:12px 18px;
-    border-radius:10px;
+    font-weight:700;
+    font-size:16px;
+    padding:16px 20px;
+    border-radius:12px;
     border:none;
     cursor:pointer;
     width:100%;
+    transition:transform .1s ease, box-shadow .15s ease;
   }
-  .btn-primary{background:var(--ink); color:var(--paper);}
-  .btn-primary:hover{background:var(--teal);}
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 4px 14px rgba(44,110,99,.28);}
+  .btn-primary:hover{background:#245a51; transform:translateY(-1px); box-shadow:0 6px 18px rgba(44,110,99,.34);}
+  .btn-primary:active{transform:translateY(0);}
   .btn-ghost{
     background:transparent;
     color:var(--ink-soft);
@@ -150,7 +153,7 @@
   .target-text{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:28px;
+    font-size:32px;
     line-height:1.5;
     word-break:keep-all;
   }
@@ -168,21 +171,28 @@
   .legend .legend-bad{color:var(--brick); font-weight:600;}
 
   .instructions{
-    background:var(--paper);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:18px;
-    font-size:13px;
+    background:var(--teal-light);
+    border:1.5px solid var(--teal);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:20px;
+    font-size:13.5px;
     color:var(--ink-soft);
-    line-height:1.7;
+    line-height:1.75;
+  }
+  .instructions .instructions-title{
+    font-weight:700;
+    color:var(--teal);
+    font-size:14px;
+    margin-bottom:4px;
   }
   .instructions b{color:var(--ink);}
 
   .type-input{
     width:100%;
     font-family:'IBM Plex Mono', monospace;
-    font-size:17px;
-    padding:13px 15px;
+    font-size:19px;
+    padding:15px 16px;
     border-radius:12px;
     border:1.5px solid var(--border);
     background:var(--paper);
@@ -253,7 +263,7 @@
   <div id="screen-start" class="screen active">
     <div class="card">
       <div class="instructions">
-        <b>이렇게 진행됩니다</b><br/>
+        <div class="instructions-title">📋 이렇게 진행됩니다</div>
         1. 참여자 코드를 입력하고 연습을 시작하세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
         3. 화면의 글자를 그대로 입력하면, 정확히 맞았을 때 자동으로 다음 문항으로 넘어갑니다.
