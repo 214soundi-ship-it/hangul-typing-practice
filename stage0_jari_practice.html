@@ -790,6 +790,26 @@
     return SYLLABLES.concat(WORDS);
   }
 
+  // 조합 연습 화면에서 키보드/손가락 강조를 위한 분해표 (기본자리 자모 ㅁㄴㅇㄹㅓㅏㅣ로만 구성됨)
+  var SYLLABLE_JAMO = {
+    '마':['ㅁ','ㅏ'], '머':['ㅁ','ㅓ'], '미':['ㅁ','ㅣ'],
+    '나':['ㄴ','ㅏ'], '너':['ㄴ','ㅓ'], '니':['ㄴ','ㅣ'],
+    '아':['ㅇ','ㅏ'], '어':['ㅇ','ㅓ'], '이':['ㅇ','ㅣ'],
+    '라':['ㄹ','ㅏ'], '러':['ㄹ','ㅓ'], '리':['ㄹ','ㅣ']
+  };
+  var JAMO_TO_KEY = {'ㅁ':'a', 'ㄴ':'s', 'ㅇ':'d', 'ㄹ':'f', 'ㅓ':'j', 'ㅏ':'k', 'ㅣ':'l'};
+
+  function comboKeys(text){
+    var keys = [];
+    for (var i = 0; i < text.length; i++){
+      (SYLLABLE_JAMO[text[i]] || []).forEach(function(j){
+        var k = JAMO_TO_KEY[j];
+        if (k && keys.indexOf(k) === -1) keys.push(k);
+      });
+    }
+    return keys;
+  }
+
   function speak(text){
     try{
       if (!window.speechSynthesis) return;
@@ -1086,12 +1106,13 @@
   });
 
   /* ---------- 자판 / 손가락 다이어그램 ---------- */
-  function renderKeyboard(activeKey){
+  function renderKeyboard(activeKeys){
+    var active = Array.isArray(activeKeys) ? activeKeys : [activeKeys];
     function rowHtml(keys){
       return keys.map(function(k){
-        var active = (k === activeKey);
+        var isActive = active.indexOf(k) !== -1;
         var cls = 'key';
-        if (active) cls += ' key-active';
+        if (isActive) cls += ' key-active';
         else if (!BASE_KEY_SET[k]) cls += ' key-dim';
         return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
@@ -1102,13 +1123,20 @@
       '<div class="kbd-row row-bottom">' + rowHtml(BOTTOM_ROW) + '</div>';
   }
 
-  function renderHands(hand, finger, reach){
+  function renderHands(metaList){
+    var list = Array.isArray(metaList) ? metaList : [metaList];
     var leftOrder = ['pinky','ring','middle','index','thumb'];
     var rightOrder = ['thumb','index','middle','ring','pinky'];
+    function isActive(side, f){
+      return list.some(function(m){ return m && m.hand === side && m.finger === f; });
+    }
+    function isReach(side, f){
+      return list.some(function(m){ return m && m.hand === side && m.finger === f && m.reach; });
+    }
     function fingerHtml(order, side){
       return order.map(function(f){
-        var active = (hand === side && f === finger);
-        var cls = 'finger f-' + f + (active ? ' active' : '') + (active && reach ? ' reach' : '');
+        var active = isActive(side, f);
+        var cls = 'finger f-' + f + (active ? ' active' : '') + (active && isReach(side, f) ? ' reach' : '');
         return '<div class="' + cls + '"></div>';
       }).join('');
     }
@@ -1185,7 +1213,7 @@
     targetEl.textContent = ch;
     keyDiagramWrap.style.display = '';
     renderKeyboard(key);
-    renderHands(meta.hand, meta.finger, meta.reach);
+    renderHands(meta);
 
     typeInput.placeholder = '강조된 자리를 입력하세요';
     typeInput.value = '';
@@ -1213,7 +1241,12 @@
     progFill.style.width = '100%';
     targetEl.className = 'target-text combo';
     renderComboTarget('');
-    keyDiagramWrap.style.display = 'none';
+
+    var target = comboQueue[comboIdx];
+    var keys = comboKeys(target);
+    keyDiagramWrap.style.display = '';
+    renderKeyboard(keys);
+    renderHands(keys.map(function(k){ return KEY_META[k]; }));
 
     typeInput.placeholder = '위 글자를 그대로 입력하세요';
     typeInput.value = '';
@@ -1258,6 +1291,13 @@
     finishStage();
   });
 
+  typeInput.addEventListener('keydown', function(e){
+    if (comboMode && e.key === 'Backspace'){
+      typoCount++;
+      statFix.textContent = typoCount;
+    }
+  });
+
   typeInput.addEventListener('input', function(){
     if (typeInput.disabled) return;
     var val = typeInput.value;
@@ -1267,19 +1307,17 @@
     if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
 
     if (comboMode){
+      // 한글은 자모를 조합해 한 글자를 완성하는 도중(예: '마'를 만들려고 'ㅁ'만 친 상태)에도
+      // 문자열 길이가 이미 완성형과 같아 보일 수 있어서, 중간 상태를 오답으로 판정하지 않고
+      // 최종적으로 정확히 일치할 때만 정답 처리한다 (강제로 지우거나 잠그지 않음, week1과 동일한 방식).
       var comboTarget = comboQueue[comboIdx];
       renderComboTarget(val);
-      var pos = val.length - 1;
-      totalAttempts++;
-      if (pos < comboTarget.length && val[pos] === comboTarget[pos]){
-        correctAttempts++;
-      } else {
-        typoCount++;
-      }
-      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
-      statFix.textContent = typoCount;
 
       if (val === comboTarget){
+        totalAttempts++;
+        correctAttempts++;
+        statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+        statFix.textContent = typoCount;
         targetWrap.classList.add('success');
         typeInput.disabled = true;
         speak(comboTarget);
@@ -1291,16 +1329,6 @@
             showCheckpoint();
           }
         });
-      } else if (val.length >= comboTarget.length){
-        targetWrap.classList.add('error');
-        typeInput.disabled = true;
-        feedbackTimeout = setTimeout(function(){
-          targetWrap.classList.remove('error');
-          typeInput.value = '';
-          renderComboTarget('');
-          typeInput.disabled = false;
-          typeInput.focus();
-        }, 500);
       }
       return;
     }
