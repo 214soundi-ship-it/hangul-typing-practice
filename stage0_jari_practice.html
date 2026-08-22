@@ -633,6 +633,14 @@
           <button type="button" class="btn btn-primary" id="nextBtn">다음으로</button>
         </div>
       </div>
+
+      <div class="checkpoint" id="modeChoiceBox">
+        <div class="checkpoint-title">기본자리, 어떻게 연습할까요?</div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="modeNormalBtn">✏️ 일반 연습</button>
+          <button type="button" class="btn btn-primary" id="modeGameBtn">🎮 게임으로 연습</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -801,6 +809,9 @@
   var checkpointBox = document.getElementById('checkpointBox');
   var moreBtn = document.getElementById('moreBtn');
   var nextBtn = document.getElementById('nextBtn');
+  var modeChoiceBox = document.getElementById('modeChoiceBox');
+  var modeNormalBtn = document.getElementById('modeNormalBtn');
+  var modeGameBtn = document.getElementById('modeGameBtn');
 
   var heartsEl = document.getElementById('hearts');
   var gameScoreEl = document.getElementById('gameScore');
@@ -1165,8 +1176,44 @@
     var id = parseInt(chip.getAttribute('data-stage-id'), 10);
     var idx = STAGE_DEFS.findIndex(function(s){ return s.id === id; });
     if (idx < 0 || (STAGE && id === STAGE.id)) return;
+    if (id === 1){
+      showModeChoice(idx);
+      return;
+    }
     stageIdx = idx;
     loadStage(stageIdx);
+  });
+
+  function showModeChoice(idx){
+    checkpointBox.classList.remove('show');
+    keyDiagramWrap.style.display = 'none';
+    typeInput.style.display = 'none';
+    targetWrap.style.display = 'none';
+    advanceHint.classList.remove('show');
+    shiftHint.classList.remove('show');
+    modeChoiceBox.dataset.stageIdx = idx;
+    modeChoiceBox.classList.add('show');
+  }
+
+  function hideModeChoice(){
+    modeChoiceBox.classList.remove('show');
+    targetWrap.style.display = '';
+    typeInput.style.display = '';
+  }
+
+  modeNormalBtn.addEventListener('click', function(){
+    var idx = parseInt(modeChoiceBox.dataset.stageIdx, 10);
+    hideModeChoice();
+    stageIdx = idx;
+    loadStage(stageIdx);
+  });
+
+  modeGameBtn.addEventListener('click', function(){
+    hideModeChoice();
+    STAGE = STAGE_DEFS[0];
+    lastCompletionWasForward = false;
+    showScreen('game');
+    startGame();
   });
 
   /* ---------- 자판 / 손가락 다이어그램 ---------- */
