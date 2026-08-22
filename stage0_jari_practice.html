@@ -189,6 +189,11 @@
   .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
   .chip.current{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
   .chip.current .chip-n{color:#fff;}
+  .chip.clickable{cursor:pointer;}
+  .chip.clickable:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .chip.viewing{border-width:2px; border-color:var(--ink);}
+
+  .roadmap-hint{font-size:11px; color:var(--ink-soft); text-align:center; margin:-16px 0 20px;}
 
   .stage-note{
     font-size:12px;
@@ -519,6 +524,7 @@
   <div id="screen-practice" class="screen">
     <div class="card">
       <div class="roadmap" id="roadmap"></div>
+      <p class="roadmap-hint">✓ 표시된 단계를 눌러 언제든 다시 연습할 수 있어요.</p>
 
       <div class="card-head">
         <span class="type-badge" id="typeBadge">기본자리</span>
@@ -739,6 +745,8 @@
   var feedbackTimeout = null;
   var REPS_PER_KEY = 3;
   var itemRepCount = 0;
+  var maxUnlockedStage = 1;
+  var lastCompletionWasForward = true;
   var tickHandle = null;
   var sessionRecords = [];
 
@@ -920,6 +928,7 @@
     var progress = await loadProgress(code);
     completedStages = {};
     (progress.completedStages || []).forEach(function(id){ completedStages[id] = true; });
+    maxUnlockedStage = progress.nextStage;
 
     if (progress.nextStage > STAGE_DEFS.length){
       showFinalSummary();
@@ -1006,16 +1015,30 @@
   });
 
   /* ---------- 로드맵 ---------- */
-  function renderRoadmap(currentId){
+  function renderRoadmap(){
     roadmapEl.innerHTML = STAGE_DEFS.map(function(s){
+      var isDone = !!completedStages[s.id];
+      var isUnlocked = isDone || s.id <= maxUnlockedStage;
       var cls = 'chip';
-      if (completedStages[s.id]) cls += ' done';
-      else if (s.id === currentId) cls += ' current';
-      else if (s.id > currentId) cls += ' locked';
-      var mark = completedStages[s.id] ? '✓' : (s.id > currentId ? '🔒' : (s.id + '단계'));
-      return '<div class="' + cls + '"><span class="chip-n">' + mark + '</span>' + s.name + '</div>';
+      if (isDone) cls += ' done';
+      else if (s.id === maxUnlockedStage) cls += ' current';
+      else if (!isUnlocked) cls += ' locked';
+      if (STAGE && s.id === STAGE.id) cls += ' viewing';
+      if (isUnlocked) cls += ' clickable';
+      var mark = isDone ? '✓' : (!isUnlocked ? '🔒' : (s.id + '단계'));
+      return '<div class="' + cls + '" data-stage-id="' + s.id + '"><span class="chip-n">' + mark + '</span>' + s.name + '</div>';
     }).join('');
   }
+
+  roadmapEl.addEventListener('click', function(e){
+    var chip = e.target.closest ? e.target.closest('.chip.clickable') : null;
+    if (!chip || !roadmapEl.contains(chip)) return;
+    var id = parseInt(chip.getAttribute('data-stage-id'), 10);
+    var idx = STAGE_DEFS.findIndex(function(s){ return s.id === id; });
+    if (idx < 0 || (STAGE && id === STAGE.id)) return;
+    stageIdx = idx;
+    loadStage(stageIdx);
+  });
 
   /* ---------- 자판 / 손가락 다이어그램 ---------- */
   function renderKeyboard(activeKey){
@@ -1062,7 +1085,7 @@
     statAcc.textContent = '100%';
     statFix.textContent = '0';
     stageNote.textContent = (STAGE.id === 4) ? '양손 검지가 안쪽으로 뻗어서 짚는, 자판 한가운데 자리입니다.' : '';
-    renderRoadmap(STAGE.id);
+    renderRoadmap();
     loadKeyItem();
   }
 
@@ -1166,30 +1189,46 @@
     };
     sessionRecords.push(record);
     completedStages[STAGE.id] = true;
+    lastCompletionWasForward = (STAGE.id + 1) > maxUnlockedStage;
 
     await saveStageRecord(currentCode, record);
-    await saveProgress(currentCode, {
-      completedStages: Object.keys(completedStages).map(Number),
-      nextStage: STAGE.id + 1
-    });
+    if (lastCompletionWasForward){
+      maxUnlockedStage = STAGE.id + 1;
+      await saveProgress(currentCode, {
+        completedStages: Object.keys(completedStages).map(Number),
+        nextStage: maxUnlockedStage
+      });
+    }
 
     if (STAGE.hasGame){
       showScreen('game');
       startGame();
     } else {
-      proceedAfterStage();
+      proceedAfterStage(lastCompletionWasForward);
     }
   }
 
-  function proceedAfterStage(){
-    var nextIdx = STAGE_DEFS.findIndex(function(s){ return s.id === STAGE.id + 1; });
-    if (nextIdx >= 0){
-      stageIdx = nextIdx;
-      showScreen('practice');
-      loadStage(stageIdx);
-    } else {
-      showFinalSummary();
+  function proceedAfterStage(isForward){
+    if (isForward){
+      var nextIdx = STAGE_DEFS.findIndex(function(s){ return s.id === STAGE.id + 1; });
+      if (nextIdx >= 0){
+        stageIdx = nextIdx;
+        showScreen('practice');
+        loadStage(stageIdx);
+      } else {
+        showFinalSummary();
+      }
+      return;
     }
+    // 복습 완료 → 실제 진행 위치(maxUnlockedStage)로 돌아감
+    if (maxUnlockedStage > STAGE_DEFS.length){
+      showFinalSummary();
+      return;
+    }
+    var resumeIdx = STAGE_DEFS.findIndex(function(s){ return s.id === maxUnlockedStage; });
+    stageIdx = resumeIdx >= 0 ? resumeIdx : 0;
+    showScreen('practice');
+    loadStage(stageIdx);
   }
 
   /* ---------- 소나기 게임 ---------- */
@@ -1299,7 +1338,7 @@
     gameActive = false;
     if (gameSpawnHandle) clearInterval(gameSpawnHandle);
     if (gameRAF) cancelAnimationFrame(gameRAF);
-    proceedAfterStage();
+    proceedAfterStage(lastCompletionWasForward);
   });
 
   /* ---------- 전체 완료 요약 ---------- */
@@ -1343,6 +1382,7 @@
   retryAllBtn.addEventListener('click', async function(){
     completedStages = {};
     sessionRecords = [];
+    maxUnlockedStage = 1;
     await saveProgress(currentCode, {completedStages: [], nextStage: 1});
     stageIdx = 0;
     showScreen('practice');
