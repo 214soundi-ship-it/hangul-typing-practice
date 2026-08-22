@@ -487,6 +487,12 @@
       <button type="button" class="link-btn" id="toggleSelfRegister">명단에 내 이름이 없어요</button>
       <div class="self-register" id="selfRegisterBox">
         <div class="field">
+          <label for="selfSection">분반</label>
+          <select id="selfSection">
+            <option value="">분반을 선택하세요</option>
+          </select>
+        </div>
+        <div class="field">
           <label for="selfStudentId">학번</label>
           <input type="text" id="selfStudentId" placeholder="예: 2026100001" autocomplete="off" inputmode="numeric" />
         </div>
@@ -661,6 +667,7 @@
   var historyBtn = document.getElementById('historyBtn');
   var toggleSelfRegister = document.getElementById('toggleSelfRegister');
   var selfRegisterBox = document.getElementById('selfRegisterBox');
+  var selfSection = document.getElementById('selfSection');
   var selfStudentId = document.getElementById('selfStudentId');
   var selfName = document.getElementById('selfName');
   var selfRegisterError = document.getElementById('selfRegisterError');
@@ -777,8 +784,9 @@
         sectionSelect.innerHTML = '<option value="">등록된 분반이 없습니다</option>';
         return;
       }
-      sectionSelect.innerHTML = '<option value="">분반을 선택하세요</option>' +
-        sections.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      var sectionOptions = sections.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      sectionSelect.innerHTML = '<option value="">분반을 선택하세요</option>' + sectionOptions;
+      selfSection.innerHTML = '<option value="">분반을 선택하세요</option>' + sectionOptions;
     } catch (err){
       console.error('학생 명단 불러오기 실패:', err);
       sectionSelect.innerHTML = '<option value="">명단을 불러오지 못했습니다</option>';
@@ -943,7 +951,7 @@
   });
 
   selfRegisterBtn.addEventListener('click', async function(){
-    var section = sectionSelect.value;
+    var section = selfSection.value;
     var studentId = selfStudentId.value.trim();
     var name = selfName.value.trim();
     if (!section || !studentId || !name){
