@@ -460,7 +460,7 @@
     <div class="card">
       <div class="instructions">
         <div class="instructions-title">📋 이렇게 진행됩니다</div>
-        1. 분반과 이름을 선택하고 연습을 시작하세요.<br/>
+        1. 분반과 이름을 선택하고, 본인 학번 뒷자리 4자리로 확인해 주세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
         3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.
       </div>
@@ -476,7 +476,12 @@
           <option value="">먼저 분반을 선택하세요</option>
         </select>
       </div>
+      <div class="field" id="verifyField" style="display:none;">
+        <label for="verifySuffix">본인 확인 · 학번 뒷자리 4자리</label>
+        <input type="text" id="verifySuffix" placeholder="예: 0137" autocomplete="off" inputmode="numeric" maxlength="4" />
+      </div>
       <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
+      <div class="error-text" id="verifyError">학번 뒷자리 4자리가 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
       <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
       <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
 
@@ -648,6 +653,9 @@
   var sectionSelect = document.getElementById('sectionSelect');
   var nameSelect = document.getElementById('nameSelect');
   var codeError = document.getElementById('codeError');
+  var verifyField = document.getElementById('verifyField');
+  var verifySuffix = document.getElementById('verifySuffix');
+  var verifyError = document.getElementById('verifyError');
   var startBtn = document.getElementById('startBtn');
   var historyBtn = document.getElementById('historyBtn');
   var toggleSelfRegister = document.getElementById('toggleSelfRegister');
@@ -697,6 +705,7 @@
   var currentCode = '';
   var currentName = '';
   var studentsBySection = {};
+  var studentIdSuffixByCode = {};
   var completedStages = {};
   var stageIdx = 0;
   var STAGE = null;
@@ -714,6 +723,9 @@
   sectionSelect.addEventListener('change', function(){
     var section = sectionSelect.value;
     var list = studentsBySection[section] || [];
+    verifyField.style.display = 'none';
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
     if (!section || list.length === 0){
       nameSelect.innerHTML = '<option value="">먼저 분반을 선택하세요</option>';
       nameSelect.disabled = true;
@@ -722,6 +734,12 @@
     nameSelect.innerHTML = '<option value="">이름을 선택하세요</option>' +
       list.map(function(s){ return '<option value="' + s.code + '">' + s.name + '</option>'; }).join('');
     nameSelect.disabled = false;
+  });
+
+  nameSelect.addEventListener('change', function(){
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
+    verifyField.style.display = nameSelect.value ? 'block' : 'none';
   });
 
   if (tickHandle) clearInterval(tickHandle);
@@ -743,13 +761,15 @@
       return;
     }
     try{
-      var res = await sb.from('students').select('section, name, participant_code').order('name');
+      var res = await sb.from('students').select('section, name, participant_code, student_id').order('name');
       if (res.error) throw res.error;
       var rows = res.data || [];
       studentsBySection = {};
+      studentIdSuffixByCode = {};
       rows.forEach(function(r){
         if (!studentsBySection[r.section]) studentsBySection[r.section] = [];
         studentsBySection[r.section].push({name: r.name, code: r.participant_code});
+        studentIdSuffixByCode[r.participant_code] = String(r.student_id).slice(-4);
       });
       var sections = Object.keys(studentsBySection).sort();
       if (sections.length === 0){
@@ -886,10 +906,22 @@
     loadStage(stageIdx);
   }
 
+  function verifyIdentity(code){
+    var expected = studentIdSuffixByCode[code];
+    var entered = verifySuffix.value.trim();
+    if (!expected || entered !== expected){
+      verifyError.style.display = 'block';
+      return false;
+    }
+    verifyError.style.display = 'none';
+    return true;
+  }
+
   startBtn.addEventListener('click', async function(){
     var code = getCode();
     if (!code){ codeError.style.display = 'block'; return; }
     codeError.style.display = 'none';
+    if (!verifyIdentity(code)) return;
     var name = nameSelect.options[nameSelect.selectedIndex].textContent;
     await enterProgram(code, name);
   });
@@ -898,6 +930,7 @@
     var code = getCode();
     if (!code){ codeError.style.display = 'block'; return; }
     codeError.style.display = 'none';
+    if (!verifyIdentity(code)) return;
     currentCode = code;
     currentName = nameSelect.options[nameSelect.selectedIndex].textContent;
     openHistory();
