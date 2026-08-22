@@ -189,7 +189,6 @@
   .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
   .chip.current{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
   .chip.current .chip-n{color:#fff;}
-  .chip.bonus{border-style:dashed;}
 
   .stage-note{
     font-size:12px;
@@ -590,15 +589,15 @@
   /* ---------- 자판 데이터 ---------- */
   var KEY_TO_JAMO = {
     q:'ㅂ', w:'ㅈ', e:'ㄷ', r:'ㄱ', t:'ㅅ', y:'ㅛ', u:'ㅕ', i:'ㅑ', o:'ㅐ', p:'ㅔ',
-    a:'ㅁ', s:'ㄴ', d:'ㅇ', f:'ㄹ', g:'ㅎ', h:'ㅗ', j:'ㅓ', k:'ㅏ', l:'ㅣ',
-    z:'ㅋ', x:'ㅌ', c:'ㅊ', v:'ㅍ', b:'ㅠ', n:'ㅜ', m:'ㅡ'
+    a:'ㅁ', s:'ㄴ', d:'ㅇ', f:'ㄹ', g:'ㅎ', h:'ㅗ', j:'ㅓ', k:'ㅏ', l:'ㅣ', ';':';',
+    z:'ㅋ', x:'ㅌ', c:'ㅊ', v:'ㅍ', b:'ㅠ', n:'ㅜ', m:'ㅡ', ',':',', '.':'.', '/':'/'
   };
   var KEY_META = {
     a:{hand:'left',finger:'pinky',reach:false},   s:{hand:'left',finger:'ring',reach:false},
     d:{hand:'left',finger:'middle',reach:false},  f:{hand:'left',finger:'index',reach:false},
     g:{hand:'left',finger:'index',reach:true},    h:{hand:'right',finger:'index',reach:true},
     j:{hand:'right',finger:'index',reach:false},  k:{hand:'right',finger:'middle',reach:false},
-    l:{hand:'right',finger:'ring',reach:false},
+    l:{hand:'right',finger:'ring',reach:false},   ';':{hand:'right',finger:'pinky',reach:false},
     q:{hand:'left',finger:'pinky',reach:false},   w:{hand:'left',finger:'ring',reach:false},
     e:{hand:'left',finger:'middle',reach:false},  r:{hand:'left',finger:'index',reach:false},
     t:{hand:'left',finger:'index',reach:true},
@@ -608,23 +607,25 @@
     z:{hand:'left',finger:'pinky',reach:false},   x:{hand:'left',finger:'ring',reach:false},
     c:{hand:'left',finger:'middle',reach:false},  v:{hand:'left',finger:'index',reach:false},
     b:{hand:'left',finger:'index',reach:true},
-    n:{hand:'right',finger:'index',reach:true},   m:{hand:'right',finger:'index',reach:false}
+    n:{hand:'right',finger:'index',reach:true},   m:{hand:'right',finger:'index',reach:false},
+    ',':{hand:'right',finger:'middle',reach:false}, '.':{hand:'right',finger:'ring',reach:false},
+    '/':{hand:'right',finger:'pinky',reach:false}
   };
   var TOP_ROW = ['q','w','e','r','t','y','u','i','o','p'];
-  var HOME_ROW = ['a','s','d','f','g','h','j','k','l'];
-  var BOTTOM_ROW = ['z','x','c','v','b','n','m'];
+  var HOME_ROW = ['a','s','d','f','g','h','j','k','l',';'];
+  var BOTTOM_ROW = ['z','x','c','v','b','n','m',',','.','/'];
 
   var STAGE_DEFS = [
-    {id:1, name:'기본자리', keys:['a','s','d','f','g','h','j','k','l'], hasGame:true},
-    {id:2, name:'왼손 윗자리', keys:['q','w','e','r','t']},
-    {id:3, name:'오른손 윗자리', keys:['y','u','i','o','p']},
-    {id:4, name:'왼손 아랫자리', keys:['z','x','c','v','b']},
-    {id:5, name:'오른손 아랫자리', keys:['n','m']},
-    {id:6, name:'전체자리', keys:null},
-    {id:7, name:'가운데자리', bonus:true, keys:['t','g','b','y','h','n']}
+    {id:1, name:'기본자리', keys:['a','s','d','f','j','k','l',';'], hasGame:true},
+    {id:2, name:'왼손 윗자리', keys:['q','w','e','r']},
+    {id:3, name:'왼손 아랫자리', keys:['z','x','c','v']},
+    {id:4, name:'가운데자리', keys:['t','y','g','h','b','n']},
+    {id:5, name:'오른손 윗자리', keys:['u','i','o','p']},
+    {id:6, name:'오른손 아랫자리', keys:['m',',','.','/']},
+    {id:7, name:'전체자리', keys:null}
   ];
-  var ALL_KEYS = STAGE_DEFS.slice(0,5).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
-  STAGE_DEFS[5].keys = ALL_KEYS.slice();
+  var ALL_KEYS = STAGE_DEFS.slice(0,6).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
+  STAGE_DEFS[6].keys = ALL_KEYS.slice();
 
   var GAME_CHARS = STAGE_DEFS[0].keys.map(function(k){ return KEY_TO_JAMO[k]; });
 
@@ -983,12 +984,11 @@
   /* ---------- 로드맵 ---------- */
   function renderRoadmap(currentId){
     roadmapEl.innerHTML = STAGE_DEFS.map(function(s){
-      var cls = 'chip' + (s.bonus ? ' bonus' : '');
+      var cls = 'chip';
       if (completedStages[s.id]) cls += ' done';
       else if (s.id === currentId) cls += ' current';
       else if (s.id > currentId) cls += ' locked';
-      var numLabel = s.bonus ? '보너스' : (s.id + '단계');
-      var mark = completedStages[s.id] ? '✓' : (s.id > currentId ? '🔒' : numLabel);
+      var mark = completedStages[s.id] ? '✓' : (s.id > currentId ? '🔒' : (s.id + '단계'));
       return '<div class="' + cls + '"><span class="chip-n">' + mark + '</span>' + s.name + '</div>';
     }).join('');
   }
@@ -1034,7 +1034,7 @@
     statTime.textContent = '0.0초';
     statAcc.textContent = '100%';
     statFix.textContent = '0';
-    stageNote.textContent = STAGE.bonus ? '검지가 위·아래로 뻗어 나가는 자리만 모아 다시 연습합니다.' : '';
+    stageNote.textContent = (STAGE.id === 4) ? '양손 검지가 안쪽으로 뻗어서 짚는, 자판 한가운데 자리입니다.' : '';
     renderRoadmap(STAGE.id);
     loadKeyItem();
   }
