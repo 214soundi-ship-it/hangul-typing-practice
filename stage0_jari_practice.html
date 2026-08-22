@@ -460,7 +460,7 @@
     <div class="card">
       <div class="instructions">
         <div class="instructions-title">📋 이렇게 진행됩니다</div>
-        1. 분반과 이름을 선택하고, 본인 학번 뒷자리 4자리로 확인해 주세요.<br/>
+        1. 분반과 이름을 선택하고, 본인 학번 전체로 확인해 주세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
         3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.
       </div>
@@ -477,11 +477,11 @@
         </select>
       </div>
       <div class="field" id="verifyField" style="display:none;">
-        <label for="verifySuffix">본인 확인 · 학번 뒷자리 4자리</label>
-        <input type="text" id="verifySuffix" placeholder="예: 0137" autocomplete="off" inputmode="numeric" maxlength="4" />
+        <label for="verifySuffix">본인 확인 · 학번 전체</label>
+        <input type="text" id="verifySuffix" placeholder="예: 2026120137" autocomplete="off" inputmode="numeric" />
       </div>
       <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
-      <div class="error-text" id="verifyError">학번 뒷자리 4자리가 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
+      <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
       <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
       <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
 
@@ -705,7 +705,7 @@
   var currentCode = '';
   var currentName = '';
   var studentsBySection = {};
-  var studentIdSuffixByCode = {};
+  var studentIdByCode = {};
   var completedStages = {};
   var stageIdx = 0;
   var STAGE = null;
@@ -765,11 +765,11 @@
       if (res.error) throw res.error;
       var rows = res.data || [];
       studentsBySection = {};
-      studentIdSuffixByCode = {};
+      studentIdByCode = {};
       rows.forEach(function(r){
         if (!studentsBySection[r.section]) studentsBySection[r.section] = [];
         studentsBySection[r.section].push({name: r.name, code: r.participant_code});
-        studentIdSuffixByCode[r.participant_code] = String(r.student_id).slice(-4);
+        studentIdByCode[r.participant_code] = String(r.student_id);
       });
       var sections = Object.keys(studentsBySection).sort();
       if (sections.length === 0){
@@ -907,7 +907,7 @@
   }
 
   function verifyIdentity(code){
-    var expected = studentIdSuffixByCode[code];
+    var expected = studentIdByCode[code];
     var entered = verifySuffix.value.trim();
     if (!expected || entered !== expected){
       verifyError.style.display = 'block';
