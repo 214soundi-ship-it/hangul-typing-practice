@@ -679,9 +679,6 @@
 
   var GAME_CHARS = STAGE_DEFS[0].keys.map(function(k){ return KEY_TO_JAMO[k]; });
 
-  var BASE_KEY_SET = {};
-  STAGE_DEFS[0].keys.forEach(function(k){ BASE_KEY_SET[k] = true; });
-
   function shuffle(arr){
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--){
@@ -1113,7 +1110,7 @@
         var isActive = active.indexOf(k) !== -1;
         var cls = 'key';
         if (isActive) cls += ' key-active';
-        else if (!BASE_KEY_SET[k]) cls += ' key-dim';
+        else cls += ' key-dim';
         return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
     }
