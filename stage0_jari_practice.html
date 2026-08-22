@@ -77,6 +77,27 @@
     outline:none;
   }
   input[type="text"]:focus{border-color:var(--teal);}
+  select{
+    width:100%;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2357657A'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 13px center;
+    background-size:16px;
+    padding-right:36px;
+  }
+  select:focus{border-color:var(--teal);}
+  select:disabled{opacity:.55; cursor:not-allowed;}
+  select:not(:disabled){cursor:pointer;}
   .error-text{
     font-size:12px;
     color:var(--brick);
@@ -393,6 +414,29 @@
   th{color:var(--ink-soft); font-weight:600; font-size:11px;}
   .empty-note{font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0;}
 
+  .link-btn{
+    display:block;
+    width:100%;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:12.5px;
+    text-decoration:underline;
+    text-underline-offset:2px;
+    cursor:pointer;
+    padding:14px 0 0;
+    text-align:center;
+  }
+  .link-btn:hover{color:var(--teal);}
+  .self-register{
+    display:none;
+    margin-top:14px;
+    padding-top:16px;
+    border-top:1px dashed var(--border);
+  }
+  .self-register.show{display:block;}
+
   .code-pill{
     display:inline-block;
     font-family:'IBM Plex Mono', monospace;
@@ -416,17 +460,39 @@
     <div class="card">
       <div class="instructions">
         <div class="instructions-title">📋 이렇게 진행됩니다</div>
-        1. 참여자 코드를 입력하고 연습을 시작하세요.<br/>
+        1. 분반과 이름을 선택하고 연습을 시작하세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
         3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.
       </div>
       <div class="field">
-        <label for="codeInput">참여자 코드</label>
-        <input type="text" id="codeInput" placeholder="예: P01" autocomplete="off" />
-        <div class="error-text" id="codeError">참여자 코드를 입력해 주세요.</div>
+        <label for="sectionSelect">분반</label>
+        <select id="sectionSelect">
+          <option value="">분반을 선택하세요</option>
+        </select>
       </div>
+      <div class="field">
+        <label for="nameSelect">이름</label>
+        <select id="nameSelect" disabled>
+          <option value="">먼저 분반을 선택하세요</option>
+        </select>
+      </div>
+      <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
       <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
       <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
+
+      <button type="button" class="link-btn" id="toggleSelfRegister">명단에 내 이름이 없어요</button>
+      <div class="self-register" id="selfRegisterBox">
+        <div class="field">
+          <label for="selfStudentId">학번</label>
+          <input type="text" id="selfStudentId" placeholder="예: 2026100001" autocomplete="off" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label for="selfName">이름</label>
+          <input type="text" id="selfName" placeholder="이름을 입력하세요" autocomplete="off" />
+        </div>
+        <div class="error-text" id="selfRegisterError">분반 선택 후, 학번과 이름을 모두 입력해 주세요.</div>
+        <button type="button" class="btn btn-ghost" id="selfRegisterBtn">직접 등록하고 시작하기</button>
+      </div>
     </div>
   </div>
 
@@ -579,10 +645,17 @@
   }
 
   /* ---------- DOM 참조 ---------- */
-  var codeInput = document.getElementById('codeInput');
+  var sectionSelect = document.getElementById('sectionSelect');
+  var nameSelect = document.getElementById('nameSelect');
   var codeError = document.getElementById('codeError');
   var startBtn = document.getElementById('startBtn');
   var historyBtn = document.getElementById('historyBtn');
+  var toggleSelfRegister = document.getElementById('toggleSelfRegister');
+  var selfRegisterBox = document.getElementById('selfRegisterBox');
+  var selfStudentId = document.getElementById('selfStudentId');
+  var selfName = document.getElementById('selfName');
+  var selfRegisterError = document.getElementById('selfRegisterError');
+  var selfRegisterBtn = document.getElementById('selfRegisterBtn');
 
   var roadmapEl = document.getElementById('roadmap');
   var typeBadge = document.getElementById('typeBadge');
@@ -622,6 +695,8 @@
 
   /* ---------- 상태 ---------- */
   var currentCode = '';
+  var currentName = '';
+  var studentsBySection = {};
   var completedStages = {};
   var stageIdx = 0;
   var STAGE = null;
@@ -634,10 +709,19 @@
   var tickHandle = null;
   var sessionRecords = [];
 
-  function getCode(){ return codeInput.value.trim(); }
+  function getCode(){ return nameSelect.value; }
 
-  codeInput.addEventListener('keydown', function(e){
-    if (e.key === 'Enter') startBtn.click();
+  sectionSelect.addEventListener('change', function(){
+    var section = sectionSelect.value;
+    var list = studentsBySection[section] || [];
+    if (!section || list.length === 0){
+      nameSelect.innerHTML = '<option value="">먼저 분반을 선택하세요</option>';
+      nameSelect.disabled = true;
+      return;
+    }
+    nameSelect.innerHTML = '<option value="">이름을 선택하세요</option>' +
+      list.map(function(s){ return '<option value="' + s.code + '">' + s.name + '</option>'; }).join('');
+    nameSelect.disabled = false;
   });
 
   if (tickHandle) clearInterval(tickHandle);
@@ -651,6 +735,35 @@
   var sb = (window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+
+  /* ---------- 학생 명단 (분반/이름 선택) ---------- */
+  async function loadStudents(){
+    if (!sb){
+      sectionSelect.innerHTML = '<option value="">명단을 불러올 수 없습니다</option>';
+      return;
+    }
+    try{
+      var res = await sb.from('students').select('section, name, participant_code').order('name');
+      if (res.error) throw res.error;
+      var rows = res.data || [];
+      studentsBySection = {};
+      rows.forEach(function(r){
+        if (!studentsBySection[r.section]) studentsBySection[r.section] = [];
+        studentsBySection[r.section].push({name: r.name, code: r.participant_code});
+      });
+      var sections = Object.keys(studentsBySection).sort();
+      if (sections.length === 0){
+        sectionSelect.innerHTML = '<option value="">등록된 분반이 없습니다</option>';
+        return;
+      }
+      sectionSelect.innerHTML = '<option value="">분반을 선택하세요</option>' +
+        sections.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
+    } catch (err){
+      console.error('학생 명단 불러오기 실패:', err);
+      sectionSelect.innerHTML = '<option value="">명단을 불러오지 못했습니다</option>';
+    }
+  }
+  loadStudents();
 
   async function loadProgress(code){
     if (sb){
@@ -755,11 +868,9 @@
   }
 
   /* ---------- 시작 / 기록 버튼 ---------- */
-  startBtn.addEventListener('click', async function(){
-    var code = getCode();
-    if (!code){ codeError.style.display = 'block'; return; }
-    codeError.style.display = 'none';
+  async function enterProgram(code, name){
     currentCode = code;
+    currentName = name;
 
     var progress = await loadProgress(code);
     completedStages = {};
@@ -773,6 +884,14 @@
     stageIdx = idx >= 0 ? idx : 0;
     showScreen('practice');
     loadStage(stageIdx);
+  }
+
+  startBtn.addEventListener('click', async function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    var name = nameSelect.options[nameSelect.selectedIndex].textContent;
+    await enterProgram(code, name);
   });
 
   historyBtn.addEventListener('click', function(){
@@ -780,7 +899,52 @@
     if (!code){ codeError.style.display = 'block'; return; }
     codeError.style.display = 'none';
     currentCode = code;
+    currentName = nameSelect.options[nameSelect.selectedIndex].textContent;
     openHistory();
+  });
+
+  /* ---------- 명단에 없는 학생 직접 등록 ---------- */
+  toggleSelfRegister.addEventListener('click', function(){
+    selfRegisterBox.classList.toggle('show');
+  });
+
+  selfRegisterBtn.addEventListener('click', async function(){
+    var section = sectionSelect.value;
+    var studentId = selfStudentId.value.trim();
+    var name = selfName.value.trim();
+    if (!section || !studentId || !name){
+      selfRegisterError.style.display = 'block';
+      return;
+    }
+    selfRegisterError.style.display = 'none';
+    selfRegisterBtn.disabled = true;
+    selfRegisterBtn.textContent = '등록 중...';
+
+    var code = section + '-S' + studentId;
+    try{
+      if (sb){
+        var ins = await sb.from('students').insert({
+          section: section,
+          student_id: studentId,
+          name: name,
+          participant_code: code,
+          self_registered: true
+        });
+        if (ins.error && ins.error.code !== '23505'){ throw ins.error; }
+        if (ins.error && ins.error.code === '23505'){
+          // 이미 같은 학번으로 등록된 적 있음 → 기존 코드 재사용
+          var found = await sb.from('students').select('participant_code, name')
+            .eq('student_id', studentId).maybeSingle();
+          if (found.data){ code = found.data.participant_code; name = found.data.name; }
+        }
+      }
+    } catch (err){
+      console.error('직접 등록 실패:', err);
+    }
+
+    selfRegisterBtn.disabled = false;
+    selfRegisterBtn.textContent = '직접 등록하고 시작하기';
+    await enterProgram(code, name);
   });
 
   /* ---------- 로드맵 ---------- */
@@ -1106,7 +1270,7 @@
   backFromHistoryBtn.addEventListener('click', function(){ showScreen('start'); });
 
   async function openHistory(){
-    historyCodeLabel.textContent = currentCode;
+    historyCodeLabel.textContent = currentName || currentCode;
     historyContent.innerHTML = '<p class="empty-note">기록을 불러오는 중입니다...</p>';
     showScreen('history');
 
