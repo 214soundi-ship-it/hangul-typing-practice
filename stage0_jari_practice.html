@@ -220,15 +220,11 @@
   }
   .target-wrap.success{background:var(--teal-light);}
   .target-wrap.error{background:var(--brick-light);}
-
-  .rep-dots{display:flex; justify-content:center; gap:7px; margin:0 0 14px;}
-  .rep-dots .dot{
-    width:10px; height:10px;
-    border-radius:50%;
-    background:var(--border);
-    transition:background-color .15s ease, transform .15s ease;
-  }
-  .rep-dots .dot.filled{background:var(--teal); transform:scale(1.15);}
+  .target-text.combo{font-size:48px;}
+  .target-text .ch{transition:color .1s;}
+  .target-text .ch.correct{color:var(--teal);}
+  .target-text .ch.wrong{color:var(--brick); text-decoration:underline wavy var(--brick);}
+  .target-text .ch.pending{color:var(--ink);}
 
   .legend{font-size:11px; color:var(--ink-soft); text-align:center; margin:0 0 18px;}
   .legend .legend-ok{color:var(--teal); font-weight:600;}
@@ -356,6 +352,29 @@
     font-size:19px;
   }
   .stat-label{font-size:12px; color:var(--ink-soft);}
+
+  .advance-hint{
+    display:none;
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    text-align:center;
+    margin:-4px 0 14px;
+  }
+  .advance-hint.show{display:block;}
+
+  .checkpoint{
+    display:none;
+    text-align:center;
+    padding-top:8px;
+  }
+  .checkpoint.show{display:block;}
+  .checkpoint-title{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:18px;
+    margin-bottom:16px;
+  }
 
   /* 소나기 게임 */
   .game-stats{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
@@ -535,18 +554,27 @@
       <div class="legend"><span class="legend-ok">초록</span> = 맞음 · <span class="legend-bad">빨강</span> = 틀림</div>
 
       <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
-      <div class="rep-dots" id="repDots"></div>
+      <p class="advance-hint" id="advanceHint">스페이스바를 눌러 다음으로 넘어가세요</p>
 
-      <div class="kbd" id="kbd"></div>
-      <div class="hands" id="hands"></div>
-      <div class="spacebar"></div>
+      <div id="keyDiagramWrap">
+        <div class="kbd" id="kbd"></div>
+        <div class="hands" id="hands"></div>
+        <div class="spacebar"></div>
+      </div>
 
       <input type="text" class="type-input" id="typeInput" placeholder="강조된 자리를 입력하세요" autocomplete="off" />
 
       <div class="stats-bar">
-        <div class="stat"><span class="stat-value" id="statTime">0.0초</span><span class="stat-label">진행 시간</span></div>
         <div class="stat"><span class="stat-value" id="statAcc">100%</span><span class="stat-label">정확도</span></div>
         <div class="stat"><span class="stat-value" id="statFix">0</span><span class="stat-label">오타 수</span></div>
+      </div>
+
+      <div class="checkpoint" id="checkpointBox">
+        <div class="checkpoint-title">🎉 기본자리 연습을 마쳤어요!</div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="moreBtn">더 연습하기</button>
+          <button type="button" class="btn btn-primary" id="nextBtn">다음으로</button>
+        </div>
       </div>
     </div>
   </div>
@@ -698,14 +726,17 @@
   var progFill = document.getElementById('progFill');
   var stageNote = document.getElementById('stageNote');
   var targetEl = document.getElementById('target');
-  var repDotsEl = document.getElementById('repDots');
   var targetWrap = document.getElementById('targetWrap');
+  var advanceHint = document.getElementById('advanceHint');
+  var keyDiagramWrap = document.getElementById('keyDiagramWrap');
   var kbdEl = document.getElementById('kbd');
   var handsEl = document.getElementById('hands');
   var typeInput = document.getElementById('typeInput');
-  var statTime = document.getElementById('statTime');
   var statAcc = document.getElementById('statAcc');
   var statFix = document.getElementById('statFix');
+  var checkpointBox = document.getElementById('checkpointBox');
+  var moreBtn = document.getElementById('moreBtn');
+  var nextBtn = document.getElementById('nextBtn');
 
   var heartsEl = document.getElementById('hearts');
   var gameScoreEl = document.getElementById('gameScore');
@@ -744,11 +775,31 @@
   var typoCount = 0;
   var feedbackTimeout = null;
   var REPS_PER_KEY = 3;
-  var itemRepCount = 0;
   var maxUnlockedStage = 1;
   var lastCompletionWasForward = true;
-  var tickHandle = null;
   var sessionRecords = [];
+  var comboMode = false;
+  var comboQueue = [];
+  var comboIdx = 0;
+  var awaitingAdvance = false;
+  var pendingAdvanceFn = null;
+
+  var SYLLABLES = ['마','머','미','나','너','니','아','어','이','라','러','리'];
+  var WORDS = ['머리','나라','아이','나이','미리','어머니'];
+  function buildComboQueue(){
+    return SYLLABLES.concat(WORDS);
+  }
+
+  function speak(text){
+    try{
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR';
+      u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    } catch (err){ console.error('발음 재생 실패:', err); }
+  }
 
   function getCode(){ return nameSelect.value; }
 
@@ -774,12 +825,6 @@
     verifyField.style.display = nameSelect.value ? 'block' : 'none';
   });
 
-  if (tickHandle) clearInterval(tickHandle);
-  tickHandle = setInterval(function(){
-    if (!screens.practice.classList.contains('active')) return;
-    if (!stageStartTime) return;
-    statTime.textContent = ((Date.now() - stageStartTime) / 1000).toFixed(1) + '초';
-  }, 100);
 
   /* ---------- 저장소 (Supabase) ---------- */
   var sb = (window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0)
@@ -1073,28 +1118,57 @@
   }
 
   /* ---------- 단계 / 문항 진행 ---------- */
+  function fixAdjacentDuplicates(arr){
+    for (var i = 1; i < arr.length; i++){
+      if (arr[i] === arr[i - 1]){
+        for (var j = i + 1; j < arr.length; j++){
+          if (arr[j] !== arr[i] && arr[j] !== arr[i - 1]){
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+            break;
+          }
+        }
+      }
+    }
+    return arr;
+  }
+
+  // 첫 바퀴는 정해진 순서로 1번씩, 그 다음부터는 무작위 순서로 나머지 반복 횟수를 채움
+  // (같은 글자를 연달아 3번 누르는 게 아니라, 총 REPS_PER_KEY번을 서로 다른 시점에 만나게 함)
+  function buildItemQueue(keys){
+    var extra = [];
+    for (var r = 1; r < REPS_PER_KEY; r++){ extra = extra.concat(keys); }
+    var queue = keys.concat(shuffle(extra));
+    return fixAdjacentDuplicates(queue);
+  }
+
   function loadStage(idx){
     STAGE = STAGE_DEFS[idx];
-    STAGE.runtimeKeys = (STAGE.id === 6) ? shuffle(ALL_KEYS) : STAGE.keys;
+    if (STAGE.id === 7){
+      var allRepeated = [];
+      for (var r = 0; r < REPS_PER_KEY; r++){ allRepeated = allRepeated.concat(ALL_KEYS); }
+      STAGE.runtimeKeys = fixAdjacentDuplicates(shuffle(allRepeated));
+    } else {
+      STAGE.runtimeKeys = buildItemQueue(STAGE.keys);
+    }
     itemIdx = 0;
+    comboMode = false;
+    comboIdx = 0;
+    comboQueue = (STAGE.id === 1) ? buildComboQueue() : [];
+    awaitingAdvance = false;
+    pendingAdvanceFn = null;
     stageStartTime = null;
     totalAttempts = 0;
     correctAttempts = 0;
     typoCount = 0;
-    statTime.textContent = '0.0초';
     statAcc.textContent = '100%';
     statFix.textContent = '0';
     stageNote.textContent = (STAGE.id === 4) ? '양손 검지가 안쪽으로 뻗어서 짚는, 자판 한가운데 자리입니다.' : '';
+    checkpointBox.classList.remove('show');
+    targetWrap.style.display = '';
+    typeInput.style.display = '';
+    keyDiagramWrap.style.display = '';
     renderRoadmap();
     loadKeyItem();
-  }
-
-  function renderRepDots(){
-    var dots = '';
-    for (var i = 0; i < REPS_PER_KEY; i++){
-      dots += '<span class="dot' + (i < itemRepCount ? ' filled' : '') + '"></span>';
-    }
-    repDotsEl.innerHTML = dots;
   }
 
   function loadKeyItem(){
@@ -1102,20 +1176,87 @@
     var meta = KEY_META[key];
     var ch = KEY_TO_JAMO[key];
 
-    itemRepCount = 0;
     targetWrap.classList.remove('success', 'error');
+    advanceHint.classList.remove('show');
     typeBadge.textContent = STAGE.name;
     progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
     progFill.style.width = Math.round((itemIdx / STAGE.runtimeKeys.length) * 100) + '%';
+    targetEl.className = 'target-text';
     targetEl.textContent = ch;
+    keyDiagramWrap.style.display = '';
     renderKeyboard(key);
     renderHands(meta.hand, meta.finger, meta.reach);
-    renderRepDots();
 
+    typeInput.placeholder = '강조된 자리를 입력하세요';
     typeInput.value = '';
     typeInput.disabled = false;
     typeInput.focus();
   }
+
+  function renderComboTarget(typed){
+    var target = comboQueue[comboIdx];
+    targetEl.innerHTML = '';
+    for (var i = 0; i < target.length; i++){
+      var span = document.createElement('span');
+      span.className = 'ch ' + (i < typed.length ? (typed[i] === target[i] ? 'correct' : 'wrong') : 'pending');
+      span.textContent = target[i];
+      targetEl.appendChild(span);
+    }
+  }
+
+  function loadComboItem(){
+    targetWrap.classList.remove('success', 'error');
+    advanceHint.classList.remove('show');
+    var phase = comboIdx < SYLLABLES.length ? '글자 만들기' : '낱말 만들기';
+    typeBadge.textContent = STAGE.name + ' · ' + phase;
+    progLabel.textContent = (comboIdx + 1) + ' / ' + comboQueue.length;
+    progFill.style.width = '100%';
+    targetEl.className = 'target-text combo';
+    renderComboTarget('');
+    keyDiagramWrap.style.display = 'none';
+
+    typeInput.placeholder = '위 글자를 그대로 입력하세요';
+    typeInput.value = '';
+    typeInput.disabled = false;
+    typeInput.focus();
+  }
+
+  function scheduleAdvance(fn){
+    awaitingAdvance = true;
+    advanceHint.classList.add('show');
+    pendingAdvanceFn = fn;
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (!awaitingAdvance) return;
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (!screens.practice.classList.contains('active')) return;
+    e.preventDefault();
+    awaitingAdvance = false;
+    advanceHint.classList.remove('show');
+    var fn = pendingAdvanceFn;
+    pendingAdvanceFn = null;
+    if (fn) fn();
+  });
+
+  function showCheckpoint(){
+    keyDiagramWrap.style.display = 'none';
+    typeInput.style.display = 'none';
+    targetWrap.style.display = 'none';
+    advanceHint.classList.remove('show');
+    checkpointBox.classList.add('show');
+  }
+
+  moreBtn.addEventListener('click', function(){
+    loadStage(stageIdx);
+  });
+
+  nextBtn.addEventListener('click', function(){
+    checkpointBox.classList.remove('show');
+    targetWrap.style.display = '';
+    typeInput.style.display = '';
+    finishStage();
+  });
 
   typeInput.addEventListener('input', function(){
     if (typeInput.disabled) return;
@@ -1123,41 +1264,75 @@
     if (!val) return;
     if (!stageStartTime) stageStartTime = Date.now();
 
+    if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+
+    if (comboMode){
+      var comboTarget = comboQueue[comboIdx];
+      renderComboTarget(val);
+      var pos = val.length - 1;
+      totalAttempts++;
+      if (pos < comboTarget.length && val[pos] === comboTarget[pos]){
+        correctAttempts++;
+      } else {
+        typoCount++;
+      }
+      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+      statFix.textContent = typoCount;
+
+      if (val === comboTarget){
+        targetWrap.classList.add('success');
+        typeInput.disabled = true;
+        speak(comboTarget);
+        scheduleAdvance(function(){
+          comboIdx++;
+          if (comboIdx < comboQueue.length){
+            loadComboItem();
+          } else {
+            showCheckpoint();
+          }
+        });
+      } else if (val.length >= comboTarget.length){
+        targetWrap.classList.add('error');
+        typeInput.disabled = true;
+        feedbackTimeout = setTimeout(function(){
+          targetWrap.classList.remove('error');
+          typeInput.value = '';
+          renderComboTarget('');
+          typeInput.disabled = false;
+          typeInput.focus();
+        }, 500);
+      }
+      return;
+    }
+
     var key = STAGE.runtimeKeys[itemIdx];
     var target = KEY_TO_JAMO[key];
     var typedChar = val[val.length - 1];
     totalAttempts++;
 
-    if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
-
     if (typedChar === target){
       correctAttempts++;
-      itemRepCount++;
       statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
       statFix.textContent = typoCount;
       targetWrap.classList.add('success');
       typeInput.disabled = true;
-      renderRepDots();
 
-      if (itemRepCount < REPS_PER_KEY){
-        feedbackTimeout = setTimeout(function(){
-          targetWrap.classList.remove('success');
-          typeInput.value = '';
-          typeInput.disabled = false;
-          typeInput.focus();
-        }, 300);
-        return;
-      }
-
-      feedbackTimeout = setTimeout(function(){
+      scheduleAdvance(function(){
         itemIdx++;
         if (itemIdx < STAGE.runtimeKeys.length){
           loadKeyItem();
+        } else if (STAGE.id === 1 && comboQueue.length > 0){
+          comboMode = true;
+          loadComboItem();
         } else {
           progFill.style.width = '100%';
-          finishStage();
+          if (STAGE.id === 1){
+            showCheckpoint();
+          } else {
+            finishStage();
+          }
         }
-      }, 450);
+      });
     } else {
       typoCount++;
       statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
