@@ -880,7 +880,7 @@
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = 'ko-KR';
-      u.rate = 0.85;
+      u.rate = 0.6;
       window.speechSynthesis.speak(u);
     } catch (err){ console.error('발음 재생 실패:', err); }
   }
