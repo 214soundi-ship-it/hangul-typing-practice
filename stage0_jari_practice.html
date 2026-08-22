@@ -216,6 +216,15 @@
   .target-wrap.success{background:var(--teal-light);}
   .target-wrap.error{background:var(--brick-light);}
 
+  .rep-dots{display:flex; justify-content:center; gap:7px; margin:0 0 14px;}
+  .rep-dots .dot{
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--border);
+    transition:background-color .15s ease, transform .15s ease;
+  }
+  .rep-dots .dot.filled{background:var(--teal); transform:scale(1.15);}
+
   .legend{font-size:11px; color:var(--ink-soft); text-align:center; margin:0 0 18px;}
   .legend .legend-ok{color:var(--teal); font-weight:600;}
   .legend .legend-bad{color:var(--brick); font-weight:600;}
@@ -256,7 +265,7 @@
     opacity:1;
     transition:all .15s ease;
   }
-  .kbd-row.dim .key{opacity:.32;}
+  .key.key-dim{opacity:.32;}
   .key.key-active{
     background:var(--teal);
     color:#fff;
@@ -520,6 +529,7 @@
       <div class="legend"><span class="legend-ok">초록</span> = 맞음 · <span class="legend-bad">빨강</span> = 틀림</div>
 
       <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
+      <div class="rep-dots" id="repDots"></div>
 
       <div class="kbd" id="kbd"></div>
       <div class="hands" id="hands"></div>
@@ -635,6 +645,9 @@
 
   var GAME_CHARS = STAGE_DEFS[0].keys.map(function(k){ return KEY_TO_JAMO[k]; });
 
+  var BASE_KEY_SET = {};
+  STAGE_DEFS[0].keys.forEach(function(k){ BASE_KEY_SET[k] = true; });
+
   function shuffle(arr){
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--){
@@ -679,6 +692,7 @@
   var progFill = document.getElementById('progFill');
   var stageNote = document.getElementById('stageNote');
   var targetEl = document.getElementById('target');
+  var repDotsEl = document.getElementById('repDots');
   var targetWrap = document.getElementById('targetWrap');
   var kbdEl = document.getElementById('kbd');
   var handsEl = document.getElementById('hands');
@@ -723,6 +737,8 @@
   var correctAttempts = 0;
   var typoCount = 0;
   var feedbackTimeout = null;
+  var REPS_PER_KEY = 3;
+  var itemRepCount = 0;
   var tickHandle = null;
   var sessionRecords = [];
 
@@ -1006,13 +1022,16 @@
     function rowHtml(keys){
       return keys.map(function(k){
         var active = (k === activeKey);
-        return '<div class="key' + (active ? ' key-active' : '') + '">' + KEY_TO_JAMO[k] + '</div>';
+        var cls = 'key';
+        if (active) cls += ' key-active';
+        else if (!BASE_KEY_SET[k]) cls += ' key-dim';
+        return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
     }
     kbdEl.innerHTML =
-      '<div class="kbd-row row-top dim">' + rowHtml(TOP_ROW) + '</div>' +
+      '<div class="kbd-row row-top">' + rowHtml(TOP_ROW) + '</div>' +
       '<div class="kbd-row row-home">' + rowHtml(HOME_ROW) + '</div>' +
-      '<div class="kbd-row row-bottom dim">' + rowHtml(BOTTOM_ROW) + '</div>';
+      '<div class="kbd-row row-bottom">' + rowHtml(BOTTOM_ROW) + '</div>';
   }
 
   function renderHands(hand, finger, reach){
@@ -1047,11 +1066,20 @@
     loadKeyItem();
   }
 
+  function renderRepDots(){
+    var dots = '';
+    for (var i = 0; i < REPS_PER_KEY; i++){
+      dots += '<span class="dot' + (i < itemRepCount ? ' filled' : '') + '"></span>';
+    }
+    repDotsEl.innerHTML = dots;
+  }
+
   function loadKeyItem(){
     var key = STAGE.runtimeKeys[itemIdx];
     var meta = KEY_META[key];
     var ch = KEY_TO_JAMO[key];
 
+    itemRepCount = 0;
     targetWrap.classList.remove('success', 'error');
     typeBadge.textContent = STAGE.name;
     progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
@@ -1059,6 +1087,7 @@
     targetEl.textContent = ch;
     renderKeyboard(key);
     renderHands(meta.hand, meta.finger, meta.reach);
+    renderRepDots();
 
     typeInput.value = '';
     typeInput.disabled = false;
@@ -1080,10 +1109,23 @@
 
     if (typedChar === target){
       correctAttempts++;
+      itemRepCount++;
       statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
       statFix.textContent = typoCount;
       targetWrap.classList.add('success');
       typeInput.disabled = true;
+      renderRepDots();
+
+      if (itemRepCount < REPS_PER_KEY){
+        feedbackTimeout = setTimeout(function(){
+          targetWrap.classList.remove('success');
+          typeInput.value = '';
+          typeInput.disabled = false;
+          typeInput.focus();
+        }, 300);
+        return;
+      }
+
       feedbackTimeout = setTimeout(function(){
         itemIdx++;
         if (itemIdx < STAGE.runtimeKeys.length){
