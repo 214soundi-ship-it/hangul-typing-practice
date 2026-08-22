@@ -248,23 +248,22 @@
   }
   .instructions b{color:var(--ink);}
 
-  /* 키보드 다이어그램 */
-  .kbd{margin:0 0 24px;}
-  .kbd-row{display:flex; justify-content:center; align-items:center; gap:7px; margin-bottom:7px;}
-  .kbd-row.row-top{margin-left:20px;}
-  .kbd-row.row-bottom{margin-left:40px;}
+  /* 키보드 다이어그램 (실제 키보드 전체 배열) */
+  .kbd{margin:0 0 24px; overflow-x:auto; padding-bottom:2px;}
+  .kbd-row{display:flex; justify-content:center; align-items:center; gap:4px; margin-bottom:4px;}
   .key{
-    width:38px; height:38px;
-    border-radius:8px;
+    width:30px; height:30px;
+    border-radius:7px;
     border:1.5px solid var(--border);
     background:var(--card);
     display:flex; align-items:center; justify-content:center;
     font-family:'Noto Sans KR', sans-serif;
     font-weight:600;
-    font-size:15px;
+    font-size:13px;
     color:var(--ink-soft);
     opacity:1;
     transition:all .15s ease;
+    flex:none;
   }
   .key.key-dim{opacity:.32;}
   .key.key-active{
@@ -274,23 +273,55 @@
     opacity:1;
     box-shadow:0 0 0 5px var(--teal-light);
     transform:scale(1.1);
+    z-index:1;
   }
   .key.key-dual{
     flex-direction:column;
     gap:0;
     line-height:1.05;
-    height:44px;
+    height:36px;
   }
-  .key-shift-label{font-size:10px; opacity:.6;}
-  .key-base-label{font-size:12px; opacity:.85;}
+  .key-shift-label{font-size:9px; opacity:.6;}
+  .key-base-label{font-size:11px; opacity:.85;}
   .key.key-active .key-shift-label.emph,
   .key.key-active .key-base-label.emph{
     font-weight:800;
-    font-size:15px;
+    font-size:13px;
     opacity:1;
   }
   .key.key-active .key-shift-label:not(.emph),
   .key.key-active .key-base-label:not(.emph){opacity:.55;}
+
+  /* 장식용 키(숫자·Tab·Caps·Enter·Shift·Ctrl·Alt) — 실제 키보드처럼 보이게 하는 배경 요소, 강조 대상 아님 */
+  .key.key-deco{
+    opacity:.4;
+    font-size:9px;
+    color:var(--ink-soft);
+    background:var(--paper);
+    cursor:default;
+  }
+  .kbd-row.row-num .key{width:24px; height:24px; font-size:9px;}
+  .kbd-row.row-num .key.key-back{width:44px;}
+  .key.key-tab{width:38px;}
+  .key.key-caps{width:44px;}
+  .key.key-enter{width:48px;}
+  .key.key-shiftside{width:52px;}
+  .key.key-ctrl, .key.key-alt{width:34px;}
+  .key.key-space{
+    width:180px;
+    border-radius:7px;
+  }
+  .key.key-space.key-space-active{
+    opacity:1;
+    background:var(--teal);
+    border-color:var(--teal);
+    box-shadow:0 0 0 5px var(--teal-light);
+    animation:spacePulse 1s ease-in-out infinite;
+  }
+  @keyframes spacePulse{
+    0%, 100%{ box-shadow:0 0 0 5px var(--teal-light); }
+    50%{ box-shadow:0 0 0 9px var(--teal-light); }
+  }
 
   .shift-hint{
     display:none;
@@ -586,7 +617,6 @@
       <div id="keyDiagramWrap">
         <div class="kbd" id="kbd"></div>
         <div class="hands" id="hands"></div>
-        <div class="spacebar"></div>
       </div>
 
       <input type="text" class="type-input" id="typeInput" placeholder="강조된 자리를 입력하세요" autocomplete="off" />
@@ -1164,10 +1194,21 @@
         return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
     }
+    var NUM_ROW = ['`','1','2','3','4','5','6','7','8','9','0','-','='];
+    function decoKey(label, extraCls){
+      return '<div class="key key-deco ' + extraCls + '">' + label + '</div>';
+    }
+
     kbdEl.innerHTML =
-      '<div class="kbd-row row-top">' + rowHtml(TOP_ROW) + '</div>' +
-      '<div class="kbd-row row-home">' + rowHtml(HOME_ROW) + '</div>' +
-      '<div class="kbd-row row-bottom">' + rowHtml(BOTTOM_ROW) + '</div>';
+      '<div class="kbd-row row-num">' + NUM_ROW.map(function(c){ return decoKey(c, ''); }).join('') + decoKey('⌫', 'key-back') + '</div>' +
+      '<div class="kbd-row row-top">' + decoKey('Tab', 'key-tab') + rowHtml(TOP_ROW) + '</div>' +
+      '<div class="kbd-row row-home">' + decoKey('Caps', 'key-caps') + rowHtml(HOME_ROW) + decoKey('Enter', 'key-enter') + '</div>' +
+      '<div class="kbd-row row-bottom">' + decoKey('Shift', 'key-shiftside') + rowHtml(BOTTOM_ROW) + decoKey('Shift', 'key-shiftside') + '</div>' +
+      '<div class="kbd-row row-space">' +
+        decoKey('Ctrl', 'key-ctrl') + decoKey('Alt', 'key-alt') +
+        '<div class="key key-deco key-space" id="spacebarKey"></div>' +
+        decoKey('Alt', 'key-alt') + decoKey('Ctrl', 'key-ctrl') +
+      '</div>';
   }
 
   function renderHands(metaList){
@@ -1306,6 +1347,8 @@
   function scheduleAdvance(fn){
     awaitingAdvance = true;
     advanceHint.classList.add('show');
+    var spacebarKey = document.getElementById('spacebarKey');
+    if (spacebarKey) spacebarKey.classList.add('key-space-active');
     pendingAdvanceFn = fn;
   }
 
@@ -1316,6 +1359,8 @@
     e.preventDefault();
     awaitingAdvance = false;
     advanceHint.classList.remove('show');
+    var spacebarKey = document.getElementById('spacebarKey');
+    if (spacebarKey) spacebarKey.classList.remove('key-space-active');
     var fn = pendingAdvanceFn;
     pendingAdvanceFn = null;
     if (fn) fn();
