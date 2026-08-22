@@ -250,7 +250,7 @@
 
   /* 키보드 다이어그램 */
   .kbd{margin:0 0 24px;}
-  .kbd-row{display:flex; justify-content:center; gap:7px; margin-bottom:7px;}
+  .kbd-row{display:flex; justify-content:center; align-items:center; gap:7px; margin-bottom:7px;}
   .kbd-row.row-top{margin-left:20px;}
   .kbd-row.row-bottom{margin-left:40px;}
   .key{
@@ -275,6 +275,32 @@
     box-shadow:0 0 0 5px var(--teal-light);
     transform:scale(1.1);
   }
+  .key.key-dual{
+    flex-direction:column;
+    gap:0;
+    line-height:1.05;
+    height:44px;
+  }
+  .key-shift-label{font-size:10px; opacity:.6;}
+  .key-base-label{font-size:12px; opacity:.85;}
+  .key.key-active .key-shift-label.emph,
+  .key.key-active .key-base-label.emph{
+    font-weight:800;
+    font-size:15px;
+    opacity:1;
+  }
+  .key.key-active .key-shift-label:not(.emph),
+  .key.key-active .key-base-label:not(.emph){opacity:.55;}
+
+  .shift-hint{
+    display:none;
+    font-size:12px;
+    font-weight:600;
+    color:var(--brick);
+    text-align:center;
+    margin:-4px 0 12px;
+  }
+  .shift-hint.show{display:block;}
 
   /* 손가락 다이어그램 */
   .hands{
@@ -554,6 +580,7 @@
       <div class="legend"><span class="legend-ok">초록</span> = 맞음 · <span class="legend-bad">빨강</span> = 틀림</div>
 
       <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
+      <p class="shift-hint" id="shiftHint">⇧ Shift를 누른 채 입력하세요</p>
       <p class="advance-hint" id="advanceHint">스페이스바를 눌러 다음으로 넘어가세요</p>
 
       <div id="keyDiagramWrap">
@@ -665,12 +692,21 @@
   var HOME_ROW = ['a','s','d','f','g','h','j','k','l',';'];
   var BOTTOM_ROW = ['z','x','c','v','b','n','m',',','.','/'];
 
+  // Shift + 키로 나오는 쌍자음·이중모음 (2벌식: ㄱㄷㅂㅅㅈ → ㄲㄸㅃㅆㅉ, ㅐㅔ → ㅒㅖ)
+  // 물리적으로 같은 키이므로, 항목 표기는 물리 키 문자 + '*' (예: 'q*' = Shift+q = ㅃ)
+  var SHIFT_JAMO = {q:'ㅃ', w:'ㅉ', e:'ㄸ', r:'ㄲ', t:'ㅆ', o:'ㅒ', p:'ㅖ'};
+
+  function isShiftItem(item){ return typeof item === 'string' && item.length === 2 && item[1] === '*'; }
+  function physicalKey(item){ return isShiftItem(item) ? item[0] : item; }
+  function jamoFor(item){ return isShiftItem(item) ? SHIFT_JAMO[physicalKey(item)] : KEY_TO_JAMO[item]; }
+  function metaFor(item){ return KEY_META[physicalKey(item)]; }
+
   var STAGE_DEFS = [
     {id:1, name:'기본자리', keys:['a','s','d','f','j','k','l',';'], hasGame:true},
-    {id:2, name:'왼손 윗자리', keys:['q','w','e','r']},
+    {id:2, name:'왼손 윗자리', keys:['q','q*','w','w*','e','e*','r','r*']},
     {id:3, name:'왼손 아랫자리', keys:['z','x','c','v']},
-    {id:4, name:'가운데자리', keys:['t','y','g','h','b','n']},
-    {id:5, name:'오른손 윗자리', keys:['u','i','o','p']},
+    {id:4, name:'가운데자리', keys:['t','t*','y','g','h','b','n']},
+    {id:5, name:'오른손 윗자리', keys:['u','i','o','o*','p','p*']},
     {id:6, name:'오른손 아랫자리', keys:['m',',','.','/']},
     {id:7, name:'전체자리', keys:null}
   ];
@@ -725,6 +761,7 @@
   var targetEl = document.getElementById('target');
   var targetWrap = document.getElementById('targetWrap');
   var advanceHint = document.getElementById('advanceHint');
+  var shiftHint = document.getElementById('shiftHint');
   var keyDiagramWrap = document.getElementById('keyDiagramWrap');
   var kbdEl = document.getElementById('kbd');
   var handsEl = document.getElementById('hands');
@@ -1103,14 +1140,27 @@
   });
 
   /* ---------- 자판 / 손가락 다이어그램 ---------- */
-  function renderKeyboard(activeKeys){
-    var active = Array.isArray(activeKeys) ? activeKeys : [activeKeys];
+  function renderKeyboard(activeItems){
+    var items = Array.isArray(activeItems) ? activeItems : [activeItems];
+    var activePhysical = items.map(physicalKey);
+    var activeShiftPhysical = items.filter(isShiftItem).map(physicalKey);
+
     function rowHtml(keys){
       return keys.map(function(k){
-        var isActive = active.indexOf(k) !== -1;
+        var isActive = activePhysical.indexOf(k) !== -1;
+        var isShiftActive = activeShiftPhysical.indexOf(k) !== -1;
         var cls = 'key';
         if (isActive) cls += ' key-active';
         else cls += ' key-dim';
+
+        if (SHIFT_JAMO[k]){
+          var shiftCls = 'key-shift-label' + (isShiftActive ? ' emph' : '');
+          var baseCls = 'key-base-label' + (isActive && !isShiftActive ? ' emph' : '');
+          return '<div class="' + cls + ' key-dual">' +
+            '<span class="' + shiftCls + '">' + SHIFT_JAMO[k] + '</span>' +
+            '<span class="' + baseCls + '">' + KEY_TO_JAMO[k] + '</span>' +
+          '</div>';
+        }
         return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
     }
@@ -1198,11 +1248,12 @@
 
   function loadKeyItem(){
     var key = STAGE.runtimeKeys[itemIdx];
-    var meta = KEY_META[key];
-    var ch = KEY_TO_JAMO[key];
+    var meta = metaFor(key);
+    var ch = jamoFor(key);
 
     targetWrap.classList.remove('success', 'error');
     advanceHint.classList.remove('show');
+    shiftHint.classList.toggle('show', isShiftItem(key));
     typeBadge.textContent = STAGE.name;
     progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
     progFill.style.width = Math.round((itemIdx / STAGE.runtimeKeys.length) * 100) + '%';
@@ -1232,6 +1283,7 @@
   function loadComboItem(){
     targetWrap.classList.remove('success', 'error');
     advanceHint.classList.remove('show');
+    shiftHint.classList.remove('show');
     var phase = comboIdx < SYLLABLES.length ? '글자 만들기' : '낱말 만들기';
     typeBadge.textContent = STAGE.name + ' · ' + phase;
     progLabel.textContent = (comboIdx + 1) + ' / ' + comboQueue.length;
@@ -1274,6 +1326,7 @@
     typeInput.style.display = 'none';
     targetWrap.style.display = 'none';
     advanceHint.classList.remove('show');
+    shiftHint.classList.remove('show');
     checkpointBox.classList.add('show');
   }
 
@@ -1331,7 +1384,7 @@
     }
 
     var key = STAGE.runtimeKeys[itemIdx];
-    var target = KEY_TO_JAMO[key];
+    var target = jamoFor(key);
     var typedChar = val[val.length - 1];
     totalAttempts++;
 
