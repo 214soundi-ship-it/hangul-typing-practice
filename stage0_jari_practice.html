@@ -691,13 +691,6 @@
         </div>
       </div>
 
-      <div class="checkpoint" id="modeChoiceBox">
-        <div class="checkpoint-title" id="modeChoiceTitle">기본자리, 어떻게 연습할까요?</div>
-        <div class="btn-row">
-          <button type="button" class="btn btn-ghost" id="modeNormalBtn">✏️ 일반 연습</button>
-          <button type="button" class="btn btn-primary" id="modeGameBtn">🎮 게임으로 연습</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -871,10 +864,6 @@
   var checkpointTitle = document.getElementById('checkpointTitle');
   var moreBtn = document.getElementById('moreBtn');
   var nextBtn = document.getElementById('nextBtn');
-  var modeChoiceBox = document.getElementById('modeChoiceBox');
-  var modeChoiceTitle = document.getElementById('modeChoiceTitle');
-  var modeNormalBtn = document.getElementById('modeNormalBtn');
-  var modeGameBtn = document.getElementById('modeGameBtn');
   var idleOverlay = document.getElementById('idleOverlay');
   var idleResumeBtn = document.getElementById('idleResumeBtn');
 
@@ -1364,59 +1353,17 @@
     }).join('');
   }
 
+  // 어느 단계 칩을 누르든(처음이든, 이미 마친 단계를 다시 보든) 항상 일반 연습부터
+  // 시작한다. 게임은 그 단계의 일반 연습(자모+조합 낱말)을 다 마쳐야 자동으로 이어짐
+  // (finishStage의 hasGame 분기) — 연습을 건너뛰고 게임만 골라서 할 수는 없게 함.
   roadmapEl.addEventListener('click', function(e){
     var chip = e.target.closest ? e.target.closest('.chip.clickable') : null;
     if (!chip || !roadmapEl.contains(chip)) return;
     var id = parseInt(chip.getAttribute('data-stage-id'), 10);
     var idx = STAGE_DEFS.findIndex(function(s){ return s.id === id; });
     if (idx < 0 || (STAGE && id === STAGE.id)) return;
-    // 처음 도전하는 단계는 곧장 일반 연습으로 시작하고(순차 학습 유지),
-    // 이미 한 번 마친 단계를 다시 볼 때만 일반/게임 중 고를 수 있게 함
-    if (completedStages[id]){
-      showModeChoice(idx);
-      return;
-    }
     stageIdx = idx;
     loadStage(stageIdx);
-  });
-
-  function showModeChoice(idx){
-    checkpointBox.classList.remove('show');
-    keyDiagramWrap.style.display = 'none';
-    typeInput.style.display = 'none';
-    targetWrap.style.display = 'none';
-    shiftHint.classList.remove('show');
-    modeChoiceBox.dataset.stageIdx = idx;
-    modeChoiceTitle.textContent = STAGE_DEFS[idx].name + ', 어떻게 연습할까요?';
-    modeChoiceBox.classList.add('show');
-    // 로드맵 강조가 "지금 보고 있는" 이 선택 화면을 가리키도록 갱신
-    // (그렇지 않으면 직전에 보던 다른 단계가 계속 진하게 표시되어 혼란스러움)
-    stageIdx = idx;
-    STAGE = STAGE_DEFS[idx];
-    renderRoadmap();
-  }
-
-  function hideModeChoice(){
-    modeChoiceBox.classList.remove('show');
-    targetWrap.style.display = '';
-    typeInput.style.display = '';
-  }
-
-  modeNormalBtn.addEventListener('click', function(){
-    var idx = parseInt(modeChoiceBox.dataset.stageIdx, 10);
-    hideModeChoice();
-    stageIdx = idx;
-    loadStage(stageIdx);
-  });
-
-  modeGameBtn.addEventListener('click', function(){
-    var idx = parseInt(modeChoiceBox.dataset.stageIdx, 10);
-    hideModeChoice();
-    stageIdx = idx;
-    STAGE = STAGE_DEFS[idx];
-    lastCompletionWasForward = false;
-    showScreen('game');
-    startGame();
   });
 
   /* ---------- 자판 / 손가락 다이어그램 ---------- */
