@@ -342,6 +342,16 @@
   }
   .shift-hint.show{display:block;}
 
+  .advance-hint{
+    display:none;
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    text-align:center;
+    margin:-4px 0 14px;
+  }
+  .advance-hint.show{display:block;}
+
   /* 손가락 다이어그램 */
   .hands{
     display:flex;
@@ -670,6 +680,7 @@
 
       <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
       <p class="shift-hint" id="shiftHint">⇧ Shift를 누른 채 입력하세요</p>
+      <p class="advance-hint" id="advanceHint">스페이스바를 눌러 다음으로 넘어가세요</p>
 
       <div id="keyDiagramWrap">
         <div class="kbd" id="kbd"></div>
@@ -854,6 +865,7 @@
   var targetEl = document.getElementById('target');
   var targetWrap = document.getElementById('targetWrap');
   var shiftHint = document.getElementById('shiftHint');
+  var advanceHint = document.getElementById('advanceHint');
   var keyDiagramWrap = document.getElementById('keyDiagramWrap');
   var kbdEl = document.getElementById('kbd');
   var handsEl = document.getElementById('hands');
@@ -906,6 +918,10 @@
   var correctAttempts = 0;
   var typoCount = 0;
   var feedbackTimeout = null;
+  // 정답 후 스페이스바를 눌러야 다음 문항으로 넘어가게 함 — 엄지손가락으로 스페이스바를
+  // 누르는 동작이 매 문항마다 손을 홈 포지션으로 되돌려놓는 역할을 하도록.
+  var awaitingAdvance = false;
+  var pendingAdvanceFn = null;
 
   // 무입력(자리 비움 등)이 길어지면 자동으로 멈추고, 쉰 시간은 정확도/속도 계산에서 제외한다.
   // 학생이 실제로 입력을 못 하게 막을 방법은 없지만(브라우저는 자리 이탈을 감지할 수 없음),
@@ -1050,9 +1066,15 @@
     idleCount++;
     isPaused = false;
     idleOverlay.classList.remove('show');
-    typeInput.disabled = false;
-    typeInput.value = '';
-    typeInput.focus();
+    if (awaitingAdvance){
+      // 정답을 맞힌 뒤 스페이스바를 기다리다 쉬어버린 경우 — 다시 입력할 필요 없이
+      // 그대로 스페이스바만 누르면 되게 둔다 (입력창을 새로 열지 않음).
+      typeInput.focus();
+    } else {
+      typeInput.disabled = false;
+      typeInput.value = '';
+      typeInput.focus();
+    }
     armIdleTimer();
   }
 
@@ -1499,6 +1521,9 @@
     isPaused = false;
     clearTimeout(idleTimer);
     idleOverlay.classList.remove('show');
+    awaitingAdvance = false;
+    pendingAdvanceFn = null;
+    advanceHint.classList.remove('show');
     statAcc.textContent = '100%';
     statFix.textContent = '0';
     stageNote.textContent = (STAGE.id === 4) ? '양손 검지가 안쪽으로 뻗어서 짚는, 자판 한가운데 자리입니다.' : '';
@@ -1516,6 +1541,7 @@
     var ch = jamoFor(key);
 
     targetWrap.classList.remove('success', 'error');
+    advanceHint.classList.remove('show');
     shiftHint.classList.toggle('show', isShiftItem(key));
     typeBadge.textContent = STAGE.name;
     progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
@@ -1546,6 +1572,7 @@
 
   function loadComboItem(){
     targetWrap.classList.remove('success', 'error');
+    advanceHint.classList.remove('show');
     shiftHint.classList.remove('show');
     var syllableCount = (STAGE_COMBO[STAGE.id] && STAGE_COMBO[STAGE.id].syllables.length) || 0;
     var phase = comboIdx < syllableCount ? '글자 만들기' : '낱말 만들기';
@@ -1569,14 +1596,33 @@
   }
 
   function scheduleAdvance(fn){
-    feedbackTimeout = setTimeout(fn, 450);
+    awaitingAdvance = true;
+    pendingAdvanceFn = fn;
+    advanceHint.classList.add('show');
+    var spacebarKey = document.getElementById('spacebarKey');
+    if (spacebarKey) spacebarKey.classList.add('key-space-active');
   }
+
+  document.addEventListener('keydown', function(e){
+    if (!awaitingAdvance) return;
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (!screens.practice.classList.contains('active')) return;
+    e.preventDefault();
+    awaitingAdvance = false;
+    advanceHint.classList.remove('show');
+    var spacebarKey = document.getElementById('spacebarKey');
+    if (spacebarKey) spacebarKey.classList.remove('key-space-active');
+    var fn = pendingAdvanceFn;
+    pendingAdvanceFn = null;
+    if (fn) fn();
+  });
 
   function showCheckpoint(){
     keyDiagramWrap.style.display = 'none';
     typeInput.style.display = 'none';
     targetWrap.style.display = 'none';
     shiftHint.classList.remove('show');
+    advanceHint.classList.remove('show');
     checkpointTitle.textContent = '🎉 ' + STAGE.name + ' 연습을 마쳤어요!';
     checkpointBox.classList.add('show');
     // 이 단계의 실제 연습은 여기서 끝난 것으로 본다 — 결과를 보고 "더 연습하기/다음으로"를
