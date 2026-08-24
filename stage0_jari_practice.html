@@ -692,7 +692,7 @@
       </div>
 
       <div class="checkpoint" id="modeChoiceBox">
-        <div class="checkpoint-title">기본자리, 어떻게 연습할까요?</div>
+        <div class="checkpoint-title" id="modeChoiceTitle">기본자리, 어떻게 연습할까요?</div>
         <div class="btn-row">
           <button type="button" class="btn btn-ghost" id="modeNormalBtn">✏️ 일반 연습</button>
           <button type="button" class="btn btn-primary" id="modeGameBtn">🎮 게임으로 연습</button>
@@ -704,8 +704,8 @@
   <!-- 소나기 게임 화면 -->
   <div id="screen-game" class="screen">
     <div class="card">
-      <div class="type-badge" style="margin-bottom:14px;">보너스 · 소나기 게임</div>
-      <p class="lede" style="margin-bottom:16px;">방금 배운 기본자리 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요. 시간이 지나면 조합 글자(빨간 글자)도 섞여서 떨어지고, 속도도 빨라져요.</p>
+      <div class="type-badge" style="margin-bottom:14px;" id="gameBadge">보너스 · 소나기 게임</div>
+      <p class="lede" style="margin-bottom:16px;" id="gameLede">방금 배운 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요. 시간이 지나면 조합 글자(빨간 글자)도 섞여서 떨어지고, 속도도 빨라져요.</p>
       <div class="game-stats">
         <div class="hearts" id="hearts"></div>
         <div class="game-score" id="gameScore">점수 0</div>
@@ -800,17 +800,20 @@
 
   var STAGE_DEFS = [
     {id:1, name:'기본자리', keys:['a','s','d','f','j','k','l',';'], hasGame:true},
-    {id:2, name:'왼손 윗자리', keys:['q','q*','w','w*','e','e*','r','r*']},
-    {id:3, name:'왼손 아랫자리', keys:['z','x','c','v']},
-    {id:4, name:'가운데자리', keys:['t','t*','y','g','h','b','n']},
-    {id:5, name:'오른손 윗자리', keys:['u','i','o','o*','p','p*']},
-    {id:6, name:'오른손 아랫자리', keys:['m',',','.','/']},
-    {id:7, name:'전체자리', keys:null}
+    {id:2, name:'왼손 윗자리', keys:['q','q*','w','w*','e','e*','r','r*'], hasGame:true},
+    {id:3, name:'왼손 아랫자리', keys:['z','x','c','v'], hasGame:true},
+    {id:4, name:'가운데자리', keys:['t','t*','y','g','h','b','n'], hasGame:true},
+    {id:5, name:'오른손 윗자리', keys:['u','i','o','o*','p','p*'], hasGame:true},
+    {id:6, name:'오른손 아랫자리', keys:['m',',','.','/'], hasGame:true},
+    {id:7, name:'전체자리', keys:null, hasGame:true}
   ];
   var ALL_KEYS = STAGE_DEFS.slice(0,6).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
   STAGE_DEFS[6].keys = ALL_KEYS.slice();
 
-  var GAME_CHARS = STAGE_DEFS[0].keys.map(function(k){ return KEY_TO_JAMO[k]; });
+  // 게임 화면에 떨어뜨릴 자모 목록 — 지금 STAGE가 어떤 단계든 그 단계의 자모로 계산
+  function gameChars(){
+    return STAGE.keys.map(jamoFor);
+  }
 
   function shuffle(arr){
     var a = arr.slice();
@@ -869,11 +872,13 @@
   var moreBtn = document.getElementById('moreBtn');
   var nextBtn = document.getElementById('nextBtn');
   var modeChoiceBox = document.getElementById('modeChoiceBox');
+  var modeChoiceTitle = document.getElementById('modeChoiceTitle');
   var modeNormalBtn = document.getElementById('modeNormalBtn');
   var modeGameBtn = document.getElementById('modeGameBtn');
   var idleOverlay = document.getElementById('idleOverlay');
   var idleResumeBtn = document.getElementById('idleResumeBtn');
 
+  var gameBadge = document.getElementById('gameBadge');
   var heartsEl = document.getElementById('hearts');
   var gameScoreEl = document.getElementById('gameScore');
   var gameArea = document.getElementById('gameArea');
@@ -1362,7 +1367,9 @@
     var id = parseInt(chip.getAttribute('data-stage-id'), 10);
     var idx = STAGE_DEFS.findIndex(function(s){ return s.id === id; });
     if (idx < 0 || (STAGE && id === STAGE.id)) return;
-    if (id === 1){
+    // 처음 도전하는 단계는 곧장 일반 연습으로 시작하고(순차 학습 유지),
+    // 이미 한 번 마친 단계를 다시 볼 때만 일반/게임 중 고를 수 있게 함
+    if (completedStages[id]){
       showModeChoice(idx);
       return;
     }
@@ -1377,8 +1384,9 @@
     targetWrap.style.display = 'none';
     shiftHint.classList.remove('show');
     modeChoiceBox.dataset.stageIdx = idx;
+    modeChoiceTitle.textContent = STAGE_DEFS[idx].name + ', 어떻게 연습할까요?';
     modeChoiceBox.classList.add('show');
-    // 로드맵 강조가 "지금 보고 있는" 이 선택 화면(기본자리)을 가리키도록 갱신
+    // 로드맵 강조가 "지금 보고 있는" 이 선택 화면을 가리키도록 갱신
     // (그렇지 않으면 직전에 보던 다른 단계가 계속 진하게 표시되어 혼란스러움)
     stageIdx = idx;
     STAGE = STAGE_DEFS[idx];
@@ -1399,8 +1407,10 @@
   });
 
   modeGameBtn.addEventListener('click', function(){
+    var idx = parseInt(modeChoiceBox.dataset.stageIdx, 10);
     hideModeChoice();
-    STAGE = STAGE_DEFS[0];
+    stageIdx = idx;
+    STAGE = STAGE_DEFS[idx];
     lastCompletionWasForward = false;
     showScreen('game');
     startGame();
@@ -1798,6 +1808,7 @@
   }
 
   function startGame(){
+    gameBadge.textContent = STAGE.name + ' · 소나기 게임';
     gameHearts = 3;
     gameScore = 0;
     gameActive = true;
@@ -1821,11 +1832,16 @@
   function spawnFalling(){
     if (!gameActive) return;
     var inPhase2 = (Date.now() - gameStartTime) >= GAME_PHASE2_AT;
-    var comboPool = STAGE_COMBO[1].syllables.concat(STAGE_COMBO[1].words);
-    var isCombo = inPhase2 && Math.random() < 0.35;
+    var combo = STAGE_COMBO[STAGE.id];
+    // 게임 입력창은 오타 누적 방지를 위해 3글자에서 자동으로 지워지므로(아래 gameInput
+    // 리스너 참고), 그보다 긴 낱말(예: 5음절 "고려대학교")은 떨어지는 게임에서는 빼고
+    // 차분히 치는 조합 연습 화면에만 남겨둔다.
+    var comboPool = combo ? combo.syllables.concat(combo.words).filter(function(w){ return w.length <= 3; }) : [];
+    var chars = gameChars();
+    var isCombo = inPhase2 && comboPool.length > 0 && Math.random() < 0.35;
     var text = isCombo
       ? comboPool[Math.floor(Math.random() * comboPool.length)]
-      : GAME_CHARS[Math.floor(Math.random() * GAME_CHARS.length)];
+      : chars[Math.floor(Math.random() * chars.length)];
 
     var el = document.createElement('div');
     el.className = 'falling' + (isCombo ? ' falling-combo' : '');
