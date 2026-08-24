@@ -901,6 +901,7 @@
   var STAGE = null;
   var itemIdx = 0;
   var stageStartTime = null;
+  var stageEndTime = null;
   var totalAttempts = 0;
   var correctAttempts = 0;
   var typoCount = 0;
@@ -1027,14 +1028,16 @@
 
   function armIdleTimer(){
     clearTimeout(idleTimer);
-    if (isPaused || !stageStartTime) return;
+    if (isPaused || !stageStartTime || stageEndTime) return;
     if (!screens.practice.classList.contains('active')) return;
+    if (checkpointBox.classList.contains('show')) return;
     idleTimer = setTimeout(pauseForIdle, IDLE_THRESHOLD_MS);
   }
 
   function pauseForIdle(){
-    if (isPaused || !stageStartTime) return;
+    if (isPaused || !stageStartTime || stageEndTime) return;
     if (!screens.practice.classList.contains('active')) return;
+    if (checkpointBox.classList.contains('show')) return;
     isPaused = true;
     idlePauseStart = Date.now();
     typeInput.disabled = true;
@@ -1487,6 +1490,7 @@
     comboIdx = 0;
     comboQueue = buildComboQueue(STAGE.id);
     stageStartTime = null;
+    stageEndTime = null;
     totalAttempts = 0;
     correctAttempts = 0;
     typoCount = 0;
@@ -1575,6 +1579,13 @@
     shiftHint.classList.remove('show');
     checkpointTitle.textContent = '🎉 ' + STAGE.name + ' 연습을 마쳤어요!';
     checkpointBox.classList.add('show');
+    // 이 단계의 실제 연습은 여기서 끝난 것으로 본다 — 결과를 보고 "더 연습하기/다음으로"를
+    // 고르는 동안 걸리는 시간은 그 단계의 기록(속도 등)에 포함시키지 않고, 이 화면에서는
+    // 무입력 자동 일시정지도 걸지 않는다(결과를 느긋하게 봐도 "쉬었다"로 잡히지 않게).
+    stageEndTime = Date.now();
+    isPaused = false;
+    clearTimeout(idleTimer);
+    idleOverlay.classList.remove('show');
   }
 
   moreBtn.addEventListener('click', function(){
@@ -1677,7 +1688,8 @@
   });
 
   async function finishStage(){
-    var timeSec = stageStartTime ? (Date.now() - stageStartTime) / 1000 : 0;
+    var endTime = stageEndTime || Date.now();
+    var timeSec = stageStartTime ? (endTime - stageStartTime) / 1000 : 0;
     var accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
     var record = {
       stageId: STAGE.id,
