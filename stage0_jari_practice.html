@@ -475,7 +475,23 @@
     margin:0 0 20px;
   }
 
-  /* 소나기 게임 */
+  /* 단어비 게임 */
+  .speed-select{display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .speed-label{font-size:12px; color:var(--ink-soft); margin-right:2px;}
+  .speed-btn{
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    background:var(--card);
+    border:1.5px solid var(--border);
+    border-radius:999px;
+    padding:5px 14px;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .speed-btn:hover{border-color:var(--teal);}
+  .speed-btn.active{background:var(--teal); border-color:var(--teal); color:#fff;}
   .game-stats{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
   .hearts{display:flex; gap:4px; font-size:18px;}
   .heart.lost{opacity:.2;}
@@ -503,8 +519,20 @@
     color:var(--ink);
     transform:translateX(-50%);
   }
-  .falling.caught{color:var(--teal); opacity:0;}
+  .falling.match-preview{color:var(--teal); text-shadow:0 0 10px var(--teal-light);}
+  .falling.caught{animation:dropBurst .35s ease forwards; pointer-events:none;}
+  @keyframes dropBurst{
+    0%{ transform:translateX(-50%) scale(1); opacity:1; color:var(--ink); }
+    40%{ transform:translateX(-50%) scale(1.4); opacity:1; color:var(--teal); text-shadow:0 0 16px var(--teal-light); }
+    100%{ transform:translateX(-50%) scale(1.7); opacity:0; color:var(--teal); }
+  }
   .falling.falling-combo{color:var(--brick); font-size:19px;}
+  .type-input.miss{border-color:var(--brick); animation:missShake .22s ease;}
+  @keyframes missShake{
+    0%, 100%{ transform:translateX(0); }
+    25%{ transform:translateX(-5px); }
+    75%{ transform:translateX(5px); }
+  }
   .game-overlay{
     position:absolute;
     inset:0;
@@ -716,8 +744,14 @@
   <!-- 소나기 게임 화면 -->
   <div id="screen-game" class="screen">
     <div class="card">
-      <div class="type-badge" style="margin-bottom:14px;" id="gameBadge">보너스 · 소나기 게임</div>
-      <p class="lede" style="margin-bottom:16px;" id="gameLede">방금 배운 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요. 시간이 지나면 조합 글자(빨간 글자)도 섞여서 떨어지고, 속도도 빨라져요.</p>
+      <div class="type-badge" style="margin-bottom:14px;" id="gameBadge">보너스 · 단어비</div>
+      <p class="lede" style="margin-bottom:16px;" id="gameLede">방금 배운 낱말이 비처럼 떨어집니다. 바닥에 닿기 전에 입력창에 똑같이 입력하고 스페이스바를 눌러 없애 보세요.</p>
+      <div class="speed-select" id="speedSelect">
+        <span class="speed-label">떨어지는 속도</span>
+        <button type="button" class="speed-btn" data-speed="slow">느리게</button>
+        <button type="button" class="speed-btn active" data-speed="normal">보통</button>
+        <button type="button" class="speed-btn" data-speed="fast">빠르게</button>
+      </div>
       <div class="game-stats">
         <div class="hearts" id="hearts"></div>
         <div class="game-score" id="gameScore">점수 0</div>
@@ -728,7 +762,7 @@
           <div class="go-score" id="goScore">점수 0</div>
         </div>
       </div>
-      <input type="text" class="type-input" id="gameInput" placeholder="떨어지는 글자를 입력하세요" autocomplete="off" />
+      <input type="text" class="type-input" id="gameInput" placeholder="입력 후 스페이스바를 누르세요" autocomplete="off" />
       <div class="btn-row">
         <button class="btn btn-ghost" id="retryGameBtn">다시하기</button>
         <button class="btn btn-primary" id="continueGameBtn">다음 단계로 계속하기</button>
@@ -820,9 +854,9 @@
     {id:7, name:'전체자리', keys:null, hasGame:true},
     // 8~10단계: 새로운 물리 키가 아니라 "이미 배운 키를 조합하는 원리"를 배우는 심화 단계라
     // 별도의 자모 소개(물리 키 드릴) 없이 곧바로 글자·낱말 조합 연습으로 들어간다(keys:[]).
-    {id:8, name:'받침과 띄어쓰기', keys:[], hasGame:false},
-    {id:9, name:'이중모음', keys:[], hasGame:false},
-    {id:10, name:'겹받침', keys:[], hasGame:false}
+    {id:8, name:'받침과 띄어쓰기', keys:[], hasGame:true},
+    {id:9, name:'이중모음', keys:[], hasGame:true},
+    {id:10, name:'겹받침', keys:[], hasGame:true}
   ];
   var ALL_KEYS = STAGE_DEFS.slice(0,6).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
   STAGE_DEFS[6].keys = ALL_KEYS.slice();
@@ -899,6 +933,7 @@
   var gameOverlay = document.getElementById('gameOverlay');
   var goScore = document.getElementById('goScore');
   var gameInput = document.getElementById('gameInput');
+  var speedBtns = Array.prototype.slice.call(document.querySelectorAll('.speed-btn'));
   var retryGameBtn = document.getElementById('retryGameBtn');
   var continueGameBtn = document.getElementById('continueGameBtn');
 
@@ -1865,8 +1900,12 @@
     loadStage(stageIdx);
   }
 
-  /* ---------- 소나기 게임 ---------- */
+  /* ---------- 단어비 게임 ---------- */
   var GAME_PHASE2_AT = 15000; // 이 시점(ms)부터 조합 글자 등장 + 속도업
+  // 외국인 유학생 대상이라 일반적인 타자 게임보다 기본 속도를 느리게 잡고,
+  // 학생이 직접 느리게/보통/빠르게를 고를 수 있게 배율을 곱해준다.
+  var GAME_SPEED_MULT = {slow:0.7, normal:1, fast:1.4};
+  var gameSpeedMode = 'normal';
   var gameHearts = 3;
   var gameScore = 0;
   var gameActive = false;
@@ -1875,6 +1914,13 @@
   var fallingItems = [];
   var gameSpawnHandle = null;
   var gameRAF = null;
+
+  speedBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      gameSpeedMode = btn.getAttribute('data-speed');
+      speedBtns.forEach(function(b){ b.classList.toggle('active', b === btn); });
+    });
+  });
 
   function renderHearts(){
     heartsEl.innerHTML = '';
@@ -1887,7 +1933,7 @@
   }
 
   function startGame(){
-    gameBadge.textContent = STAGE.name + ' · 소나기 게임';
+    gameBadge.textContent = STAGE.name + ' · 단어비';
     gameHearts = 3;
     gameScore = 0;
     gameActive = true;
@@ -1903,24 +1949,35 @@
     gameInput.focus();
 
     if (gameSpawnHandle) clearInterval(gameSpawnHandle);
-    gameSpawnHandle = setInterval(spawnFalling, 1600);
+    gameSpawnHandle = setInterval(spawnFalling, spawnInterval(false));
     if (gameRAF) cancelAnimationFrame(gameRAF);
     gameRAF = requestAnimationFrame(gameLoop);
+  }
+
+  // 속도 선택(느리게/보통/빠르게)에 맞춰 등장 간격도 함께 조절
+  function spawnInterval(phase2){
+    var base = phase2 ? 1250 : 1600;
+    var mult = GAME_SPEED_MULT[gameSpeedMode] || 1;
+    return Math.round(base / mult);
   }
 
   function spawnFalling(){
     if (!gameActive) return;
     var inPhase2 = (Date.now() - gameStartTime) >= GAME_PHASE2_AT;
     var combo = STAGE_COMBO[STAGE.id];
-    // 게임 입력창은 오타 누적 방지를 위해 3글자에서 자동으로 지워지므로(아래 gameInput
-    // 리스너 참고), 그보다 긴 낱말(예: 5음절 "고려대학교")은 떨어지는 게임에서는 빼고
-    // 차분히 치는 조합 연습 화면에만 남겨둔다.
-    var comboPool = combo ? combo.syllables.concat(combo.words).filter(function(w){ return w.length <= 3; }) : [];
-    var chars = gameChars();
-    var isCombo = inPhase2 && comboPool.length > 0 && Math.random() < 0.35;
+    // 스페이스바가 이제 "제출" 키라서, 띄어쓰기가 들어간 낱말(예: 8단계 "한국 사람")은
+    // 게임에서 입력할 방법이 없으므로 빼고 차분히 치는 조합 연습 화면에만 남겨둔다.
+    // 3음절 넘는 낱말(예: "고려대학교")도 떨어지는 속도상 입력하기 벅차 마찬가지로 뺀다.
+    var comboPool = combo ? combo.syllables.concat(combo.words).filter(function(w){
+      return w.length <= 3 && w.indexOf(' ') === -1;
+    }) : [];
+    var chars = gameChars(); // 8~10단계는 새 물리 키가 없어 빈 배열 — 이 경우 낱말만 사용
+    var comboChance = chars.length === 0 ? 1 : (inPhase2 ? 0.5 : 0.15);
+    var isCombo = comboPool.length > 0 && Math.random() < comboChance;
     var text = isCombo
       ? comboPool[Math.floor(Math.random() * comboPool.length)]
       : chars[Math.floor(Math.random() * chars.length)];
+    if (!text) return; // 낱말·자모 풀이 모두 비어있는 예외 상황 방어
 
     var el = document.createElement('div');
     el.className = 'falling' + (isCombo ? ' falling-combo' : '');
@@ -1929,7 +1986,9 @@
     el.style.left = leftPct + '%';
     el.style.top = '0%';
     gameArea.appendChild(el);
-    var speed = inPhase2 ? (0.13 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06);
+    var mult = GAME_SPEED_MULT[gameSpeedMode] || 1;
+    var baseSpeed = inPhase2 ? (0.095 + Math.random() * 0.06) : (0.065 + Math.random() * 0.045);
+    var speed = baseSpeed * mult;
     fallingItems.push({el: el, char: text, top: 0, speed: speed, combo: isCombo});
   }
 
@@ -1939,7 +1998,7 @@
     if (!gamePhase2Started && (Date.now() - gameStartTime) >= GAME_PHASE2_AT){
       gamePhase2Started = true;
       if (gameSpawnHandle) clearInterval(gameSpawnHandle);
-      gameSpawnHandle = setInterval(spawnFalling, 1250);
+      gameSpawnHandle = setInterval(spawnFalling, spawnInterval(true));
     }
 
     for (var i = fallingItems.length - 1; i >= 0; i--){
@@ -1960,13 +2019,9 @@
     gameRAF = requestAnimationFrame(gameLoop);
   }
 
-  gameInput.addEventListener('input', function(){
-    if (!gameActive) return;
-    var val = gameInput.value;
-    if (!val) return;
-
-    // 조합 글자(예: 머리)는 여러 타수로 완성되므로, 정확히 일치할 때만 잡고
-    // 그 전까지는 입력을 지우지 않고 계속 조합할 수 있게 둔다.
+  // 입력 중에는 잡지 않고, 어느 낱말과 일치하는지만 미리보기로 강조해준다
+  // (실제로 잡는 건 스페이스바를 눌러 "제출"하는 순간).
+  function findBestMatch(val){
     var bestIdx = -1, bestTop = -1;
     for (var i = 0; i < fallingItems.length; i++){
       if (fallingItems[i].char === val && fallingItems[i].top > bestTop){
@@ -1974,20 +2029,42 @@
         bestIdx = i;
       }
     }
-    if (bestIdx >= 0){
-      var it = fallingItems[bestIdx];
+    return bestIdx;
+  }
+
+  gameInput.addEventListener('input', function(){
+    if (!gameActive) return;
+    gameInput.classList.remove('miss');
+    fallingItems.forEach(function(it){ it.el.classList.remove('match-preview'); });
+    var val = gameInput.value;
+    if (!val) return;
+    var idx = findBestMatch(val);
+    if (idx >= 0) fallingItems[idx].el.classList.add('match-preview');
+    if (val.length > 3) gameInput.value = ''; // 너무 길어지면 오타로 보고 정리(낱말은 최대 3음절)
+  });
+
+  gameInput.addEventListener('keydown', function(e){
+    if (!gameActive) return;
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    e.preventDefault(); // 스페이스가 입력창에 실제 공백으로 들어가지 않게(제출 키로만 씀)
+    var val = gameInput.value;
+    if (!val) return;
+    var idx = findBestMatch(val);
+    if (idx >= 0){
+      var it = fallingItems[idx];
+      it.el.classList.remove('match-preview');
       it.el.classList.add('caught');
       gameScore++;
       gameScoreEl.textContent = '점수 ' + gameScore;
-      fallingItems.splice(bestIdx, 1);
+      fallingItems.splice(idx, 1);
       gameInput.value = '';
       if (it.combo) speak(it.char);
-      setTimeout(function(){ it.el.parentNode && it.el.parentNode.removeChild(it.el); }, 200);
-      return;
-    }
-
-    if (val.length >= 3){
+      setTimeout(function(){ it.el.parentNode && it.el.parentNode.removeChild(it.el); }, 350);
+    } else {
+      // 일치하는 낱말이 없으면 하트를 깎지 않고, 입력창만 흔들어 알려주고 지운다
+      gameInput.classList.add('miss');
       gameInput.value = '';
+      setTimeout(function(){ gameInput.classList.remove('miss'); }, 250);
     }
   });
 
