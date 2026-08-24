@@ -424,6 +424,39 @@
     margin-bottom:16px;
   }
 
+  /* 무입력 상태가 길어지면(자리 비움 등) 화면을 덮어 타이머를 멈추고, 쉰 시간은 기록에서 분리 */
+  .idle-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(246,241,231,.96);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+  }
+  .idle-overlay.show{display:flex;}
+  .idle-box{
+    background:var(--card);
+    border:2px solid var(--border);
+    border-radius:18px;
+    padding:32px 28px;
+    max-width:320px;
+    text-align:center;
+    box-shadow:0 12px 30px rgba(30,42,56,.12);
+  }
+  .idle-title{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:19px;
+    margin-bottom:10px;
+  }
+  .idle-desc{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+
   /* 소나기 게임 */
   .game-stats{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
   .hearts{display:flex; gap:4px; font-size:18px;}
@@ -615,6 +648,13 @@
 
   <!-- 연습 화면 -->
   <div id="screen-practice" class="screen">
+    <div class="idle-overlay" id="idleOverlay">
+      <div class="idle-box">
+        <div class="idle-title">잠시 쉬고 계셨네요 🙂</div>
+        <p class="idle-desc">쉬는 시간은 기록에 따로 표시되니 걱정하지 마세요.<br>준비되면 아래 버튼을 눌러 이어서 연습해 주세요.</p>
+        <button type="button" class="btn btn-primary" id="idleResumeBtn">이어서 하기</button>
+      </div>
+    </div>
     <div class="card">
       <button type="button" class="home-link" id="homeLink">← 처음으로</button>
       <div class="roadmap" id="roadmap"></div>
@@ -830,6 +870,8 @@
   var modeChoiceBox = document.getElementById('modeChoiceBox');
   var modeNormalBtn = document.getElementById('modeNormalBtn');
   var modeGameBtn = document.getElementById('modeGameBtn');
+  var idleOverlay = document.getElementById('idleOverlay');
+  var idleResumeBtn = document.getElementById('idleResumeBtn');
 
   var heartsEl = document.getElementById('hearts');
   var gameScoreEl = document.getElementById('gameScore');
@@ -868,6 +910,17 @@
   var correctAttempts = 0;
   var typoCount = 0;
   var feedbackTimeout = null;
+
+  // 무입력(자리 비움 등)이 길어지면 자동으로 멈추고, 쉰 시간은 정확도/속도 계산에서 제외한다.
+  // 학생이 실제로 입력을 못 하게 막을 방법은 없지만(브라우저는 자리 이탈을 감지할 수 없음),
+  // 무입력 5초가 지나면 화면을 덮어서 더 진행되지 않게 하고, 쉰 시간·횟수를 기록에 남겨
+  // "느려진 것처럼 보이는 기록"과 "진짜 쉬어서 생긴 공백"을 구분할 수 있게 한다.
+  var IDLE_THRESHOLD_MS = 5000;
+  var idleTimer = null;
+  var isPaused = false;
+  var idlePauseStart = 0;
+  var idleCount = 0;
+  var idleTotalMs = 0;
   var REPS_PER_KEY = 3;
   var maxUnlockedStage = 1;
   var lastCompletionWasForward = true;
@@ -929,6 +982,40 @@
       osc.stop(audioCtx.currentTime + 0.18);
     } catch (err){ console.error('효과음 재생 실패:', err); }
   }
+
+  function armIdleTimer(){
+    clearTimeout(idleTimer);
+    if (isPaused || !stageStartTime) return;
+    if (!screens.practice.classList.contains('active')) return;
+    idleTimer = setTimeout(pauseForIdle, IDLE_THRESHOLD_MS);
+  }
+
+  function pauseForIdle(){
+    if (isPaused || !stageStartTime) return;
+    if (!screens.practice.classList.contains('active')) return;
+    isPaused = true;
+    idlePauseStart = Date.now();
+    typeInput.disabled = true;
+    idleOverlay.classList.add('show');
+  }
+
+  function resumeFromIdle(){
+    if (!isPaused) return;
+    idleTotalMs += Date.now() - idlePauseStart;
+    idleCount++;
+    isPaused = false;
+    idleOverlay.classList.remove('show');
+    typeInput.disabled = false;
+    typeInput.value = '';
+    typeInput.focus();
+    armIdleTimer();
+  }
+
+  idleResumeBtn.addEventListener('click', resumeFromIdle);
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) pauseForIdle();
+  });
 
   function getCode(){ return nameSelect.value; }
 
@@ -1034,21 +1121,34 @@
 
   async function saveStageRecord(code, record){
     if (sb){
+      var payload = {
+        participant_code: code,
+        stage_id: record.stageId,
+        stage_name: record.stageName,
+        item_count: record.itemCount,
+        time_sec: record.timeSec,
+        accuracy: record.accuracy,
+        typo_count: record.typoCount,
+        total_attempts: record.totalAttempts,
+        correct_attempts: record.correctAttempts,
+        idle_count: record.idleCount,
+        idle_total_sec: record.idleTotalSec,
+        recorded_at: record.date
+      };
       try{
-        var res = await sb.from('stage0_records').insert({
-          participant_code: code,
-          stage_id: record.stageId,
-          stage_name: record.stageName,
-          item_count: record.itemCount,
-          time_sec: record.timeSec,
-          accuracy: record.accuracy,
-          typo_count: record.typoCount,
-          total_attempts: record.totalAttempts,
-          correct_attempts: record.correctAttempts,
-          recorded_at: record.date
-        });
+        var res = await sb.from('stage0_records').insert(payload);
         if (res.error) throw res.error;
-      } catch (err){ console.error('단계 기록 저장 실패:', err); }
+      } catch (err){
+        // idle_count/idle_total_sec 컬럼이 아직 DB에 없으면(마이그레이션 전) 그 값만 빼고 재시도.
+        // → 마이그레이션을 나중에 실행하더라도 기존 기록 저장 자체는 끊기지 않도록 방어.
+        console.error('단계 기록 저장 실패, idle 필드 없이 재시도:', err);
+        try{
+          delete payload.idle_count;
+          delete payload.idle_total_sec;
+          var res2 = await sb.from('stage0_records').insert(payload);
+          if (res2.error) throw res2.error;
+        } catch (err2){ console.error('단계 기록 저장 완전 실패:', err2); }
+      }
       return;
     }
     try{
@@ -1075,6 +1175,8 @@
             typoCount: row.typo_count,
             totalAttempts: row.total_attempts,
             correctAttempts: row.correct_attempts,
+            idleCount: row.idle_count || 0,
+            idleTotalSec: row.idle_total_sec || 0,
             date: row.recorded_at
           };
         });
@@ -1378,6 +1480,11 @@
     totalAttempts = 0;
     correctAttempts = 0;
     typoCount = 0;
+    idleCount = 0;
+    idleTotalMs = 0;
+    isPaused = false;
+    clearTimeout(idleTimer);
+    idleOverlay.classList.remove('show');
     statAcc.textContent = '100%';
     statFix.textContent = '0';
     stageNote.textContent = (STAGE.id === 4) ? '양손 검지가 안쪽으로 뻗어서 짚는, 자판 한가운데 자리입니다.' : '';
@@ -1409,6 +1516,7 @@
     typeInput.value = '';
     typeInput.disabled = false;
     typeInput.focus();
+    armIdleTimer();
   }
 
   function renderComboTarget(typed){
@@ -1442,6 +1550,7 @@
     typeInput.value = '';
     typeInput.disabled = false;
     typeInput.focus();
+    armIdleTimer();
   }
 
   function scheduleAdvance(fn){
@@ -1479,6 +1588,7 @@
     var val = typeInput.value;
     if (!val) return;
     if (!stageStartTime) stageStartTime = Date.now();
+    armIdleTimer();
 
     if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
 
@@ -1565,8 +1675,11 @@
       typoCount: typoCount,
       totalAttempts: totalAttempts,
       correctAttempts: correctAttempts,
+      idleCount: idleCount,
+      idleTotalSec: Math.round(idleTotalMs / 100) / 10,
       date: new Date().toISOString()
     };
+    clearTimeout(idleTimer);
     sessionRecords.push(record);
     completedStages[STAGE.id] = true;
     lastCompletionWasForward = (STAGE.id + 1) > maxUnlockedStage;
@@ -1811,15 +1924,18 @@
     }
 
     // 같은 단계를 몇 번째로 연습했는지(회차)와, 직전 회차 대비 빨라졌는지를 계산.
-    // 단계마다 글자 수가 달라도 공정하게 비교할 수 있도록 시간이 아니라
-    // 속도(입력한 글자 수 / 걸린 시간)를 기준으로 비교한다.
+    // 단계마다 글자 수가 달라도 공정하게 비교할 수 있도록, 그리고 중간에 쉰 시간이
+    // "느려진 것"처럼 보이지 않도록, 시간이 아니라 실제 입력 시간(쉰 시간 제외) 기준
+    // 속도(입력한 글자 수 / 실제 입력 시간)로 비교한다.
     var byStage = {};
     records.slice().sort(function(a, b){ return new Date(a.date) - new Date(b.date); })
       .forEach(function(r){
         var list = byStage[r.stageId] || (byStage[r.stageId] = []);
-        var speed = r.timeSec > 0 ? (r.itemCount / r.timeSec) : 0;
+        var activeSec = Math.max(0, r.timeSec - (r.idleTotalSec || 0));
+        var speed = activeSec > 0 ? (r.itemCount / activeSec) : 0;
         var prev = list[list.length - 1];
         r._attemptNo = list.length + 1;
+        r._activeSec = activeSec;
         r._speed = speed;
         r._trend = !prev ? null : (speed > prev._speed ? 'up' : (speed < prev._speed ? 'down' : 'flat'));
         list.push(r);
@@ -1831,22 +1947,24 @@
       var d = new Date(r.date);
       var dateLabel = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
       var trendMark = r._trend === 'up' ? ' <span class="trend-up">▲</span>' : (r._trend === 'down' ? ' <span class="trend-down">▼</span>' : '');
+      var idleLabel = r.idleCount ? (r.idleCount + '회·' + r.idleTotalSec + '초') : '-';
       return '<tr>' +
         '<td>' + dateLabel + '</td>' +
         '<td>' + r.stageName + '<span class="attempt-badge">' + r._attemptNo + '회차</span></td>' +
         '<td>' + r.accuracy + '%</td>' +
         '<td>' + r.typoCount + '</td>' +
         '<td>' + r.timeSec + '초</td>' +
+        '<td>' + idleLabel + '</td>' +
         '<td>' + r._speed.toFixed(2) + '타/초' + trendMark + '</td>' +
       '</tr>';
     }).join('');
 
     historyContent.innerHTML =
       '<table>' +
-        '<thead><tr><th>날짜</th><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th><th>속도</th></tr></thead>' +
+        '<thead><tr><th>날짜</th><th>단계</th><th>정확도</th><th>오타 수</th><th>총 시간</th><th>쉼</th><th>속도</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
-      '<p class="empty-note">속도 = 입력한 글자 수 ÷ 걸린 시간. ▲는 이 단계를 직전에 연습했을 때보다 빨라졌다는 뜻입니다.</p>';
+      '<p class="empty-note">쉼 = 5초 이상 입력이 없어 자동으로 멈췄던 횟수·시간. 속도 = 입력한 글자 수 ÷ (총 시간 − 쉰 시간). ▲는 이 단계를 직전에 연습했을 때보다 빨라졌다는 뜻입니다.</p>';
   }
 })();
 </script>

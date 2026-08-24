@@ -10,6 +10,9 @@ create table if not exists stage0_progress (
 );
 
 -- 2) 단계별 연습 기록 (진행 시간 / 정확도 / 오타 수 등, 연구 데이터)
+--    idle_count/idle_total_sec: 무입력 5초 이상(자리 비움 등)이 감지되어 자동으로
+--    멈췄던 횟수와 그 시간의 합. time_sec은 시작~완료까지의 총 시간(쉰 시간 포함)이고,
+--    실제 입력에 걸린 시간은 time_sec - idle_total_sec 로 계산합니다.
 create table if not exists stage0_records (
   id bigint generated always as identity primary key,
   participant_code text not null,
@@ -21,8 +24,14 @@ create table if not exists stage0_records (
   typo_count int not null,
   total_attempts int not null,
   correct_attempts int not null,
+  idle_count int not null default 0,
+  idle_total_sec numeric not null default 0,
   recorded_at timestamptz not null default now()
 );
+
+-- 이미 만들어진 테이블에는 위 두 컬럼이 없을 수 있으므로 안전하게 추가 (기존 행은 0으로 채워짐)
+alter table stage0_records add column if not exists idle_count int not null default 0;
+alter table stage0_records add column if not exists idle_total_sec numeric not null default 0;
 
 create index if not exists stage0_records_code_idx on stage0_records (participant_code);
 
