@@ -455,6 +455,7 @@
     transform:translateX(-50%);
   }
   .falling.caught{color:var(--teal); opacity:0;}
+  .falling.falling-combo{color:var(--brick); font-size:19px;}
   .game-overlay{
     position:absolute;
     inset:0;
@@ -511,6 +512,19 @@
     text-align:center;
   }
   .link-btn:hover{color:var(--teal);}
+  .home-link{
+    display:inline-block;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    margin-bottom:16px;
+  }
+  .home-link:hover{color:var(--teal);}
   .self-register{
     display:none;
     margin-top:14px;
@@ -592,6 +606,7 @@
   <!-- 연습 화면 -->
   <div id="screen-practice" class="screen">
     <div class="card">
+      <button type="button" class="home-link" id="homeLink">← 처음으로</button>
       <div class="roadmap" id="roadmap"></div>
       <p class="roadmap-hint">✓ 표시된 단계를 눌러 언제든 다시 연습할 수 있어요.</p>
 
@@ -641,7 +656,7 @@
   <div id="screen-game" class="screen">
     <div class="card">
       <div class="type-badge" style="margin-bottom:14px;">보너스 · 소나기 게임</div>
-      <p class="lede" style="margin-bottom:16px;">방금 배운 기본자리 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요.</p>
+      <p class="lede" style="margin-bottom:16px;">방금 배운 기본자리 글자가 떨어집니다. 바닥에 닿기 전에 입력해서 없애 보세요. 시간이 지나면 조합 글자(빨간 글자)도 섞여서 떨어지고, 속도도 빨라져요.</p>
       <div class="game-stats">
         <div class="hearts" id="hearts"></div>
         <div class="game-score" id="gameScore">점수 0</div>
@@ -829,6 +844,7 @@
   var historyCodeLabel = document.getElementById('historyCodeLabel');
   var historyContent = document.getElementById('historyContent');
   var backFromHistoryBtn = document.getElementById('backFromHistoryBtn');
+  var homeLink = document.getElementById('homeLink');
 
   /* ---------- 상태 ---------- */
   var currentCode = '';
@@ -1103,6 +1119,10 @@
     currentCode = code;
     currentName = nameSelect.options[nameSelect.selectedIndex].textContent;
     openHistory();
+  });
+
+  homeLink.addEventListener('click', function(){
+    showScreen('start');
   });
 
   /* ---------- 명단에 없는 학생 직접 등록 ---------- */
@@ -1582,9 +1602,12 @@
   }
 
   /* ---------- 소나기 게임 ---------- */
+  var GAME_PHASE2_AT = 15000; // 이 시점(ms)부터 조합 글자 등장 + 속도업
   var gameHearts = 3;
   var gameScore = 0;
   var gameActive = false;
+  var gameStartTime = 0;
+  var gamePhase2Started = false;
   var fallingItems = [];
   var gameSpawnHandle = null;
   var gameRAF = null;
@@ -1603,6 +1626,8 @@
     gameHearts = 3;
     gameScore = 0;
     gameActive = true;
+    gameStartTime = Date.now();
+    gamePhase2Started = false;
     fallingItems.forEach(function(it){ if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); });
     fallingItems = [];
     gameOverlay.classList.remove('show');
@@ -1620,19 +1645,33 @@
 
   function spawnFalling(){
     if (!gameActive) return;
-    var ch = GAME_CHARS[Math.floor(Math.random() * GAME_CHARS.length)];
+    var inPhase2 = (Date.now() - gameStartTime) >= GAME_PHASE2_AT;
+    var comboPool = SYLLABLES.concat(WORDS);
+    var isCombo = inPhase2 && Math.random() < 0.35;
+    var text = isCombo
+      ? comboPool[Math.floor(Math.random() * comboPool.length)]
+      : GAME_CHARS[Math.floor(Math.random() * GAME_CHARS.length)];
+
     var el = document.createElement('div');
-    el.className = 'falling';
-    el.textContent = ch;
+    el.className = 'falling' + (isCombo ? ' falling-combo' : '');
+    el.textContent = text;
     var leftPct = 10 + Math.random() * 78;
     el.style.left = leftPct + '%';
     el.style.top = '0%';
     gameArea.appendChild(el);
-    fallingItems.push({el: el, char: ch, top: 0, speed: 0.09 + Math.random() * 0.06});
+    var speed = inPhase2 ? (0.13 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06);
+    fallingItems.push({el: el, char: text, top: 0, speed: speed, combo: isCombo});
   }
 
   function gameLoop(){
     if (!gameActive){ return; }
+
+    if (!gamePhase2Started && (Date.now() - gameStartTime) >= GAME_PHASE2_AT){
+      gamePhase2Started = true;
+      if (gameSpawnHandle) clearInterval(gameSpawnHandle);
+      gameSpawnHandle = setInterval(spawnFalling, 1250);
+    }
+
     for (var i = fallingItems.length - 1; i >= 0; i--){
       var it = fallingItems[i];
       it.top += it.speed;
@@ -1654,12 +1693,13 @@
   gameInput.addEventListener('input', function(){
     if (!gameActive) return;
     var val = gameInput.value;
-    gameInput.value = '';
     if (!val) return;
-    var ch = val[val.length - 1];
+
+    // 조합 글자(예: 머리)는 여러 타수로 완성되므로, 정확히 일치할 때만 잡고
+    // 그 전까지는 입력을 지우지 않고 계속 조합할 수 있게 둔다.
     var bestIdx = -1, bestTop = -1;
     for (var i = 0; i < fallingItems.length; i++){
-      if (fallingItems[i].char === ch && fallingItems[i].top > bestTop){
+      if (fallingItems[i].char === val && fallingItems[i].top > bestTop){
         bestTop = fallingItems[i].top;
         bestIdx = i;
       }
@@ -1670,7 +1710,14 @@
       gameScore++;
       gameScoreEl.textContent = '점수 ' + gameScore;
       fallingItems.splice(bestIdx, 1);
+      gameInput.value = '';
+      if (it.combo) speak(it.char);
       setTimeout(function(){ it.el.parentNode && it.el.parentNode.removeChild(it.el); }, 200);
+      return;
+    }
+
+    if (val.length >= 3){
+      gameInput.value = '';
     }
   });
 
