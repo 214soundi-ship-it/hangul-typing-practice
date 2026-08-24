@@ -300,6 +300,14 @@
     background:var(--paper);
     cursor:default;
   }
+  /* Shift를 눌러야 하는 항목(쌍자음·이중모음) 연습 중에는 실제로 눌러야 할 Shift 키도 함께 강조 */
+  .key.key-deco.key-shift-emph{
+    opacity:1;
+    background:var(--teal);
+    color:#fff;
+    border-color:var(--teal);
+    box-shadow:0 0 0 5px var(--teal-light);
+  }
   .kbd-row.row-num .key{width:32px; height:32px; font-size:11px;}
   .kbd-row.row-num .key.key-dual{height:40px;}
   .kbd-row.row-num .key.key-back{width:56px;}
@@ -402,16 +410,6 @@
     font-size:19px;
   }
   .stat-label{font-size:12px; color:var(--ink-soft);}
-
-  .advance-hint{
-    display:none;
-    font-size:12px;
-    font-weight:600;
-    color:var(--teal);
-    text-align:center;
-    margin:-4px 0 14px;
-  }
-  .advance-hint.show{display:block;}
 
   .checkpoint{
     display:none;
@@ -620,7 +618,6 @@
 
       <div class="target-wrap" id="targetWrap"><div class="target-text" id="target"></div></div>
       <p class="shift-hint" id="shiftHint">⇧ Shift를 누른 채 입력하세요</p>
-      <p class="advance-hint" id="advanceHint">스페이스바를 눌러 다음으로 넘어가세요</p>
 
       <div id="keyDiagramWrap">
         <div class="kbd" id="kbd"></div>
@@ -808,7 +805,6 @@
   var stageNote = document.getElementById('stageNote');
   var targetEl = document.getElementById('target');
   var targetWrap = document.getElementById('targetWrap');
-  var advanceHint = document.getElementById('advanceHint');
   var shiftHint = document.getElementById('shiftHint');
   var keyDiagramWrap = document.getElementById('keyDiagramWrap');
   var kbdEl = document.getElementById('kbd');
@@ -867,8 +863,6 @@
   var comboMode = false;
   var comboQueue = [];
   var comboIdx = 0;
-  var awaitingAdvance = false;
-  var pendingAdvanceFn = null;
 
   var SYLLABLES = ['마','머','미','나','너','니','아','어','이','라','러','리'];
   var WORDS = ['머리','나라','아이','나이','미리','어머니'];
@@ -905,6 +899,23 @@
       u.rate = 0.6;
       window.speechSynthesis.speak(u);
     } catch (err){ console.error('발음 재생 실패:', err); }
+  }
+
+  var audioCtx = null;
+  function playWrongSound(){
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 180;
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    } catch (err){ console.error('효과음 재생 실패:', err); }
   }
 
   function getCode(){ return nameSelect.value; }
@@ -1205,7 +1216,6 @@
     keyDiagramWrap.style.display = 'none';
     typeInput.style.display = 'none';
     targetWrap.style.display = 'none';
-    advanceHint.classList.remove('show');
     shiftHint.classList.remove('show');
     modeChoiceBox.dataset.stageIdx = idx;
     modeChoiceBox.classList.add('show');
@@ -1237,6 +1247,12 @@
     var items = Array.isArray(activeItems) ? activeItems : [activeItems];
     var activePhysical = items.map(physicalKey);
     var activeShiftPhysical = items.filter(isShiftItem).map(physicalKey);
+    // Shift를 눌러야 하는 항목이 있으면, 실제 타이핑처럼 반대쪽 손 Shift 키를 강조 표시
+    var shiftSide = null;
+    if (activeShiftPhysical.length){
+      var shiftBaseMeta = KEY_META[activeShiftPhysical[0]];
+      if (shiftBaseMeta) shiftSide = (shiftBaseMeta.hand === 'left') ? 'right' : 'left';
+    }
 
     function rowHtml(keys){
       return keys.map(function(k){
@@ -1275,7 +1291,11 @@
         decoDualKey('{', '[', '') + decoDualKey('}', ']', '') + decoDualKey('|', '\\', '') + '</div>' +
       '<div class="kbd-row row-home">' + decoKey('Caps', 'key-caps') + rowHtml(HOME_ROW) +
         decoDualKey('"', "'", '') + decoKey('Enter', 'key-enter') + '</div>' +
-      '<div class="kbd-row row-bottom">' + decoKey('Shift', 'key-shiftside') + rowHtml(BOTTOM_ROW) + decoKey('Shift', 'key-shiftside') + '</div>' +
+      '<div class="kbd-row row-bottom">' +
+        decoKey('Shift', 'key-shiftside' + (shiftSide === 'left' ? ' key-shift-emph' : '')) +
+        rowHtml(BOTTOM_ROW) +
+        decoKey('Shift', 'key-shiftside' + (shiftSide === 'right' ? ' key-shift-emph' : '')) +
+      '</div>' +
       '<div class="kbd-row row-space">' +
         decoKey('Ctrl', 'key-ctrl') + decoKey('Alt', 'key-alt') +
         '<div class="key key-deco key-space" id="spacebarKey"></div>' +
@@ -1342,8 +1362,6 @@
     comboMode = false;
     comboIdx = 0;
     comboQueue = (STAGE.id === 1) ? buildComboQueue() : [];
-    awaitingAdvance = false;
-    pendingAdvanceFn = null;
     stageStartTime = null;
     totalAttempts = 0;
     correctAttempts = 0;
@@ -1365,7 +1383,6 @@
     var ch = jamoFor(key);
 
     targetWrap.classList.remove('success', 'error');
-    advanceHint.classList.remove('show');
     shiftHint.classList.toggle('show', isShiftItem(key));
     typeBadge.textContent = STAGE.name;
     progLabel.textContent = (itemIdx + 1) + ' / ' + STAGE.runtimeKeys.length;
@@ -1395,7 +1412,6 @@
 
   function loadComboItem(){
     targetWrap.classList.remove('success', 'error');
-    advanceHint.classList.remove('show');
     shiftHint.classList.remove('show');
     var phase = comboIdx < SYLLABLES.length ? '글자 만들기' : '낱말 만들기';
     typeBadge.textContent = STAGE.name + ' · ' + phase;
@@ -1417,32 +1433,13 @@
   }
 
   function scheduleAdvance(fn){
-    awaitingAdvance = true;
-    advanceHint.classList.add('show');
-    var spacebarKey = document.getElementById('spacebarKey');
-    if (spacebarKey) spacebarKey.classList.add('key-space-active');
-    pendingAdvanceFn = fn;
+    feedbackTimeout = setTimeout(fn, 450);
   }
-
-  document.addEventListener('keydown', function(e){
-    if (!awaitingAdvance) return;
-    if (e.code !== 'Space' && e.key !== ' ') return;
-    if (!screens.practice.classList.contains('active')) return;
-    e.preventDefault();
-    awaitingAdvance = false;
-    advanceHint.classList.remove('show');
-    var spacebarKey = document.getElementById('spacebarKey');
-    if (spacebarKey) spacebarKey.classList.remove('key-space-active');
-    var fn = pendingAdvanceFn;
-    pendingAdvanceFn = null;
-    if (fn) fn();
-  });
 
   function showCheckpoint(){
     keyDiagramWrap.style.display = 'none';
     typeInput.style.display = 'none';
     targetWrap.style.display = 'none';
-    advanceHint.classList.remove('show');
     shiftHint.classList.remove('show');
     checkpointBox.classList.add('show');
   }
@@ -1534,6 +1531,7 @@
       statFix.textContent = typoCount;
       targetWrap.classList.add('error');
       typeInput.disabled = true;
+      playWrongSound();
       feedbackTimeout = setTimeout(function(){
         targetWrap.classList.remove('error');
         typeInput.value = '';
