@@ -1334,6 +1334,11 @@
     shiftHint.classList.remove('show');
     modeChoiceBox.dataset.stageIdx = idx;
     modeChoiceBox.classList.add('show');
+    // 로드맵 강조가 "지금 보고 있는" 이 선택 화면(기본자리)을 가리키도록 갱신
+    // (그렇지 않으면 직전에 보던 다른 단계가 계속 진하게 표시되어 혼란스러움)
+    stageIdx = idx;
+    STAGE = STAGE_DEFS[idx];
+    renderRoadmap();
   }
 
   function hideModeChoice(){
