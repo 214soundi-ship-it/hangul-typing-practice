@@ -1020,6 +1020,9 @@
   function playWrongSound(){
     try{
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // 브라우저 자동재생 정책 때문에 AudioContext가 만들어진 직후 'suspended' 상태로
+      // 남아 소리가 안 나는 경우가 있어, 매번 재생 전에 명시적으로 깨워준다.
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       var osc = audioCtx.createOscillator();
       var gain = audioCtx.createGain();
       osc.type = 'square';
@@ -1642,6 +1645,7 @@
     if (comboMode && e.key === 'Backspace'){
       typoCount++;
       statFix.textContent = typoCount;
+      playWrongSound();
     }
   });
 
