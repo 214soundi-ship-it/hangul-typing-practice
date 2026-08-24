@@ -758,7 +758,7 @@
       </div>
       <div class="game-area" id="gameArea">
         <div class="game-overlay" id="gameOverlay">
-          <div class="go-title">게임 종료</div>
+          <div class="go-title" id="goTitle">게임 종료</div>
           <div class="go-score" id="goScore">점수 0</div>
         </div>
       </div>
@@ -861,11 +861,6 @@
   var ALL_KEYS = STAGE_DEFS.slice(0,6).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
   STAGE_DEFS[6].keys = ALL_KEYS.slice();
 
-  // 게임 화면에 떨어뜨릴 자모 목록 — 지금 STAGE가 어떤 단계든 그 단계의 자모로 계산
-  function gameChars(){
-    return STAGE.keys.map(jamoFor);
-  }
-
   function shuffle(arr){
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--){
@@ -932,6 +927,7 @@
   var gameArea = document.getElementById('gameArea');
   var gameOverlay = document.getElementById('gameOverlay');
   var goScore = document.getElementById('goScore');
+  var goTitle = document.getElementById('goTitle');
   var gameInput = document.getElementById('gameInput');
   var speedBtns = Array.prototype.slice.call(document.querySelectorAll('.speed-btn'));
   var retryGameBtn = document.getElementById('retryGameBtn');
@@ -1006,9 +1002,12 @@
     5: {syllables:['며','냐','여','야','내','래','매','네'],
         words:['여자','야구','노래','배구','개구리']},
     6: {syllables:['므','느','으','르','브','즈'],
-        words:['그림','크기','느리다','스스로']},
+        words:['느끼다','크기','느리다','스스로']},
     7: {syllables:[],
-        words:['한국어','타이핑','고려대학교']},
+        // 원래 '한국어/타이핑/고려대학교'였는데, 8단계에서 받침을 처음 도입하는 구조를
+        // 나중에 추가하면서 7단계까지는 받침 없이 가야 한다는 원칙과 어긋나게 됐음(받침
+        // 있는 글자였음) — 원칙에 맞게 받침 없는 낱말로 교체.
+        words:['이야기','가르치다','아이디어']},
     8: {syllables:['강','물','산','학','책'],
         words:['한국 사람','학생 식당']},
     // 스펙 원안은 '워'를 자모 하나(ㅝ)만 단독으로 보여주는 안이었으나, 2벌식에서 앞에
@@ -1024,6 +1023,43 @@
     var c = STAGE_COMBO[stageId];
     return c ? c.syllables.concat(c.words) : [];
   }
+
+  // "단어비" 게임 전용 대량 어휘 풀(최대 40개/단계). 위 STAGE_COMBO(글자·낱말 만들기용
+  // 소규모 고정 목록)와는 별개로, 게임에서 매판 무작위로 15~20개를 뽑아 쓰는 큰 풀이다.
+  // 그 단계까지 배운 자모만으로 구성된 실제 한국어 낱말이며, 1~7단계는 받침 없이,
+  // 8단계부터 받침, 9단계부터 이중모음, 10단계부터 겹받침을 허용하는 원칙을 지켰다.
+  // ※ 1단계는 자음 4개(ㅁㄴㅇㄹ)+모음 3개(ㅓㅏㅣ)뿐이고 받침도 없어, 그 조합으로 실제
+  //   존재하는 낱말을 다 찾아도 14개가 한계라 40개를 채우지 못했다(사용자와 상의된 사항).
+  var GAME_WORD_POOL = {
+    1: ['머리','나라','아이','나이','미리','어머니','이리','이마','어머','아마','미아','아리아','미라','마리'],
+    2: ['자리','바지','다리','거리','어디','아버지','가지','거지','바다','자다','가다','다리미','가지다','바가지',
+        '자라다','가자미','아기','어기다','가리다','자기','거기','가마','어디까지','아까','가짜','아빠','따라가다',
+        '짜다','까다','따다','다지다','지리','어버이','나머지','지다','이기다','어리다','다니다','나가다','가지가지'],
+    3: ['기차','커피','타자기','파리','아차','마차','커지다','타다','치아','파다','차다','치다','피다','기타',
+        '어차피','차라리','지치다','마치','카키','자차','피자','자치','타파','아치','카피','차차','다치다','타이어',
+        '자아','기아','마피아','아이디어','타자','처지다','이차','피처','아기','자기','거기','가리키다'],
+    4: ['소리','나무','우리','두부','하마','소나기','사자','모자','바보','가수','고기','구두','자유','오후','오다',
+        '나오다','라디오','비누','모두','자주','아우','수도','지도','보다','사다','파도','고구마','오리','너구리',
+        '다시','이사','하나','고치다','사다리','오이','나비','다시마','모기','어부','부자'],
+    5: ['여자','야구','노래','배구','개구리','시계','세계','요리','교사','애기','애매','예매','얘기','매우','새우',
+        '여기','저기','야채','매미','여배우','소매','이제','메뉴','세수','매매','교수','모래','가게','예보','구애',
+        '개미','모기','다시','사다리','오이','나비','아버지','어머니','하마','소나기'],
+    6: ['고르다','크기','느리다','스스로','느끼다','크다','쓰다','그리다','흐르다','모으다','크게','드리다','어느',
+        '그저','그래','아프다','바쁘다','기쁘다','고프다','나쁘다','예쁘다','이쁘다','쓰레기','그러나','여자','노래',
+        '요리','교사','소리','나무','우리','사다리','나비','모기','다시','오이','하마','아기','자기','거기'],
+    7: ['어머니','아버지','다리미','가지다','바가지','자라다','가자미','이기다','다니다','나가다','커피','타자기',
+        '파리','차라리','어차피','다치다','타이어','아이디어','소리','나무','우리','자유','사다리','너구리','고구마',
+        '요리','교사','시계','세계','야구','노래','여배우','메뉴','모래','고르다','흐르다','모으다','어느','아프다','바쁘다'],
+    8: ['학교','사람','한국','생각','시간','음식','도시락','아침','저녁','동생','친구','학생','식당','공부','사랑',
+        '가족','얼굴','편지','공책','지갑','운동','사진','서울','날씨','문제','결혼','직업','경제','매일','동안',
+        '사이','연습','학년','기억','표현','발표','준비','성적','목표','방학'],
+    9: ['사과','병원','의사','회사','과자','의자','교과서','회의','전화','과일','사회','외국','외국인','권리',
+        '월급','원래','취미','쉬다','바뀌다','화장실','과거','교회','취소','의견','의미','회원','과정','의원',
+        '회사원','스위치','사귀다','가위','더위','추위','학교','사람','친구','공부','사랑','가족'],
+    10: ['닭튀김','많다','없다','읽다','짧다','넓다','닭고기','여덟','앉다','얹다','끊다','잃다','싫다','읽기','삶다',
+         '젊다','밝다','맑다','없이','많이','짧게','핥다','사과','병원','의사','회사','학교','사람','친구','공부',
+         '사랑','가족','과자','의자','회의','전화','과일','사회','외국인','취미']
+  };
 
   // 한글 완성형 음절을 자모로 분해 (유니코드 공식) — 조합 연습 화면에서
   // 자판·손가락 강조에 사용. 복합모음(ㅘㅙㅚㅝㅞㅟ)과 겹받침(ㄳㄵㄶ 등)은 2벌식에서
@@ -1901,7 +1937,7 @@
   }
 
   /* ---------- 단어비 게임 ---------- */
-  var GAME_PHASE2_AT = 15000; // 이 시점(ms)부터 조합 글자 등장 + 속도업
+  var GAME_PHASE2_AT = 15000; // 이 시점(ms)부터 속도업
   // 외국인 유학생 대상이라 일반적인 타자 게임보다 기본 속도를 느리게 잡고,
   // 학생이 직접 느리게/보통/빠르게를 고를 수 있게 배율을 곱해준다.
   var GAME_SPEED_MULT = {slow:0.7, normal:1, fast:1.4};
@@ -1914,6 +1950,18 @@
   var fallingItems = [];
   var gameSpawnHandle = null;
   var gameRAF = null;
+  var gameWordsForPlay = []; // 이번 판에 뽑힌 15~20개(그 단계 풀이 더 작으면 있는 만큼)
+  var gameWordQueueIdx = 0;
+
+  // 40개짜리 큰 풀을 섞어서 이번 한 판에만 쓸 15~20개를 뽑는다. 순서대로 하나씩
+  // 떨어뜨리므로(무작위 재추첨이 아니라 미리 섞은 큐를 그대로 소진) 같은 낱말이
+  // 두 번 나오는 일 자체가 없고, 당연히 연속 중복도 생기지 않는다.
+  function pickPlayWords(stageId){
+    var pool = (GAME_WORD_POOL[stageId] || []).slice();
+    shuffle(pool);
+    var n = Math.min(pool.length, 15 + Math.floor(Math.random() * 6)); // 15~20
+    return pool.slice(0, n);
+  }
 
   speedBtns.forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1939,6 +1987,8 @@
     gameActive = true;
     gameStartTime = Date.now();
     gamePhase2Started = false;
+    gameWordsForPlay = pickPlayWords(STAGE.id);
+    gameWordQueueIdx = 0;
     fallingItems.forEach(function(it){ if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); });
     fallingItems = [];
     gameOverlay.classList.remove('show');
@@ -1963,24 +2013,17 @@
 
   function spawnFalling(){
     if (!gameActive) return;
+    if (gameWordQueueIdx >= gameWordsForPlay.length){
+      // 이번 판에 뽑힌 낱말을 다 떨어뜨렸으면 더 이상 새로 만들지 않고,
+      // 화면에 남은 낱말이 다 정리되면 gameLoop에서 "완료"로 종료 처리한다.
+      if (gameSpawnHandle){ clearInterval(gameSpawnHandle); gameSpawnHandle = null; }
+      return;
+    }
+    var text = gameWordsForPlay[gameWordQueueIdx++];
     var inPhase2 = (Date.now() - gameStartTime) >= GAME_PHASE2_AT;
-    var combo = STAGE_COMBO[STAGE.id];
-    // 스페이스바가 이제 "제출" 키라서, 띄어쓰기가 들어간 낱말(예: 8단계 "한국 사람")은
-    // 게임에서 입력할 방법이 없으므로 빼고 차분히 치는 조합 연습 화면에만 남겨둔다.
-    // 3음절 넘는 낱말(예: "고려대학교")도 떨어지는 속도상 입력하기 벅차 마찬가지로 뺀다.
-    var comboPool = combo ? combo.syllables.concat(combo.words).filter(function(w){
-      return w.length <= 3 && w.indexOf(' ') === -1;
-    }) : [];
-    var chars = gameChars(); // 8~10단계는 새 물리 키가 없어 빈 배열 — 이 경우 낱말만 사용
-    var comboChance = chars.length === 0 ? 1 : (inPhase2 ? 0.5 : 0.15);
-    var isCombo = comboPool.length > 0 && Math.random() < comboChance;
-    var text = isCombo
-      ? comboPool[Math.floor(Math.random() * comboPool.length)]
-      : chars[Math.floor(Math.random() * chars.length)];
-    if (!text) return; // 낱말·자모 풀이 모두 비어있는 예외 상황 방어
 
     var el = document.createElement('div');
-    el.className = 'falling' + (isCombo ? ' falling-combo' : '');
+    el.className = 'falling falling-combo';
     el.textContent = text;
     var leftPct = 10 + Math.random() * 78;
     el.style.left = leftPct + '%';
@@ -1989,7 +2032,7 @@
     var mult = GAME_SPEED_MULT[gameSpeedMode] || 1;
     var baseSpeed = inPhase2 ? (0.095 + Math.random() * 0.06) : (0.065 + Math.random() * 0.045);
     var speed = baseSpeed * mult;
-    fallingItems.push({el: el, char: text, top: 0, speed: speed, combo: isCombo});
+    fallingItems.push({el: el, char: text, top: 0, speed: speed, combo: true});
   }
 
   function gameLoop(){
@@ -1998,7 +2041,9 @@
     if (!gamePhase2Started && (Date.now() - gameStartTime) >= GAME_PHASE2_AT){
       gamePhase2Started = true;
       if (gameSpawnHandle) clearInterval(gameSpawnHandle);
-      gameSpawnHandle = setInterval(spawnFalling, spawnInterval(true));
+      if (gameWordQueueIdx < gameWordsForPlay.length){
+        gameSpawnHandle = setInterval(spawnFalling, spawnInterval(true));
+      }
     }
 
     for (var i = fallingItems.length - 1; i >= 0; i--){
@@ -2011,10 +2056,16 @@
         gameHearts--;
         renderHearts();
         if (gameHearts <= 0){
-          endGame();
+          endGame(false);
           return;
         }
       }
+    }
+
+    // 뽑힌 낱말을 다 떨어뜨렸고 화면에 남은 것도 없으면 "가볍게 클리어" 완료 처리
+    if (gameWordQueueIdx >= gameWordsForPlay.length && fallingItems.length === 0){
+      endGame(true);
+      return;
     }
     gameRAF = requestAnimationFrame(gameLoop);
   }
@@ -2040,7 +2091,7 @@
     if (!val) return;
     var idx = findBestMatch(val);
     if (idx >= 0) fallingItems[idx].el.classList.add('match-preview');
-    if (val.length > 3) gameInput.value = ''; // 너무 길어지면 오타로 보고 정리(낱말은 최대 3음절)
+    if (val.length > 4) gameInput.value = ''; // 너무 길어지면 오타로 보고 정리(낱말 풀은 최대 4음절)
   });
 
   gameInput.addEventListener('keydown', function(e){
@@ -2068,11 +2119,12 @@
     }
   });
 
-  function endGame(){
+  function endGame(cleared){
     gameActive = false;
     if (gameSpawnHandle) clearInterval(gameSpawnHandle);
     if (gameRAF) cancelAnimationFrame(gameRAF);
     gameInput.disabled = true;
+    goTitle.textContent = cleared ? '🎉 완료!' : '게임 종료';
     goScore.textContent = '점수 ' + gameScore;
     gameOverlay.classList.add('show');
   }
