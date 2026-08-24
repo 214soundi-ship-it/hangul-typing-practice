@@ -221,10 +221,18 @@
   .target-wrap.success{background:var(--teal-light);}
   .target-wrap.error{background:var(--brick-light);}
   .target-text.combo{font-size:56px;}
-  .target-text .ch{transition:color .1s;}
+  .target-text .ch{transition:color .1s; display:inline-block; border-radius:8px; padding:0 2px;}
   .target-text .ch.correct{color:var(--teal);}
   .target-text .ch.wrong{color:var(--brick); text-decoration:underline wavy var(--brick);}
   .target-text .ch.pending{color:var(--ink);}
+  .target-text .ch.space{min-width:0.6em; border-bottom:3px dashed var(--border);}
+  /* 받침이 붙거나 이중모음·겹받침이 막 완성되는 순간의 시각 피드백 */
+  .target-text .ch.pop{animation:chPop .5s ease;}
+  @keyframes chPop{
+    0%{ transform:scale(1); background:transparent; }
+    35%{ transform:scale(1.22); background:var(--teal-light); }
+    100%{ transform:scale(1); background:transparent; }
+  }
 
   .legend{font-size:11px; color:var(--ink-soft); text-align:center; margin:0 0 18px;}
   .legend .legend-ok{color:var(--teal); font-weight:600;}
@@ -809,7 +817,12 @@
     {id:4, name:'가운데자리', keys:['t','t*','y','g','h','b','n'], hasGame:true},
     {id:5, name:'오른손 윗자리', keys:['u','i','o','o*','p','p*'], hasGame:true},
     {id:6, name:'오른손 아랫자리', keys:['m',',','.','/'], hasGame:true},
-    {id:7, name:'전체자리', keys:null, hasGame:true}
+    {id:7, name:'전체자리', keys:null, hasGame:true},
+    // 8~10단계: 새로운 물리 키가 아니라 "이미 배운 키를 조합하는 원리"를 배우는 심화 단계라
+    // 별도의 자모 소개(물리 키 드릴) 없이 곧바로 글자·낱말 조합 연습으로 들어간다(keys:[]).
+    {id:8, name:'받침과 띄어쓰기', keys:[], hasGame:false},
+    {id:9, name:'이중모음', keys:[], hasGame:false},
+    {id:10, name:'겹받침', keys:[], hasGame:false}
   ];
   var ALL_KEYS = STAGE_DEFS.slice(0,6).reduce(function(acc, s){ return acc.concat(s.keys); }, []);
   STAGE_DEFS[6].keys = ALL_KEYS.slice();
@@ -960,7 +973,17 @@
     6: {syllables:['므','느','으','르','브','즈'],
         words:['그림','크기','느리다','스스로']},
     7: {syllables:[],
-        words:['한국어','타이핑','고려대학교']}
+        words:['한국어','타이핑','고려대학교']},
+    8: {syllables:['강','물','산','학','책'],
+        words:['한국 사람','학생 식당']},
+    // 스펙 원안은 '워'를 자모 하나(ㅝ)만 단독으로 보여주는 안이었으나, 2벌식에서 앞에
+    // 자음 없이 모음만 입력하면 실제 한국어 IME는 자동으로 초성 자리에 ㅇ을 채워
+    // "워"로 조합되어(빈 ㅝ 상태로 멈추지 않음) 목표를 "ㅝ" 그대로 두면 학생이 아무리
+    // 정확히 입력해도 절대 일치할 수 없는 문제가 있어, 실제로 조합되는 대로 "워"로 바꿈.
+    9: {syllables:['과','워','의','왜','뉘'],
+        words:['사과','병원','의사','회사']},
+    10: {syllables:['닭','많','없','읽','짧'],
+        words:['많다','없다','읽다']}
   };
   function buildComboQueue(stageId){
     var c = STAGE_COMBO[stageId];
@@ -968,16 +991,23 @@
   }
 
   // 한글 완성형 음절을 자모로 분해 (유니코드 공식) — 조합 연습 화면에서
-  // 자판·손가락 강조에 사용. 겹받침(ㄳㄵㄶ 등)과 복합모음(ㅘㅙㅚㅝㅞㅟ, 2벌식에서
-  // 두 키를 조합해야 함)은 이 연습 목록에서 쓰지 않으므로 여기서도 다루지 않음.
+  // 자판·손가락 강조에 사용. 복합모음(ㅘㅙㅚㅝㅞㅟ)과 겹받침(ㄳㄵㄶ 등)은 2벌식에서
+  // 키를 2번 연속 입력해 만드므로, 아래 표에서 각각 2개의 물리 자모로 풀어준다.
   var CHO_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
   var JUNG_LIST = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
   var JONG_LIST = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-  // 실제로 한 번의 키 입력(Shift 포함)으로 완성되는 모음만 여기 등록. ㅢ만 예외적으로
-  // ㅡ+ㅣ 두 번의 입력으로 완성되지만 2벌식 기본 규칙이라 포함시킴.
+  // 모음 하나(자판 한 번 입력) 또는 복합모음(자판 두 번 입력, 예: ㅘ=ㅗ+ㅏ)의 물리 입력 순서
   var JUNG_KEYSTROKES = {
     'ㅏ':['ㅏ'], 'ㅐ':['ㅐ'], 'ㅑ':['ㅑ'], 'ㅒ':['ㅒ'], 'ㅓ':['ㅓ'], 'ㅔ':['ㅔ'], 'ㅕ':['ㅕ'], 'ㅖ':['ㅖ'],
-    'ㅗ':['ㅗ'], 'ㅛ':['ㅛ'], 'ㅜ':['ㅜ'], 'ㅠ':['ㅠ'], 'ㅡ':['ㅡ'], 'ㅢ':['ㅡ','ㅣ'], 'ㅣ':['ㅣ']
+    'ㅗ':['ㅗ'], 'ㅛ':['ㅛ'], 'ㅜ':['ㅜ'], 'ㅠ':['ㅠ'], 'ㅡ':['ㅡ'], 'ㅢ':['ㅡ','ㅣ'], 'ㅣ':['ㅣ'],
+    'ㅘ':['ㅗ','ㅏ'], 'ㅙ':['ㅗ','ㅐ'], 'ㅚ':['ㅗ','ㅣ'], 'ㅝ':['ㅜ','ㅓ'], 'ㅞ':['ㅜ','ㅔ'], 'ㅟ':['ㅜ','ㅣ']
+  };
+  // 받침 하나(자판 한 번) 또는 겹받침(자판 두 번, 예: ㄺ=ㄹ+ㄱ)의 물리 입력 순서
+  var JONG_KEYSTROKES = {
+    'ㄱ':['ㄱ'], 'ㄲ':['ㄲ'], 'ㄴ':['ㄴ'], 'ㄷ':['ㄷ'], 'ㄹ':['ㄹ'], 'ㅁ':['ㅁ'], 'ㅂ':['ㅂ'],
+    'ㅅ':['ㅅ'], 'ㅆ':['ㅆ'], 'ㅇ':['ㅇ'], 'ㅈ':['ㅈ'], 'ㅊ':['ㅊ'], 'ㅋ':['ㅋ'], 'ㅌ':['ㅌ'], 'ㅍ':['ㅍ'], 'ㅎ':['ㅎ'],
+    'ㄳ':['ㄱ','ㅅ'], 'ㄵ':['ㄴ','ㅈ'], 'ㄶ':['ㄴ','ㅎ'], 'ㄺ':['ㄹ','ㄱ'], 'ㄻ':['ㄹ','ㅁ'],
+    'ㄼ':['ㄹ','ㅂ'], 'ㄽ':['ㄹ','ㅅ'], 'ㄾ':['ㄹ','ㅌ'], 'ㄿ':['ㄹ','ㅍ'], 'ㅀ':['ㄹ','ㅎ'], 'ㅄ':['ㅂ','ㅅ']
   };
   function decomposeSyllable(ch){
     var code = ch.charCodeAt(0) - 0xAC00;
@@ -986,11 +1016,10 @@
     var jungIdx = Math.floor(code / 28) % 21;
     var choIdx = Math.floor(code / 28 / 21);
     var jungKeys = JUNG_KEYSTROKES[JUNG_LIST[jungIdx]];
-    if (!jungKeys) return null; // 복합모음(ㅘㅙㅚㅝㅞㅟ) 등 이 연습에서 다루지 않는 모음
-    var jong = JONG_LIST[jongIdx];
-    var seq = [CHO_LIST[choIdx]].concat(jungKeys);
-    if (jong) seq.push(jong);
-    return seq;
+    if (!jungKeys) return null;
+    var jongChar = JONG_LIST[jongIdx];
+    var jongKeys = jongChar ? (JONG_KEYSTROKES[jongChar] || [jongChar]) : [];
+    return [CHO_LIST[choIdx]].concat(jungKeys, jongKeys);
   }
 
   var JAMO_TO_KEY = {
@@ -1532,7 +1561,14 @@
     typeInput.style.display = '';
     keyDiagramWrap.style.display = '';
     renderRoadmap();
-    loadKeyItem();
+    // 8~10단계(받침·이중모음·겹받침)는 새로 배울 물리 키가 없어 자모 드릴 없이
+    // 곧바로 조합 연습으로 시작한다.
+    if (STAGE.runtimeKeys.length === 0 && comboQueue.length > 0){
+      comboMode = true;
+      loadComboItem();
+    } else {
+      loadKeyItem();
+    }
   }
 
   function loadKeyItem(){
@@ -1559,15 +1595,24 @@
     armIdleTimer();
   }
 
+  var comboPrevVal = '';
   function renderComboTarget(typed){
     var target = comboQueue[comboIdx];
     targetEl.innerHTML = '';
     for (var i = 0; i < target.length; i++){
       var span = document.createElement('span');
-      span.className = 'ch ' + (i < typed.length ? (typed[i] === target[i] ? 'correct' : 'wrong') : 'pending');
+      var isCorrectNow = i < typed.length && typed[i] === target[i];
+      var wasCorrectBefore = i < comboPrevVal.length && comboPrevVal[i] === target[i];
+      var cls = 'ch ' + (i < typed.length ? (isCorrectNow ? 'correct' : 'wrong') : 'pending');
+      // 받침이 붙거나 이중모음·겹받침이 막 완성되는 등, 이 자리가 "방금" 정답으로
+      // 바뀐 순간에만 짧은 팝 애니메이션으로 시각 피드백을 준다.
+      if (isCorrectNow && !wasCorrectBefore) cls += ' pop';
+      if (target[i] === ' ') cls += ' space';
+      span.className = cls;
       span.textContent = target[i];
       targetEl.appendChild(span);
     }
+    comboPrevVal = typed;
   }
 
   function loadComboItem(){
@@ -1580,6 +1625,7 @@
     progLabel.textContent = (comboIdx + 1) + ' / ' + comboQueue.length;
     progFill.style.width = '100%';
     targetEl.className = 'target-text combo';
+    comboPrevVal = '';
     renderComboTarget('');
 
     var target = comboQueue[comboIdx];
