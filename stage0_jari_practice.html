@@ -29,7 +29,7 @@
     justify-content:center;
     padding:32px 16px 64px;
   }
-  .app{width:100%;max-width:640px;}
+  .app{width:100%;max-width:800px;}
   .eyebrow{
     font-family:'IBM Plex Mono', monospace;
     font-size:13px;
@@ -215,12 +215,12 @@
   .target-text{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
-    font-size:76px;
+    font-size:86px;
     line-height:1.2;
   }
   .target-wrap.success{background:var(--teal-light);}
   .target-wrap.error{background:var(--brick-light);}
-  .target-text.combo{font-size:48px;}
+  .target-text.combo{font-size:56px;}
   .target-text .ch{transition:color .1s;}
   .target-text .ch.correct{color:var(--teal);}
   .target-text .ch.wrong{color:var(--brick); text-decoration:underline wavy var(--brick);}
@@ -249,17 +249,17 @@
   .instructions b{color:var(--ink);}
 
   /* 키보드 다이어그램 (실제 키보드 전체 배열) */
-  .kbd{margin:0 0 24px; overflow-x:auto; padding-bottom:2px;}
-  .kbd-row{display:flex; justify-content:center; align-items:center; gap:4px; margin-bottom:4px;}
+  .kbd{margin:0 0 26px; overflow-x:auto; padding-bottom:2px;}
+  .kbd-row{display:flex; justify-content:center; align-items:center; gap:6px; margin-bottom:6px;}
   .key{
-    width:30px; height:30px;
-    border-radius:7px;
+    width:38px; height:38px;
+    border-radius:8px;
     border:1.5px solid var(--border);
     background:var(--card);
     display:flex; align-items:center; justify-content:center;
     font-family:'Noto Sans KR', sans-serif;
     font-weight:600;
-    font-size:13px;
+    font-size:15px;
     color:var(--ink-soft);
     opacity:1;
     transition:all .15s ease;
@@ -278,15 +278,15 @@
   .key.key-dual{
     flex-direction:column;
     gap:0;
-    line-height:1.05;
-    height:36px;
+    line-height:1.1;
+    height:44px;
   }
-  .key-shift-label{font-size:9px; opacity:.6;}
-  .key-base-label{font-size:11px; opacity:.85;}
+  .key-shift-label{font-size:11px; opacity:.6;}
+  .key-base-label{font-size:13px; opacity:.85;}
   .key.key-active .key-shift-label.emph,
   .key.key-active .key-base-label.emph{
     font-weight:800;
-    font-size:13px;
+    font-size:16px;
     opacity:1;
   }
   .key.key-active .key-shift-label:not(.emph),
@@ -295,21 +295,22 @@
   /* 장식용 키(숫자·Tab·Caps·Enter·Shift·Ctrl·Alt) — 실제 키보드처럼 보이게 하는 배경 요소, 강조 대상 아님 */
   .key.key-deco{
     opacity:.4;
-    font-size:9px;
+    font-size:11px;
     color:var(--ink-soft);
     background:var(--paper);
     cursor:default;
   }
-  .kbd-row.row-num .key{width:24px; height:24px; font-size:9px;}
-  .kbd-row.row-num .key.key-back{width:44px;}
-  .key.key-tab{width:38px;}
-  .key.key-caps{width:44px;}
-  .key.key-enter{width:48px;}
-  .key.key-shiftside{width:52px;}
-  .key.key-ctrl, .key.key-alt{width:34px;}
+  .kbd-row.row-num .key{width:32px; height:32px; font-size:11px;}
+  .kbd-row.row-num .key.key-dual{height:40px;}
+  .kbd-row.row-num .key.key-back{width:56px;}
+  .key.key-tab{width:48px;}
+  .key.key-caps{width:56px;}
+  .key.key-enter{width:60px;}
+  .key.key-shiftside{width:66px;}
+  .key.key-ctrl, .key.key-alt{width:42px;}
   .key.key-space{
-    width:180px;
-    border-radius:7px;
+    width:220px;
+    border-radius:8px;
   }
   .key.key-space.key-space-active{
     opacity:1;
@@ -338,34 +339,26 @@
     display:flex;
     align-items:flex-end;
     justify-content:center;
-    gap:8px;
-    margin:0 0 26px;
+    gap:10px;
+    margin:0 0 30px;
   }
   .hand{
     display:flex;
     align-items:flex-end;
-    gap:7px;
-  }
-  .spacebar{
-    width:220px;
-    height:16px;
-    border-radius:8px;
-    background:var(--border);
-    opacity:.55;
-    margin:6px auto 0;
+    gap:8px;
   }
   .finger{
-    width:20px;
-    border-radius:9px 9px 5px 5px;
+    width:23px;
+    border-radius:10px 10px 6px 6px;
     background:var(--border);
     position:relative;
     transition:background-color .15s ease;
   }
-  .finger.f-pinky{height:42px;}
-  .finger.f-ring{height:58px;}
-  .finger.f-middle{height:66px;}
-  .finger.f-index{height:56px;}
-  .finger.f-thumb{height:30px; width:22px;}
+  .finger.f-pinky{height:48px;}
+  .finger.f-ring{height:66px;}
+  .finger.f-middle{height:76px;}
+  .finger.f-index{height:64px;}
+  .finger.f-thumb{height:34px; width:25px;}
   .finger.active{
     background:var(--teal);
     box-shadow:0 0 0 4px var(--teal-light);
@@ -384,9 +377,9 @@
   .type-input{
     width:100%;
     font-family:'IBM Plex Mono', monospace;
-    font-size:22px;
+    font-size:26px;
     text-align:center;
-    padding:16px 15px;
+    padding:19px 16px;
     border-radius:12px;
     border:1.5px solid var(--border);
     background:var(--paper);
@@ -733,6 +726,8 @@
   // Shift + 키로 나오는 쌍자음·이중모음 (2벌식: ㄱㄷㅂㅅㅈ → ㄲㄸㅃㅆㅉ, ㅐㅔ → ㅒㅖ)
   // 물리적으로 같은 키이므로, 항목 표기는 물리 키 문자 + '*' (예: 'q*' = Shift+q = ㅃ)
   var SHIFT_JAMO = {q:'ㅃ', w:'ㅉ', e:'ㄸ', r:'ㄲ', t:'ㅆ', o:'ㅒ', p:'ㅖ'};
+  // 실제로 연습하지는 않지만, 진짜 키보드처럼 보이도록 함께 표시만 하는 Shift 기호
+  var COSMETIC_SHIFT = {';':':', ',':'<', '.':'>', '/':'?'};
 
   function isShiftItem(item){ return typeof item === 'string' && item.length === 2 && item[1] === '*'; }
   function physicalKey(item){ return isShiftItem(item) ? item[0] : item; }
@@ -1230,26 +1225,35 @@
         if (isActive) cls += ' key-active';
         else cls += ' key-dim';
 
-        if (SHIFT_JAMO[k]){
+        var shiftLabel = SHIFT_JAMO[k] || COSMETIC_SHIFT[k];
+        if (shiftLabel){
           var shiftCls = 'key-shift-label' + (isShiftActive ? ' emph' : '');
           var baseCls = 'key-base-label' + (isActive && !isShiftActive ? ' emph' : '');
           return '<div class="' + cls + ' key-dual">' +
-            '<span class="' + shiftCls + '">' + SHIFT_JAMO[k] + '</span>' +
+            '<span class="' + shiftCls + '">' + shiftLabel + '</span>' +
             '<span class="' + baseCls + '">' + KEY_TO_JAMO[k] + '</span>' +
           '</div>';
         }
         return '<div class="' + cls + '">' + KEY_TO_JAMO[k] + '</div>';
       }).join('');
     }
-    var NUM_ROW = ['`','1','2','3','4','5','6','7','8','9','0','-','='];
+    var NUM_PAIRS = [['~','`'],['!','1'],['@','2'],['#','3'],['$','4'],['%','5'],['^','6'],['&','7'],['*','8'],['(','9'],[')','0'],['_','-'],['+','=']];
     function decoKey(label, extraCls){
       return '<div class="key key-deco ' + extraCls + '">' + label + '</div>';
     }
+    function decoDualKey(shift, base, extraCls){
+      return '<div class="key key-deco key-dual ' + (extraCls || '') + '">' +
+        '<span class="key-shift-label">' + shift + '</span>' +
+        '<span class="key-base-label">' + base + '</span>' +
+      '</div>';
+    }
 
     kbdEl.innerHTML =
-      '<div class="kbd-row row-num">' + NUM_ROW.map(function(c){ return decoKey(c, ''); }).join('') + decoKey('⌫', 'key-back') + '</div>' +
-      '<div class="kbd-row row-top">' + decoKey('Tab', 'key-tab') + rowHtml(TOP_ROW) + '</div>' +
-      '<div class="kbd-row row-home">' + decoKey('Caps', 'key-caps') + rowHtml(HOME_ROW) + decoKey('Enter', 'key-enter') + '</div>' +
+      '<div class="kbd-row row-num">' + NUM_PAIRS.map(function(p){ return decoDualKey(p[0], p[1], ''); }).join('') + decoKey('⌫', 'key-back') + '</div>' +
+      '<div class="kbd-row row-top">' + decoKey('Tab', 'key-tab') + rowHtml(TOP_ROW) +
+        decoDualKey('{', '[', '') + decoDualKey('}', ']', '') + decoDualKey('|', '\\', '') + '</div>' +
+      '<div class="kbd-row row-home">' + decoKey('Caps', 'key-caps') + rowHtml(HOME_ROW) +
+        decoDualKey('"', "'", '') + decoKey('Enter', 'key-enter') + '</div>' +
       '<div class="kbd-row row-bottom">' + decoKey('Shift', 'key-shiftside') + rowHtml(BOTTOM_ROW) + decoKey('Shift', 'key-shiftside') + '</div>' +
       '<div class="kbd-row row-space">' +
         decoKey('Ctrl', 'key-ctrl') + decoKey('Alt', 'key-alt') +
