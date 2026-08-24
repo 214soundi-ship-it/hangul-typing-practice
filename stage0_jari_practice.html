@@ -187,11 +187,11 @@
   .chip .chip-n{font-family:'IBM Plex Mono', monospace; font-size:13px; display:block;}
   .chip.locked{opacity:.45;}
   .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
-  .chip.current{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
-  .chip.current .chip-n{color:#fff;}
+  .chip.next{border-color:var(--teal); color:var(--teal); border-width:2px;}
   .chip.clickable{cursor:pointer;}
   .chip.clickable:hover{border-color:var(--teal); transform:translateY(-1px);}
-  .chip.viewing{border-width:2px; border-color:var(--ink);}
+  .chip.viewing{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
+  .chip.viewing .chip-n{color:#fff;}
 
   .roadmap-hint{font-size:11px; color:var(--ink-soft); text-align:center; margin:-16px 0 20px;}
 
@@ -1154,11 +1154,12 @@
     roadmapEl.innerHTML = STAGE_DEFS.map(function(s){
       var isDone = !!completedStages[s.id];
       var isUnlocked = isDone || s.id <= maxUnlockedStage;
+      var isViewing = !!(STAGE && s.id === STAGE.id);
       var cls = 'chip';
-      if (isDone) cls += ' done';
-      else if (s.id === maxUnlockedStage) cls += ' current';
+      if (isViewing) cls += ' viewing';
+      else if (isDone) cls += ' done';
+      else if (s.id === maxUnlockedStage) cls += ' next';
       else if (!isUnlocked) cls += ' locked';
-      if (STAGE && s.id === STAGE.id) cls += ' viewing';
       if (isUnlocked) cls += ' clickable';
       var mark = isDone ? '✓' : (!isUnlocked ? '🔒' : (s.id + '단계'));
       return '<div class="' + cls + '" data-stage-id="' + s.id + '"><span class="chip-n">' + mark + '</span>' + s.name + '</div>';
