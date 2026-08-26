@@ -667,6 +667,7 @@
       </div>
       <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
       <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
+      <div class="error-text" id="loadError">이전 진행 상태를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요. (진행 기록을 지키기 위해, 확인 없이는 처음부터 시작하지 않습니다.)</div>
       <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
       <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
 
@@ -889,6 +890,7 @@
   var verifyField = document.getElementById('verifyField');
   var verifySuffix = document.getElementById('verifySuffix');
   var verifyError = document.getElementById('verifyError');
+  var loadError = document.getElementById('loadError');
   var startBtn = document.getElementById('startBtn');
   var historyBtn = document.getElementById('historyBtn');
   var toggleSelfRegister = document.getElementById('toggleSelfRegister');
@@ -1246,6 +1248,12 @@
   }
   loadStudents();
 
+  // ※ 중요: 불러오기 실패(네트워크 오류·Supabase 일시정지 후 깨어나는 중 등)를
+  // "진행 기록이 아예 없는 신규 학생"과 절대 같은 것으로 취급하면 안 된다 — 그렇게
+  // 취급하면 이미 여러 단계를 마친 학생이 처음부터 다시 시작하게 되고, 그 상태로
+  // finishStage()가 저장되는 순간 실제 진행 기록이 통째로 덮어써져 사라진다(실제로
+  // 발생했던 사고). 그래서 실패 시엔 loadFailed:true를 돌려주고, 호출부(enterProgram)가
+  // 이를 보고 진행하지 않도록 막는다.
   async function loadProgress(code){
     if (sb){
       try{
@@ -1256,21 +1264,43 @@
         if (res.error) throw res.error;
         if (res.data) return {
           completedStages: res.data.completed_stages || [],
-          nextStage: res.data.next_stage || 1
+          nextStage: res.data.next_stage || 1,
+          loadFailed: false
         };
-        return {completedStages: [], nextStage: 1};
-      } catch (err){ console.error('진행 상태 불러오기 실패:', err); return {completedStages: [], nextStage: 1}; }
+        return {completedStages: [], nextStage: 1, loadFailed: false};
+      } catch (err){
+        console.error('진행 상태 불러오기 실패:', err);
+        return {completedStages: [], nextStage: 1, loadFailed: true};
+      }
     }
     try{
       var got = await window.storage.get('stage0:progress:' + code, false);
-      if (got && got.value) return JSON.parse(got.value);
-    } catch (err){ console.error('진행 상태 불러오기 실패:', err); }
-    return {completedStages: [], nextStage: 1};
+      if (got && got.value){
+        var parsed = JSON.parse(got.value);
+        parsed.loadFailed = false;
+        return parsed;
+      }
+    } catch (err){
+      console.error('진행 상태 불러오기 실패:', err);
+      return {completedStages: [], nextStage: 1, loadFailed: true};
+    }
+    return {completedStages: [], nextStage: 1, loadFailed: false};
   }
 
   async function saveProgress(code, progress){
     if (sb){
       try{
+        // 되돌아가는(퇴행) 저장을 막는 안전장치 — 무슨 이유로든(불러오기 실패 후
+        // 신규 학생처럼 취급되는 경우 등) 이미 저장된 진행도보다 낮은 값을 저장하려고
+        // 하면 거부한다. 진행도는 오직 앞으로만 나아가야 한다.
+        var existing = await sb.from('stage0_progress')
+          .select('next_stage')
+          .eq('participant_code', code)
+          .maybeSingle();
+        if (!existing.error && existing.data && existing.data.next_stage > progress.nextStage){
+          console.error('진행 상태 저장 거부(퇴행 방지): 기존 next_stage=' + existing.data.next_stage + ', 시도한 값=' + progress.nextStage);
+          return;
+        }
         var res = await sb.from('stage0_progress').upsert({
           participant_code: code,
           completed_stages: progress.completedStages,
@@ -1365,10 +1395,17 @@
 
   /* ---------- 시작 / 기록 버튼 ---------- */
   async function enterProgram(code, name){
+    var progress = await loadProgress(code);
+    if (progress.loadFailed){
+      // 진행 상태를 못 불러왔으면 절대 화면을 넘어가지 않는다 — 여기서 그냥 진행해버리면
+      // 기존 진행 기록이 통째로 덮어써질 수 있다. 시작 화면에 그대로 두고 다시 시도하게 함.
+      loadError.style.display = 'block';
+      return;
+    }
+    loadError.style.display = 'none';
     currentCode = code;
     currentName = name;
 
-    var progress = await loadProgress(code);
     completedStages = {};
     (progress.completedStages || []).forEach(function(id){ completedStages[id] = true; });
     maxUnlockedStage = progress.nextStage;
