@@ -42,12 +42,14 @@
     font-size:42px;
     color:var(--teal);
     margin:0 0 12px;
+    text-wrap:balance;
   }
   .lede{
     font-size:17px;
     color:var(--ink-soft);
     line-height:1.65;
     margin:0 0 36px;
+    text-wrap:balance;
   }
   .card{
     display:block;
@@ -75,6 +77,13 @@
     border-radius:999px;
     margin-bottom:12px;
   }
+  .connector{
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft);
+    opacity:.5;
+    margin:-4px 0 14px;
+  }
+  .connector svg{width:16px; height:16px;}
   .card h2{
     font-family:'Noto Serif KR', serif;
     font-weight:700;
@@ -114,7 +123,7 @@
 <div class="app">
   <div class="eyebrow">연구용 웹 프로그램</div>
   <h1>타이핑 기반 사전학습 프로그램</h1>
-  <p class="lede">외국인 유학생 대상 한국어 글쓰기 수업을 위한 사전학습 도구입니다. 아래에서 진행할 단계를 선택하세요.</p>
+  <p class="lede">외국인 유학생 대상 한국어 글쓰기 수업을 위한 사전학습 도구입니다.<br/>아래에서 해당 주차 단계를 선택하세요.</p>
 
   <div class="section-label">사전학습 (타자 기초)</div>
 
@@ -122,28 +131,32 @@
     <span class="arrow">→</span>
     <span class="badge">1주차</span>
     <h2>자판 자리 연습</h2>
-    <p>한글 타이핑이 처음인 학습자를 위한 키보드 자판 위치·손가락 사용법 연습 (10단계 + 게임 모드)</p>
+    <p>한글 키보드 자판 위치·손가락 사용법 연습 (10단계 + 게임 모드)</p>
   </a>
+
+  <div class="connector" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v14M6 13l6 6 6-6"/></svg>
+  </div>
 
   <div class="section-label">사전학습 (강의 지문 연계)</div>
 
-  <div class="card disabled">
-    <span class="badge badge-soon">2~3주차 · 준비 중</span>
-    <h2>성찰적 글</h2>
-    <p>주2~3 대응 (성찰, 감정 표현·비유 / 교재 p23~44) — 핵심 개념어 → 지문 어휘·표현 → 핵심 문장 순 타이핑, 영·중 뜻 함께 제공</p>
+  <a class="card" href="week2_3_reflective_writing.html">
+    <span class="arrow">→</span>
+    <span class="badge">2~3주차</span>
+    <h2>성찰적 글쓰기</h2>
+    <p>교재 p23~44</p>
+  </a>
+
+  <div class="connector" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v14M6 13l6 6 6-6"/></svg>
   </div>
 
-  <div class="card disabled">
-    <span class="badge badge-soon">4~5주차 · 준비 중</span>
-    <h2>요약하기</h2>
-    <p>주4~5 대응 (요약, 의견 및 근거 제시 / 교재 p45~64)</p>
-  </div>
-
-  <div class="card disabled">
-    <span class="badge badge-soon">6~15주차 · 준비 중</span>
-    <h2>보고서 쓰기</h2>
-    <p>주6~15 대응 (보고서 유형 → 주제 → 참고문헌 → 개요 → 서론 → 인용 → 조사하기 → 결론 → 수정하기 / 교재 p65~136)</p>
-  </div>
+  <a class="card" href="week4_5_summary.html">
+    <span class="arrow">→</span>
+    <span class="badge">4~5주차</span>
+    <h2>요약을 활용한 글쓰기</h2>
+    <p>교재 p45~64</p>
+  </a>
 </div>
 </body>
 </html>

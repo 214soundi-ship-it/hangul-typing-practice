@@ -662,7 +662,10 @@
         <div class="instructions-title">📋 이렇게 진행됩니다</div>
         1. 분반과 이름을 선택하고, 본인 학번 전체로 확인해 주세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
-        3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.
+        3. 화면에 강조된 자리를 그대로 입력하면 자동으로 다음 자리로 넘어갑니다.<br/>
+        4. 이 프로그램은 <b>컴퓨터로 진행</b>해 주세요 — 한글 타이핑 실력 향상이 목적이라 휴대폰·태블릿으로는 연습이 잘 안 돼요.<br/>
+        5. 다음 수업 시작 전까지 미리 완료해 주세요.<br/>
+        6. 정확도나 속도는 <b>성적에 반영되지 않아요</b>. 편하게 연습해 주세요.
       </div>
       <div class="field">
         <label for="sectionSelect">분반</label>
@@ -797,8 +800,7 @@
         <div class="summary-box"><div class="val" id="sumStages">-</div><div class="lab">완료 단계</div></div>
       </div>
       <div id="sumTableWrap"></div>
-      <button class="btn btn-primary" id="toWeek1Btn" style="margin-top:16px;">1주차 문장 타이핑으로 이동</button>
-      <button class="btn btn-ghost" id="retryAllBtn">처음부터 다시 연습하기</button>
+      <button class="btn btn-primary" id="retryAllBtn" style="margin-top:16px;">단계 골라서 다시 연습하기</button>
       <button class="btn btn-ghost" id="toHistoryBtn">내 기록 보기</button>
     </div>
   </div>
@@ -956,7 +958,6 @@
   var sumFix = document.getElementById('sumFix');
   var sumStages = document.getElementById('sumStages');
   var sumTableWrap = document.getElementById('sumTableWrap');
-  var toWeek1Btn = document.getElementById('toWeek1Btn');
   var retryAllBtn = document.getElementById('retryAllBtn');
   var toHistoryBtn = document.getElementById('toHistoryBtn');
 
@@ -1485,8 +1486,11 @@
     openHistory();
   });
 
+  // "처음으로"는 이 프로그램 안의 로그인 화면이 아니라 전체 프로그램 목록(랜딩 페이지)으로
+  // 돌아가는 버튼이어야 한다는 피드백(2~3주차·4~5주차와 동일 적용) — 학생 전환은 이미
+  // "다른 학생으로 로그인"이 따로 있음
   homeLink.addEventListener('click', function(){
-    showScreen('start');
+    window.location.href = 'index.html';
   });
 
   /* ---------- 명단에 없는 학생 직접 등록 ---------- */
@@ -1842,7 +1846,7 @@
     }
   });
 
-  typeInput.addEventListener('input', function(){
+  typeInput.addEventListener('input', function(e){
     if (typeInput.disabled) return;
     var val = typeInput.value;
     if (!val) return;
@@ -1859,6 +1863,13 @@
       // 확정 오답으로 보고 지운다(week1과 동일한 방식 + 확정 오답 감지 추가).
       var comboTarget = comboQueue[comboIdx];
       renderComboTarget(val);
+
+      // 한글 IME가 아직 조합 중이면 지금 값은 최종 값이 아닐 수 있다. 특히 정답 판정에서
+      // 이 상태를 무시하고 곧바로 입력창을 비활성화(disabled=true)하면, 그 타이밍에 IME가
+      // 조합 상태를 잃어버리면서 이미 확정돼 있던 앞 글자가 통째로 사라지는 문제가 실제로
+      // 있었음(정답·오답 판정 둘 다에서 발생 가능) — 브라우저가 알려주는 조합 상태
+      // (isComposing)를 확인해, 조합이 끝나기 전에는 정답이든 오답이든 판정을 미룬다.
+      if (e.isComposing) return;
 
       if (val === comboTarget){
         totalAttempts++;
@@ -1879,11 +1890,14 @@
         return;
       }
 
-      var settledMismatch = val.length > comboTarget.length;
-      for (var ci = 0; !settledMismatch && ci < val.length - 1; ci++){
-        if (val[ci] !== comboTarget[ci]) settledMismatch = true;
+      // 확정 오답 판정: "확정된"(마지막 글자 제외 — 아직 조합 중일 수 있음) 글자들 중
+      // 목표와 처음 어긋나는 지점을 찾는다.
+      var mismatchIdx = -1;
+      for (var ci = 0; ci < val.length - 1; ci++){
+        if (val[ci] !== comboTarget[ci]) { mismatchIdx = ci; break; }
       }
-      if (settledMismatch){
+      if (mismatchIdx === -1 && val.length > comboTarget.length) mismatchIdx = comboTarget.length;
+      if (mismatchIdx !== -1){
         totalAttempts++;
         typoCount++;
         statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
@@ -1893,10 +1907,13 @@
         playWrongSound();
         feedbackTimeout = setTimeout(function(){
           targetWrap.classList.remove('error');
-          typeInput.value = '';
+          // 전체를 지우지 않고, 틀리기 직전까지 맞았던 부분은 남기고 오타 이후만 지운다 —
+          // 낱말 하나 정도야 처음부터 다시 쳐도 부담이 적지만, 문장처럼 긴 글에서 끝부분
+          // 오타 하나로 전체를 다시 치게 하면 학습자가 크게 좌절할 수 있음.
+          typeInput.value = val.slice(0, mismatchIdx);
           typeInput.disabled = false;
           typeInput.focus();
-          renderComboTarget('');
+          renderComboTarget(typeInput.value);
         }, 320);
       }
       return;
@@ -1944,6 +1961,14 @@
         typeInput.focus();
       }, 320);
     }
+  });
+
+  // 일부 브라우저·IME 조합에서는 조합이 끝나도 값이 안 바뀌면 별도의 input 이벤트를
+  // 안 보내는 경우가 있어, 조합 종료 시점에 한 번 더 명시적으로 판정 로직을 실행해
+  // 최종값을 놓치지 않게 한다(합성 input 이벤트는 isComposing이 false라 위 로직을
+  // 정상적으로 통과함).
+  typeInput.addEventListener('compositionend', function(){
+    typeInput.dispatchEvent(new Event('input', {bubbles: true}));
   });
 
   async function finishStage(){
@@ -2223,6 +2248,12 @@
     });
     var list = STAGE_DEFS.map(function(s){ return latestByStage[s.id]; }).filter(Boolean);
 
+    // 이 단계를 몇 번 연습했는지(회차 수) — 학생이 실제로 몇 번이나 반복했는지 한눈에
+    // 보이게, 요약 화면에도 표시한다. 회차별 상세(언제·얼마나 빨라졌는지)는 "내 기록
+    // 보기"에서 볼 수 있다.
+    var attemptCounts = {};
+    records.forEach(function(r){ attemptCounts[r.stageId] = (attemptCounts[r.stageId] || 0) + 1; });
+
     var totalTime = 0, totalCorrect = 0, totalAll = 0, totalTypo = 0;
     list.forEach(function(r){
       totalTime += r.timeSec;
@@ -2238,31 +2269,31 @@
     sumStages.textContent = list.length + ' / ' + STAGE_DEFS.length;
 
     var rows = list.map(function(r){
-      return '<tr><td>' + r.stageName + '</td><td>' + r.accuracy + '%</td><td>' + r.typoCount + '</td><td>' + r.timeSec + '초</td></tr>';
+      var cnt = attemptCounts[r.stageId] || 1;
+      var cntBadge = cnt > 1 ? ' <span class="attempt-badge">' + cnt + '회</span>' : '';
+      return '<tr><td>' + r.stageName + cntBadge + '</td><td>' + r.accuracy + '%</td><td>' + r.typoCount + '</td><td>' + r.timeSec + '초</td></tr>';
     }).join('');
     sumTableWrap.innerHTML = list.length ?
-      '<table><thead><tr><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th></tr></thead><tbody>' + rows + '</tbody></table>' :
+      '<table><thead><tr><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p class="empty-note">각 단계를 몇 회 연습했는지, 회차마다 얼마나 빨라졌는지는 "내 기록 보기"에서 자세히 볼 수 있어요.</p>' :
       '<p class="empty-note">기록이 없습니다.</p>';
 
     showScreen('summary');
   }
 
-  toWeek1Btn.addEventListener('click', function(){
-    window.location.href = 'week1_hangul_typing.html';
-  });
-
-  retryAllBtn.addEventListener('click', async function(){
-    completedStages = {};
-    sessionRecords = [];
-    maxUnlockedStage = 1;
-    await saveProgress(currentCode, {completedStages: [], nextStage: 1});
+  // "단계 골라서 다시 연습하기" — 진행 상태(완료 단계·다음 단계)를 절대 초기화하지 않는다.
+  // 예전에는 이 버튼이 진행 상태를 1단계로 되돌려서, 이미 다 마친 학생도 다시 순서대로
+  // 처음부터 풀어야만 뒷단계에 접근할 수 있었다(자유 선택이 불가능했음). 이제는 그냥
+  // 연습 화면으로 이동만 하고, 로드맵의 완료(✓) 단계 칩을 눌러 원하는 단계를 자유롭게
+  // 골라 다시 연습할 수 있게 한다.
+  retryAllBtn.addEventListener('click', function(){
     stageIdx = 0;
     showScreen('practice');
     loadStage(0);
   });
 
   toHistoryBtn.addEventListener('click', function(){ openHistory(); });
-  backFromHistoryBtn.addEventListener('click', function(){ showScreen('start'); });
+  backFromHistoryBtn.addEventListener('click', function(){ window.location.href = 'index.html'; });
 
   async function openHistory(){
     historyCodeLabel.textContent = currentName || currentCode;

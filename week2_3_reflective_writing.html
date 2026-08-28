@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2~3주차 · 성찰적 글쓰기</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --paper:#F6F1E7;
+    --card:#FFFDF8;
+    --ink:#1E2A38;
+    --ink-soft:#57657A;
+    --teal:#2C6E63;
+    --teal-light:#E4F0EC;
+    --brick:#A6432F;
+    --brick-light:#F6E7E3;
+    --border:rgba(30,42,56,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans KR', -apple-system, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .app{width:100%;max-width:800px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:34px;
+    color:var(--teal);
+    margin:0 0 8px;
+  }
+  .lede{
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 28px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:34px 36px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input[type="text"]{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+  }
+  input[type="text"]:focus{border-color:var(--teal);}
+  select{
+    width:100%;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2357657A'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 13px center;
+    background-size:16px;
+    padding-right:36px;
+  }
+  select:focus{border-color:var(--teal);}
+  select:disabled{opacity:.55; cursor:not-allowed;}
+  select:not(:disabled){cursor:pointer;}
+  .error-text{
+    font-size:12px;
+    color:var(--brick);
+    margin-top:6px;
+    display:none;
+  }
+  .btn{
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    padding:16px 20px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    width:100%;
+    transition:transform .1s ease, box-shadow .15s ease;
+  }
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 4px 14px rgba(44,110,99,.28);}
+  .btn-primary:hover{background:#245a51; transform:translateY(-1px); box-shadow:0 6px 18px rgba(44,110,99,.34);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1.5px solid var(--border);
+    margin-top:10px;
+  }
+  .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+  .btn-row{display:flex; gap:10px; margin-top:10px;}
+  .btn-row .btn{margin-top:0;}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+  }
+  .type-badge{
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .prog-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .progress-track{
+    height:4px;
+    background:var(--border);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--teal);
+    width:0%;
+    transition:width .35s ease;
+  }
+
+  /* 단계 로드맵 */
+  .roadmap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:22px;
+  }
+  .chip{
+    flex:1 1 12%;
+    min-width:72px;
+    text-align:center;
+    padding:8px 2px;
+    border-radius:9px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink-soft);
+    font-size:12px;
+    font-weight:600;
+    line-height:1.4;
+  }
+  .chip.locked{opacity:.45;}
+  .chip.done{background:var(--teal-light); border-color:var(--teal); color:var(--teal);}
+  .chip.next{border-color:var(--teal); color:var(--teal); border-width:2px;}
+  .chip.clickable{cursor:pointer;}
+  .chip.clickable:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .chip.viewing{background:var(--teal); border-color:var(--teal); color:#fff; border-width:2px; box-shadow:0 3px 10px rgba(44,110,99,.3);}
+
+  .roadmap-hint{font-size:11px; color:var(--ink-soft); text-align:center; margin:-16px 0 20px;}
+
+  .target-wrap{
+    text-align:center;
+    min-height:110px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:6px;
+    padding:18px 12px;
+    transition:background-color .2s ease;
+    border-radius:14px;
+  }
+  .target-text{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:44px;
+    line-height:1.5;
+  }
+  .target-text.sentence{font-size:24px; line-height:1.85; font-weight:600; text-align:left;}
+  .target-wrap.success{background:var(--teal-light);}
+  .target-wrap.error{background:var(--brick-light);}
+  .target-text .ch{transition:color .1s; display:inline-block; border-radius:8px; padding:0 1px;}
+  .target-text .ch.correct{color:var(--teal);}
+  .target-text .ch.wrong{color:var(--brick); text-decoration:underline wavy var(--brick);}
+  .target-text .ch.pending{color:var(--ink);}
+  .target-text .ch.space{min-width:0.5em; border-bottom:2px dashed var(--border);}
+  .target-text .ch.pop{animation:chPop .5s ease;}
+  @keyframes chPop{
+    0%{ transform:scale(1); background:transparent; }
+    35%{ transform:scale(1.22); background:var(--teal-light); }
+    100%{ transform:scale(1); background:transparent; }
+  }
+  .gloss-box{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    align-items:center;
+    text-align:center;
+  }
+  .gloss-box .gloss-ko{color:var(--ink); font-weight:600;}
+  .gloss-box .gloss-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:700;
+    color:var(--teal);
+    background:var(--teal-light);
+    border-radius:5px;
+    padding:1px 5px;
+    margin-right:6px;
+  }
+
+  .legend{font-size:11px; color:var(--ink-soft); text-align:center; margin:0 0 18px;}
+  .legend .legend-ok{color:var(--teal); font-weight:600;}
+  .legend .legend-bad{color:var(--brick); font-weight:600;}
+
+  .instructions{
+    background:var(--teal-light);
+    border:1.5px solid var(--teal);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:20px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.75;
+  }
+  .instructions .instructions-title{
+    font-weight:700;
+    color:var(--teal);
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .instructions b{color:var(--ink);}
+
+  .advance-hint{
+    display:none;
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal);
+    text-align:center;
+    margin:-4px 0 14px;
+  }
+  .advance-hint.show{display:block;}
+
+  .save-warning{
+    display:none;
+    position:fixed;
+    top:0; left:0; right:0;
+    background:var(--brick);
+    color:#fff;
+    text-align:center;
+    padding:9px 12px;
+    font-size:13px;
+    font-weight:600;
+    z-index:200;
+  }
+  .save-warning.show{display:block;}
+
+  .type-input{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px;
+    text-align:center;
+    padding:17px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    margin-bottom:24px;
+  }
+  .type-input:focus{border-color:var(--teal);}
+
+  .stats-bar{
+    display:flex;
+    justify-content:space-between;
+    border-top:1px dashed var(--border);
+    padding-top:16px;
+  }
+  .stat{display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .stat-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:19px;
+  }
+  .stat-label{font-size:12px; color:var(--ink-soft);}
+
+  .checkpoint{
+    display:none;
+    text-align:center;
+    padding-top:8px;
+  }
+  .checkpoint.show{display:block;}
+  .checkpoint-title{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:18px;
+    margin-bottom:16px;
+  }
+
+  .idle-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(246,241,231,.96);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+  }
+  .idle-overlay.show{display:flex;}
+  .idle-box{
+    background:var(--card);
+    border:2px solid var(--border);
+    border-radius:18px;
+    padding:32px 28px;
+    max-width:320px;
+    text-align:center;
+    box-shadow:0 12px 30px rgba(30,42,56,.12);
+  }
+  .idle-title{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:19px;
+    margin-bottom:10px;
+  }
+  .idle-desc{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin:20px 0 24px;
+  }
+  .summary-box{
+    background:var(--paper);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+  }
+  .summary-box .val{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:20px;
+    color:var(--ink);
+  }
+  .summary-box .lab{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{text-align:left; padding:8px 6px; border-bottom:1px solid var(--border);}
+  th{color:var(--ink-soft); font-weight:600; font-size:11px;}
+  .empty-note{font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0;}
+  .attempt-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+    background:var(--teal-light);
+    border-radius:999px;
+    padding:1px 7px;
+    margin-left:5px;
+  }
+  .trend-up{color:var(--teal); font-weight:700;}
+  .trend-down{color:var(--brick); font-weight:700;}
+
+  .link-btn{
+    display:block;
+    width:100%;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:12.5px;
+    text-decoration:underline;
+    text-underline-offset:2px;
+    cursor:pointer;
+    padding:14px 0 0;
+    text-align:center;
+  }
+  .link-btn:hover{color:var(--teal);}
+  .home-link{
+    display:inline-block;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    margin-bottom:16px;
+  }
+  .home-link:hover{color:var(--teal);}
+  .self-register{
+    display:none;
+    margin-top:14px;
+    padding-top:16px;
+    border-top:1px dashed var(--border);
+  }
+  .self-register.show{display:block;}
+
+  .code-pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+
+  /* 파트 선택 화면 */
+  .part-card{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--paper);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    padding:20px 22px;
+    margin-bottom:12px;
+    cursor:default;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .part-card.clickable{cursor:pointer;}
+  .part-card.clickable:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .part-card.disabled{opacity:.55;}
+  .part-card.done{border-color:var(--teal); background:var(--teal-light);}
+  .part-card h2{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:19px;
+    margin:8px 0 4px;
+  }
+  .part-card p{font-size:13px; color:var(--ink-soft); margin:0;}
+  .part-card .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    color:var(--teal);
+    background:var(--teal-light);
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .part-card.disabled .badge{background:var(--border); color:var(--ink-soft);}
+  .part-card .badge.badge-done{background:var(--teal); color:#fff;}
+
+  .part-heading{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin:0 0 8px;
+  }
+
+  /* 이해도 확인 퀴즈 */
+  .passage-lede{
+    font-size:14px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+  .passage-text{
+    font-family:'Noto Serif KR', serif;
+    font-size:15.5px;
+    line-height:1.9;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:22px 24px;
+    margin-bottom:22px;
+    max-height:60vh;
+    overflow-y:auto;
+  }
+  .passage-text p{margin:0 0 16px; text-indent:1em;}
+  .passage-text p:last-child{margin-bottom:0;}
+  .passage-text .passage-credit{
+    text-align:right;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+
+  .quiz-section-note{
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    text-align:center;
+    color:var(--teal-deep, var(--teal));
+    background:var(--teal-light);
+    border-radius:10px;
+    padding:9px 12px;
+    margin:0 0 14px;
+  }
+  .quiz-question{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:18px;
+    line-height:1.6;
+    margin:8px 0 22px;
+    text-align:center;
+    white-space:pre-line;
+  }
+  .quiz-meaning{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    align-items:center;
+    margin-top:10px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:600;
+    font-size:14px;
+  }
+  .quiz-meaning .m-ko{color:var(--ink);}
+  .quiz-meaning .m-en, .quiz-meaning .m-zh{font-size:12.5px; font-weight:500; color:var(--ink-soft);}
+  .quiz-meaning .m-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:700;
+    color:var(--teal);
+    background:var(--teal-light);
+    border-radius:5px;
+    padding:1px 5px;
+    margin-right:6px;
+  }
+  .quiz-option .quiz-meaning{align-items:flex-start; text-align:left;}
+  .quiz-options{display:flex; flex-direction:column; gap:10px;}
+  .quiz-option{
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14px;
+    text-align:left;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .quiz-option:hover:not(:disabled){border-color:var(--teal);}
+  .quiz-option:disabled{cursor:default;}
+  .quiz-option.correct{background:var(--teal-light); border-color:var(--teal); color:var(--teal); font-weight:700;}
+  .quiz-option.wrong{background:var(--brick-light); border-color:var(--brick); color:var(--brick); font-weight:700;}
+  .quiz-review-note{
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    text-align:center;
+    border-radius:10px;
+    padding:12px;
+    margin:0 0 14px;
+  }
+  .quiz-review-note.is-correct{color:var(--teal); background:var(--teal-light); border:1.5px solid var(--teal);}
+  .quiz-review-note.is-wrong{color:var(--brick); background:var(--brick-light); border:1.5px solid var(--brick);}
+  .qr-note-sub{display:block; font-weight:500; font-size:11.5px; opacity:.75; margin-top:3px;}
+  .qo-mark{display:inline-block; font-weight:700; margin-right:6px;}
+  .quiz-nav{display:flex; justify-content:space-between; margin-top:14px;}
+  .quiz-nav-btn{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:12.5px;
+    text-decoration:underline;
+    text-underline-offset:2px;
+    cursor:pointer;
+    padding:4px 2px;
+  }
+  .quiz-nav-btn:hover{color:var(--teal);}
+  .quiz-result-title{
+    font-family:'Noto Serif KR', serif;
+    font-weight:700;
+    font-size:20px;
+    text-align:center;
+    margin:12px 0 10px;
+  }
+  .quiz-result-desc{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+  .quiz-review-list{display:flex; flex-direction:column; gap:8px; margin:0 0 20px; max-height:340px; overflow-y:auto;}
+  .quiz-review-row{
+    border-radius:10px;
+    padding:10px 14px;
+    border:1.5px solid var(--border);
+    background:var(--paper);
+  }
+  .quiz-review-row.is-correct{border-color:var(--teal); background:var(--teal-light);}
+  .quiz-review-row.is-wrong{border-color:var(--brick); background:var(--brick-light);}
+  .qr-q{font-size:13.5px; font-weight:600; color:var(--ink); margin:0 0 4px;}
+  .qr-a{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .qr-mark{font-weight:700;}
+  .quiz-review-row.is-correct .qr-mark{color:var(--teal);}
+  .quiz-review-row.is-wrong .qr-mark{color:var(--brick);}
+
+  .resume-box{
+    background:var(--teal-light);
+    border:1.5px solid var(--teal);
+    border-radius:14px;
+    padding:18px 20px;
+    margin-bottom:20px;
+    text-align:center;
+  }
+  .resume-text{
+    font-size:14px;
+    color:var(--ink);
+    margin:0 0 12px;
+    font-weight:600;
+  }
+</style>
+</head>
+<body>
+<div class="save-warning" id="saveWarning">⚠️ 진행 상태 저장에 실패했어요. 인터넷 연결을 확인해 주세요 — 계속 실패하면 선생님께 알려주세요.</div>
+<div class="app">
+  <div class="eyebrow">타이핑 기반 사전학습 프로그램</div>
+  <h1>2~3주차 · 성찰적 글쓰기</h1>
+  <p class="lede">교재 「외국인 유학생을 위한 학술적 글쓰기」 성찰적 글쓰기 단원의 <b>파트 1(계획하기)·파트 2(작성하기)·파트 3(수정하기)</b>(23~44쪽)에서 가져온 필수 어휘를 순서대로 타이핑하며 익힙니다.</p>
+
+  <!-- 시작 화면 -->
+  <div id="screen-start" class="screen active">
+    <div class="card">
+      <div class="resume-box" id="resumeBox" style="display:none;">
+        <p class="resume-text" id="resumeText"></p>
+        <button type="button" class="btn btn-primary" id="resumeBtn">계속하기</button>
+        <button type="button" class="link-btn" id="switchStudentBtn">다른 학생으로 로그인</button>
+      </div>
+      <div class="instructions" id="instructionsBox">
+        <div class="instructions-title">📋 이렇게 진행됩니다</div>
+        1. 분반과 이름을 선택하고, 본인 학번 전체로 확인해 주세요.<br/>
+        2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
+        3. 로그인하면 파트를 선택하는 화면이 나옵니다. 파트를 고르면 그 안에서 화면의 단어를 그대로 입력하며 순서대로 진행하고, 파트 1을 다 마쳐야 파트 2가 열립니다.<br/>
+        4. 이 프로그램은 <b>컴퓨터로 진행</b>해 주세요 — 한글 타이핑 실력 향상이 목적이라 휴대폰·태블릿으로는 연습이 잘 안 돼요.<br/>
+        5. 다음 수업 시작 전까지 미리 완료해 주세요.<br/>
+        6. 타이핑 정확도나 이해도 확인 점수는 <b>성적에 반영되지 않아요</b>. 편하게 연습해 주세요.
+      </div>
+      <div id="loginFormBox">
+        <div class="field">
+          <label for="sectionSelect">분반</label>
+          <select id="sectionSelect">
+            <option value="">분반을 선택하세요</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nameSelect">이름</label>
+          <select id="nameSelect" disabled>
+            <option value="">먼저 분반을 선택하세요</option>
+          </select>
+        </div>
+        <div class="field" id="verifyField" style="display:none;">
+          <label for="verifySuffix">본인 확인 · 학번 전체</label>
+          <input type="text" id="verifySuffix" placeholder="예: 2026120137" autocomplete="off" inputmode="numeric" />
+        </div>
+        <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
+        <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
+        <div class="error-text" id="loadError">이전 진행 상태를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요. (진행 기록을 지키기 위해, 확인 없이는 처음부터 시작하지 않습니다.)</div>
+        <div class="error-text" id="contentError">학습 내용을 불러오지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로고침해 주세요.</div>
+        <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
+        <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
+
+        <button type="button" class="link-btn" id="toggleSelfRegister">명단에 내 이름이 없어요</button>
+        <div class="self-register" id="selfRegisterBox">
+          <div class="field">
+            <label for="selfSection">분반</label>
+            <select id="selfSection">
+              <option value="">분반을 선택하세요</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="selfStudentId">학번</label>
+            <input type="text" id="selfStudentId" placeholder="예: 2026100001" autocomplete="off" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="selfName">이름</label>
+            <input type="text" id="selfName" placeholder="이름을 입력하세요" autocomplete="off" />
+          </div>
+          <div class="error-text" id="selfRegisterError">분반 선택 후, 학번과 이름을 모두 입력해 주세요.</div>
+          <button type="button" class="btn btn-ghost" id="selfRegisterBtn">직접 등록하고 시작하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파트 선택 화면 -->
+  <div id="screen-part-select" class="screen">
+    <div class="card">
+      <button type="button" class="home-link" id="homeLinkFromPartSelect">← 처음으로</button>
+      <div id="partSelectList"></div>
+      <button type="button" class="btn btn-ghost" id="toSummaryFromPartSelectBtn" style="margin-top:16px;">전체 진행 현황 보기</button>
+      <button type="button" class="btn btn-ghost" id="toHistoryFromPartSelectBtn">내 기록 보기</button>
+    </div>
+  </div>
+
+  <!-- 연습 화면 -->
+  <div id="screen-practice" class="screen">
+    <div class="idle-overlay" id="idleOverlay">
+      <div class="idle-box">
+        <div class="idle-title">잠시 쉬고 계셨네요 🙂</div>
+        <p class="idle-desc">쉬는 시간은 기록에 따로 표시되니 걱정하지 마세요.<br>준비되면 아래 버튼을 눌러 이어서 연습해 주세요.</p>
+        <button type="button" class="btn btn-primary" id="idleResumeBtn">이어서 하기</button>
+      </div>
+    </div>
+    <div class="card">
+      <button type="button" class="home-link" id="homeLink">← 파트 선택으로</button>
+      <div class="part-heading" id="partHeading"></div>
+      <div class="roadmap" id="roadmap"></div>
+      <p class="roadmap-hint">✓ 표시된 단계를 눌러 언제든 다시 연습할 수 있어요.</p>
+
+      <div class="card-head">
+        <span class="type-badge" id="typeBadge">핵심 개념어</span>
+        <span class="prog-label" id="progLabel">1 / 8</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+      <div class="legend"><span class="legend-ok">초록</span> = 맞음 · <span class="legend-bad">빨강</span> = 틀림</div>
+
+      <div class="target-wrap" id="targetWrap">
+        <div class="target-text" id="target"></div>
+        <div class="gloss-box" id="glossBox"></div>
+      </div>
+      <p class="advance-hint" id="advanceHint">스페이스바를 눌러 다음으로 넘어가세요</p>
+
+      <input type="text" class="type-input" id="typeInput" placeholder="위 글을 그대로 입력하세요" autocomplete="off" />
+
+      <div class="stats-bar">
+        <div class="stat"><span class="stat-value" id="statAcc">100%</span><span class="stat-label">정확도</span></div>
+        <div class="stat"><span class="stat-value" id="statFix">0</span><span class="stat-label">오타 수</span></div>
+      </div>
+
+      <div class="checkpoint" id="checkpointBox">
+        <div class="checkpoint-title" id="checkpointTitle">🎉 연습을 마쳤어요!</div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="moreBtn">더 연습하기</button>
+          <button type="button" class="btn btn-primary" id="nextBtn">다음으로</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 지문 전체 읽기 화면 (파트 2 어휘를 다 마친 후, 이해도 퀴즈 전에) -->
+  <div id="screen-passage" class="screen">
+    <div class="card">
+      <div class="type-badge" style="margin-bottom:14px;">읽어보기 · 지문 전체</div>
+      <p class="passage-lede">방금 배운 어휘로 지문 전체를 이어서 읽어보세요. 문장이 어떻게 연결되는지 확인하는 단계예요 — 따로 입력하지 않아도 됩니다.</p>
+      <div class="passage-text" id="passageText"></div>
+      <button type="button" class="btn btn-primary" id="passageContinueBtn">다 읽었어요, 이해도 확인하기</button>
+    </div>
+  </div>
+
+  <!-- 이해도 확인 퀴즈 화면 (파트를 마칠 때마다) -->
+  <div id="screen-quiz" class="screen">
+    <div class="card">
+      <div class="card-head">
+        <span class="type-badge" id="quizBadge">이해도 확인</span>
+        <span class="prog-label" id="quizProgLabel">1 / 8</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="quizProgFill"></div></div>
+
+      <div id="quizQuestionBox">
+        <p class="quiz-section-note" id="quizSectionNote" style="display:none;">📖 이제부터는 방금 읽은 지문의 내용을 이해했는지 묻는 문제예요</p>
+        <p class="quiz-review-note" id="quizReviewNote" style="display:none;">✓ 이미 답변한 문제예요 — 확인만 가능하고 답은 바뀌지 않아요</p>
+        <p class="quiz-question" id="quizQuestion"></p>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="quiz-nav" id="quizNav">
+          <button type="button" class="quiz-nav-btn" id="quizPrevBtn" style="visibility:hidden;">← 이전 문제</button>
+          <button type="button" class="quiz-nav-btn" id="quizNextBtn" style="visibility:hidden;">다음 문제 →</button>
+        </div>
+      </div>
+
+      <div id="quizResultBox" style="display:none;">
+        <div class="quiz-result-title" id="quizResultTitle"></div>
+        <p class="quiz-result-desc">이해도 확인 결과는 연구 데이터로 기록됩니다. 틀린 문제가 있어도 진행에는 영향이 없어요.</p>
+        <div class="quiz-review-list" id="quizReviewList"></div>
+        <button type="button" class="btn btn-primary" id="quizContinueBtn">계속하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전체 완료 요약 화면 -->
+  <div id="screen-summary" class="screen">
+    <div class="card">
+      <div class="type-badge" style="margin-bottom:14px;">성찰적 글쓰기 연습 완료</div>
+      <div class="summary-grid">
+        <div class="summary-box"><div class="val" id="sumTime">-</div><div class="lab">총 소요 시간</div></div>
+        <div class="summary-box"><div class="val" id="sumAcc">-</div><div class="lab">평균 정확도</div></div>
+        <div class="summary-box"><div class="val" id="sumFix">-</div><div class="lab">총 오타 수</div></div>
+        <div class="summary-box"><div class="val" id="sumStages">-</div><div class="lab">완료 단계</div></div>
+      </div>
+      <div id="sumTableWrap"></div>
+      <button class="btn btn-primary" id="retryAllBtn" style="margin-top:16px;">단계 골라서 다시 연습하기</button>
+      <button class="btn btn-ghost" id="toHistoryBtn">내 기록 보기</button>
+    </div>
+  </div>
+
+  <!-- 기록 화면 -->
+  <div id="screen-history" class="screen">
+    <div class="card">
+      <div class="code-pill" id="historyCodeLabel"></div>
+      <div id="historyContent"></div>
+      <button class="btn btn-ghost" id="backFromHistoryBtn">처음으로</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  /* ---------- Supabase 연결 정보 (stage0_jari_practice.html과 동일한 프로젝트) ---------- */
+  var SUPABASE_URL = 'https://lkimtjqooxzvlbnigqyk.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP';
+
+  var screens = {
+    start: document.getElementById('screen-start'),
+    partSelect: document.getElementById('screen-part-select'),
+    practice: document.getElementById('screen-practice'),
+    passage: document.getElementById('screen-passage'),
+    quiz: document.getElementById('screen-quiz'),
+    summary: document.getElementById('screen-summary'),
+    history: document.getElementById('screen-history')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('active', k === name); });
+  }
+
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function speak(text){
+    try{
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR';
+      u.rate = 0.75;
+      window.speechSynthesis.speak(u);
+    } catch (err){ console.error('발음 재생 실패:', err); }
+  }
+
+  var audioCtx = null;
+  function playWrongSound(){
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 180;
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    } catch (err){ console.error('효과음 재생 실패:', err); }
+  }
+
+  /* ---------- DOM 참조 ---------- */
+  var sectionSelect = document.getElementById('sectionSelect');
+  var nameSelect = document.getElementById('nameSelect');
+  var codeError = document.getElementById('codeError');
+  var verifyField = document.getElementById('verifyField');
+  var verifySuffix = document.getElementById('verifySuffix');
+  var verifyError = document.getElementById('verifyError');
+  var loadError = document.getElementById('loadError');
+  var contentError = document.getElementById('contentError');
+  var saveWarning = document.getElementById('saveWarning');
+  var startBtn = document.getElementById('startBtn');
+  var historyBtn = document.getElementById('historyBtn');
+  var toggleSelfRegister = document.getElementById('toggleSelfRegister');
+  var selfRegisterBox = document.getElementById('selfRegisterBox');
+  var selfSection = document.getElementById('selfSection');
+  var selfStudentId = document.getElementById('selfStudentId');
+  var selfName = document.getElementById('selfName');
+  var selfRegisterError = document.getElementById('selfRegisterError');
+  var selfRegisterBtn = document.getElementById('selfRegisterBtn');
+  var instructionsBox = document.getElementById('instructionsBox');
+  var loginFormBox = document.getElementById('loginFormBox');
+  var resumeBox = document.getElementById('resumeBox');
+  var resumeText = document.getElementById('resumeText');
+  var resumeBtn = document.getElementById('resumeBtn');
+  var switchStudentBtn = document.getElementById('switchStudentBtn');
+
+  var partSelectList = document.getElementById('partSelectList');
+  var homeLinkFromPartSelect = document.getElementById('homeLinkFromPartSelect');
+  var toSummaryFromPartSelectBtn = document.getElementById('toSummaryFromPartSelectBtn');
+  var toHistoryFromPartSelectBtn = document.getElementById('toHistoryFromPartSelectBtn');
+  var partHeading = document.getElementById('partHeading');
+  var passageText = document.getElementById('passageText');
+  var passageContinueBtn = document.getElementById('passageContinueBtn');
+  var quizBadge = document.getElementById('quizBadge');
+  var quizProgLabel = document.getElementById('quizProgLabel');
+  var quizProgFill = document.getElementById('quizProgFill');
+  var quizQuestionBox = document.getElementById('quizQuestionBox');
+  var quizSectionNote = document.getElementById('quizSectionNote');
+  var quizReviewNote = document.getElementById('quizReviewNote');
+  var quizQuestion = document.getElementById('quizQuestion');
+  var quizOptions = document.getElementById('quizOptions');
+  var quizPrevBtn = document.getElementById('quizPrevBtn');
+  var quizNextBtn = document.getElementById('quizNextBtn');
+  var quizResultBox = document.getElementById('quizResultBox');
+  var quizResultTitle = document.getElementById('quizResultTitle');
+  var quizReviewList = document.getElementById('quizReviewList');
+  var quizContinueBtn = document.getElementById('quizContinueBtn');
+  var roadmapEl = document.getElementById('roadmap');
+  var typeBadge = document.getElementById('typeBadge');
+  var progLabel = document.getElementById('progLabel');
+  var progFill = document.getElementById('progFill');
+  var targetEl = document.getElementById('target');
+  var targetWrap = document.getElementById('targetWrap');
+  var glossBox = document.getElementById('glossBox');
+  var advanceHint = document.getElementById('advanceHint');
+  var typeInput = document.getElementById('typeInput');
+  var statAcc = document.getElementById('statAcc');
+  var statFix = document.getElementById('statFix');
+  var checkpointBox = document.getElementById('checkpointBox');
+  var checkpointTitle = document.getElementById('checkpointTitle');
+  var moreBtn = document.getElementById('moreBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var idleOverlay = document.getElementById('idleOverlay');
+  var idleResumeBtn = document.getElementById('idleResumeBtn');
+
+  var sumTime = document.getElementById('sumTime');
+  var sumAcc = document.getElementById('sumAcc');
+  var sumFix = document.getElementById('sumFix');
+  var sumStages = document.getElementById('sumStages');
+  var sumTableWrap = document.getElementById('sumTableWrap');
+  var retryAllBtn = document.getElementById('retryAllBtn');
+  var toHistoryBtn = document.getElementById('toHistoryBtn');
+
+  var historyCodeLabel = document.getElementById('historyCodeLabel');
+  var historyContent = document.getElementById('historyContent');
+  var backFromHistoryBtn = document.getElementById('backFromHistoryBtn');
+  var homeLink = document.getElementById('homeLink');
+
+  /* ---------- 단계 정의. 파트 1(계획하기)·파트 2(작성하기) 확정 반영, 파트 3(수정하기)은 준비 중.
+     각 단계는 특정 파트에 속하며, 학생은 파트 1을 다 마쳐야 파트 2로 넘어감(실제 수업이
+     계획하기→작성하기→수정하기 순서로 진행되는 것과 동일). ---------- */
+  // (수정 이력) "활동 지시문 어휘" 그룹(파트 1·2)은 한때 있었으나, 실제 활동은 수업 시간에
+  // 교수자가 직접 설명해줘서 사전학습 도구로 다룰 실익이 적다고 판단해 두 파트 모두에서
+  // 제외함(연구자 결정) — research-notes.md 로그 참고.
+  var STAGE_DEFS = [
+    {id:1, part:1, key:'concept', name:'핵심 개념어', partName:'파트 1 · 계획하기'},
+    {id:2, part:1, key:'narrative', name:'예시 이해 어휘', partName:'파트 1 · 계획하기'},
+    {id:3, part:2, key:'concept', name:'핵심 개념어', partName:'파트 2 · 작성하기'},
+    {id:4, part:2, key:'reading', name:'읽어보기(30쪽) 어휘와 표현', partName:'파트 2 · 작성하기'},
+    {id:5, part:3, key:'concept', name:'핵심 개념어', partName:'파트 3 · 수정하기'},
+    {id:6, part:3, key:'adverb', name:'부사 연습(42쪽) 어휘', partName:'파트 3 · 수정하기'}
+  ];
+
+  // 파트 선택 화면에 보여줄 카드 정의. ready:false인 파트는 STAGE_DEFS에 단계가 없어도
+  // (아직 콘텐츠가 없어도) "준비 중" 카드로 함께 보여준다.
+  var PART_DEFS = [
+    {part:1, name:'3. 성찰적 글 계획하기', pages:'교재 23~28쪽', ready:true},
+    {part:2, name:'4. 성찰적 글 작성하기', pages:'교재 29~36쪽', ready:true},
+    {part:3, name:'5. 성찰적 글 수정하기', pages:'교재 37~44쪽', ready:true}
+  ];
+
+  /* ---------- 상태 ---------- */
+  var currentCode = '';
+  var currentName = '';
+
+  // 학번 확인을 매번(페이지를 새로고침하거나 다른 프로그램에서 돌아올 때마다) 다시 하게
+  // 하면 번거롭다는 피드백 — 참여자 코드·이름을 localStorage에 저장해 페이지를 새로
+  // 열어도 "이어서 진행하시겠어요?" 화면으로 바로 갈 수 있게 함. 키를 프로그램별로
+  // 나누지 않은 건, 같은 학생이 1주차·2~3주차·4~5주차를 오갈 때도 동일 인물이라 굳이
+  // 다시 확인할 필요가 없기 때문(실제 배포 시 같은 도메인이라 공유됨)
+  var IDENTITY_STORAGE_KEY = 'hangul_typing_identity';
+  function saveIdentity(code, name){
+    try{ localStorage.setItem(IDENTITY_STORAGE_KEY, JSON.stringify({code: code, name: name})); } catch (e){}
+  }
+  function clearIdentity(){
+    try{ localStorage.removeItem(IDENTITY_STORAGE_KEY); } catch (e){}
+  }
+  function loadSavedIdentity(){
+    try{
+      var raw = localStorage.getItem(IDENTITY_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return (parsed && parsed.code) ? parsed : null;
+    } catch (e){ return null; }
+  }
+
+  var studentsBySection = {};
+  var studentIdByCode = {};
+  var completedStages = {};
+  var stageIdx = 0;
+  var STAGE = null;
+  var stageStartTime = null;
+  var stageEndTime = null;
+  var totalAttempts = 0;
+  var correctAttempts = 0;
+  var typoCount = 0;
+  var feedbackTimeout = null;
+  var awaitingAdvance = false;
+  var pendingAdvanceFn = null;
+
+  var IDLE_THRESHOLD_MS = 20000;
+  var idleTimer = null;
+  var isPaused = false;
+  var idlePauseStart = 0;
+  var idleCount = 0;
+  var idleTotalMs = 0;
+  var maxUnlockedStage = 1;
+  var lastCompletionWasForward = true;
+
+  var comboQueue = [];   // [{text, gloss, glossEn, glossZh}]
+  var comboIdx = 0;
+  var comboPrevVal = '';
+
+  /* ---------- 이해도 확인 퀴즈 (RQ1: 사전 내용 이해도 측정용) ---------- */
+  var quizQuestions = [];
+  var quizIdx = 0;
+  var quizAnswers = [];
+  var quizPendingPart = null;
+  var quizOnDone = null;
+  var quizVocabCount = 0;
+  var compQuestionsByPart = {}; // part -> [{question, correct, distractors:[...]}]
+  var passageOnDone = null;
+
+  /* ---------- 콘텐츠 (교재에서 가져온 지문 — Supabase에서만 불러오고, 이 파일 안에는
+     원문을 직접 심어두지 않는다. 그래야 저작권 있는 교재 원문이 공개 GitHub 소스코드에
+     남지 않는다.) ---------- */
+  // 같은 stage_key('concept' 등)가 파트마다 다시 쓰이므로, "파트:key"로 묶어서 서로 다른
+  // 파트의 콘텐츠가 섞이지 않게 한다.
+  function stageContentKey(stage){ return stage.part + ':' + stage.key; }
+  var contentByStage = {};
+  var contentLoadFailed = false;
+
+  function armIdleTimer(){
+    clearTimeout(idleTimer);
+    if (isPaused || !stageStartTime || stageEndTime) return;
+    if (!screens.practice.classList.contains('active')) return;
+    if (checkpointBox.classList.contains('show')) return;
+    idleTimer = setTimeout(pauseForIdle, IDLE_THRESHOLD_MS);
+  }
+  function pauseForIdle(){
+    if (isPaused || !stageStartTime || stageEndTime) return;
+    if (!screens.practice.classList.contains('active')) return;
+    if (checkpointBox.classList.contains('show')) return;
+    isPaused = true;
+    idlePauseStart = Date.now();
+    typeInput.disabled = true;
+    idleOverlay.classList.add('show');
+  }
+  function resumeFromIdle(){
+    if (!isPaused) return;
+    idleTotalMs += Date.now() - idlePauseStart;
+    idleCount++;
+    isPaused = false;
+    idleOverlay.classList.remove('show');
+    if (awaitingAdvance){
+      typeInput.focus();
+    } else {
+      typeInput.disabled = false;
+      typeInput.value = '';
+      typeInput.focus();
+    }
+    armIdleTimer();
+  }
+  idleResumeBtn.addEventListener('click', resumeFromIdle);
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) pauseForIdle();
+  });
+
+  function getCode(){ return nameSelect.value; }
+
+  sectionSelect.addEventListener('change', function(){
+    var section = sectionSelect.value;
+    var list = studentsBySection[section] || [];
+    verifyField.style.display = 'none';
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
+    if (!section || list.length === 0){
+      nameSelect.innerHTML = '<option value="">먼저 분반을 선택하세요</option>';
+      nameSelect.disabled = true;
+      return;
+    }
+    nameSelect.innerHTML = '<option value="">이름을 선택하세요</option>' +
+      list.map(function(s){ return '<option value="' + s.code + '">' + s.name + '</option>'; }).join('');
+    nameSelect.disabled = false;
+  });
+
+  nameSelect.addEventListener('change', function(){
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
+    verifyField.style.display = nameSelect.value ? 'block' : 'none';
+  });
+
+  /* ---------- 저장소 (Supabase) ---------- */
+  var sb = (window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  /* ---------- 학생 명단 (분반/이름 선택) — students 테이블은 stage0과 공유 ---------- */
+  async function loadStudents(){
+    if (!sb){
+      sectionSelect.innerHTML = '<option value="">명단을 불러올 수 없습니다</option>';
+      return;
+    }
+    try{
+      var res = await sb.from('students').select('section, name, participant_code, student_id').order('name');
+      if (res.error) throw res.error;
+      var rows = res.data || [];
+      studentsBySection = {};
+      studentIdByCode = {};
+      rows.forEach(function(r){
+        if (!studentsBySection[r.section]) studentsBySection[r.section] = [];
+        studentsBySection[r.section].push({name: r.name, code: r.participant_code});
+        studentIdByCode[r.participant_code] = String(r.student_id);
+      });
+      var sections = Object.keys(studentsBySection).sort();
+      if (sections.length === 0){
+        sectionSelect.innerHTML = '<option value="">등록된 분반이 없습니다</option>';
+        return;
+      }
+      var sectionOptions = sections.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      sectionSelect.innerHTML = '<option value="">분반을 선택하세요</option>' + sectionOptions;
+      selfSection.innerHTML = '<option value="">분반을 선택하세요</option>' + sectionOptions;
+    } catch (err){
+      console.error('학생 명단 불러오기 실패:', err);
+      sectionSelect.innerHTML = '<option value="">명단을 불러오지 못했습니다</option>';
+    }
+  }
+  loadStudents();
+
+  // 저장된 로그인이 있으면 복원 — 진행 상태 자체는 "계속하기"를 눌러야 다시 불러오지만,
+  // 화면에 "OO님, 이어서 진행하시겠어요?"를 바로 보여줘서 분반·이름·학번 재입력을 건너뛴다
+  var savedIdentity = loadSavedIdentity();
+  if (savedIdentity){
+    currentCode = savedIdentity.code;
+    currentName = savedIdentity.name || '';
+  }
+  showStartScreen();
+
+  /* ---------- 콘텐츠 (교재에서 발췌한 개념어·어휘·문장) 불러오기 ----------
+     ※ stage0의 critical bug 교훈: 불러오기 실패를 "내용이 원래 없음"과 절대
+     같은 것으로 취급하지 않는다. 실패하면 빈 배열로 조용히 넘어가지 않고
+     contentLoadFailed를 세워서, 시작 버튼을 눌러도 진행하지 못하게 막는다. */
+  // 페이지가 열리자마자 한 번만 시도하는데, 마이그레이션 SQL을 막 실행한 직후처럼
+  // Supabase 쪽이 일시적으로 지연될 수 있는 순간이 있다 — 그때 딱 걸리면 재시도 없이
+  // 영구히 "불러오기 실패" 상태에 갇히는 문제가 실제로 있었다(수정 전). saveProgress와
+  // 같은 자동 재시도(최대 3회)를 추가해 일시적 실패는 스스로 회복하게 한다.
+  async function loadContent(){
+    if (!sb){ contentLoadFailed = true; return; }
+    for (var attempt = 1; attempt <= 3; attempt++){
+      try{
+        var res = await sb.from('week23_content')
+          .select('part, stage_key, order_num, target_text, gloss, gloss_en, gloss_zh')
+          .eq('unit', 'week23')
+          .order('order_num');
+        if (res.error) throw res.error;
+        var rows = res.data || [];
+        var byStage = {};
+        rows.forEach(function(r){
+          var k = r.part + ':' + r.stage_key;
+          if (!byStage[k]) byStage[k] = [];
+          byStage[k].push({text: r.target_text, gloss: r.gloss, glossEn: r.gloss_en, glossZh: r.gloss_zh});
+        });
+        var hasAny = STAGE_DEFS.every(function(s){ return (byStage[stageContentKey(s)] || []).length > 0; });
+        if (!hasAny) throw new Error('일부 단계의 콘텐츠가 비어 있습니다');
+        contentByStage = byStage;
+        contentLoadFailed = false;
+        return;
+      } catch (err){
+        console.error('학습 내용 불러오기 실패(시도 ' + attempt + '/3):', err);
+        contentLoadFailed = true;
+        if (attempt < 3) await sleep(attempt * 700);
+      }
+    }
+  }
+  var contentLoadPromise = loadContent();
+
+  // 내용 이해 문항(선택적 보강 기능) — 어휘 콘텐츠와 달리 없어도 어휘 퀴즈 자체는 정상
+  // 작동하므로, 실패해도 화면을 막지 않고 콘솔에만 남긴다(비필수 기능은 이렇게 처리하기로
+  // 확정한 기존 원칙 그대로 적용).
+  async function loadComprehensionQuestions(){
+    if (!sb) return;
+    try{
+      var res = await sb.from('week23_comprehension_questions')
+        .select('part, order_num, question_text, correct_answer, distractor_1, distractor_2, distractor_3')
+        .eq('unit', 'week23')
+        .order('order_num');
+      if (res.error) throw res.error;
+      var byPart = {};
+      (res.data || []).forEach(function(r){
+        if (!byPart[r.part]) byPart[r.part] = [];
+        byPart[r.part].push({
+          question: r.question_text,
+          correct: r.correct_answer,
+          distractors: [r.distractor_1, r.distractor_2, r.distractor_3]
+        });
+      });
+      compQuestionsByPart = byPart;
+    } catch (err){
+      console.error('내용 이해 문항 불러오기 실패(선택적 기능이라 퀴즈 진행에는 영향 없음):', err);
+    }
+  }
+  loadComprehensionQuestions();
+
+  async function loadProgress(code){
+    if (sb){
+      try{
+        var res = await sb.from('week23_progress')
+          .select('completed_stages, next_stage')
+          .eq('participant_code', code)
+          .maybeSingle();
+        if (res.error) throw res.error;
+        if (res.data) return {
+          completedStages: res.data.completed_stages || [],
+          nextStage: res.data.next_stage || 1,
+          loadFailed: false
+        };
+        return {completedStages: [], nextStage: 1, loadFailed: false};
+      } catch (err){
+        console.error('진행 상태 불러오기 실패:', err);
+        return {completedStages: [], nextStage: 1, loadFailed: true};
+      }
+    }
+    return {completedStages: [], nextStage: 1, loadFailed: true};
+  }
+
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  async function saveProgress(code, progress){
+    if (!sb) return false;
+    for (var attempt = 1; attempt <= 3; attempt++){
+      try{
+        var existing = await sb.from('week23_progress')
+          .select('next_stage')
+          .eq('participant_code', code)
+          .maybeSingle();
+        if (!existing.error && existing.data && existing.data.next_stage > progress.nextStage){
+          console.error('진행 상태 저장 거부(퇴행 방지): 이미 저장된 진행도가 더 앞서 있음');
+          return false;
+        }
+        var res = await sb.from('week23_progress').upsert({
+          participant_code: code,
+          completed_stages: progress.completedStages,
+          next_stage: progress.nextStage,
+          updated_at: new Date().toISOString()
+        }, {onConflict: 'participant_code'});
+        if (res.error) throw res.error;
+        return true;
+      } catch (err){
+        console.error('진행 상태 저장 실패(시도 ' + attempt + '/3):', err);
+        if (attempt < 3) await sleep(attempt * 500);
+      }
+    }
+    return false;
+  }
+
+  async function saveStageRecord(code, record){
+    if (!sb) return;
+    var payload = {
+      participant_code: code,
+      stage_id: record.stageId,
+      stage_name: record.stageName,
+      item_count: record.itemCount,
+      time_sec: record.timeSec,
+      accuracy: record.accuracy,
+      typo_count: record.typoCount,
+      total_attempts: record.totalAttempts,
+      correct_attempts: record.correctAttempts,
+      idle_count: record.idleCount,
+      idle_total_sec: record.idleTotalSec,
+      recorded_at: record.date
+    };
+    try{
+      var res = await sb.from('week23_records').insert(payload);
+      if (res.error) throw res.error;
+    } catch (err){ console.error('단계 기록 저장 실패:', err); }
+  }
+
+  async function fetchAllRecords(code){
+    if (!sb){ var f = []; f.failed = true; return f; }
+    try{
+      var res = await sb.from('week23_records')
+        .select('*')
+        .eq('participant_code', code)
+        .order('recorded_at', {ascending: false});
+      if (res.error) throw res.error;
+      return (res.data || []).map(function(row){
+        return {
+          stageId: row.stage_id,
+          stageName: row.stage_name,
+          itemCount: row.item_count,
+          timeSec: row.time_sec,
+          accuracy: row.accuracy,
+          typoCount: row.typo_count,
+          totalAttempts: row.total_attempts,
+          correctAttempts: row.correct_attempts,
+          idleCount: row.idle_count || 0,
+          idleTotalSec: row.idle_total_sec || 0,
+          date: row.recorded_at
+        };
+      });
+    } catch (err){
+      console.error('기록 목록 조회 실패:', err);
+      var failed = [];
+      failed.failed = true;
+      return failed;
+    }
+  }
+
+  /* ---------- 시작 / 기록 버튼 ---------- */
+  async function enterProgram(code, name){
+    await contentLoadPromise;
+    if (contentLoadFailed){
+      contentError.style.display = 'block';
+      return;
+    }
+    contentError.style.display = 'none';
+
+    var progress = await loadProgress(code);
+    if (progress.loadFailed){
+      loadError.style.display = 'block';
+      return;
+    }
+    loadError.style.display = 'none';
+    currentCode = code;
+    currentName = name;
+    saveIdentity(code, name);
+
+    completedStages = {};
+    (progress.completedStages || []).forEach(function(id){ completedStages[id] = true; });
+    maxUnlockedStage = progress.nextStage;
+
+    showPartSelect();
+  }
+
+  /* ---------- 파트 선택 화면 ---------- */
+  // (수정 이력) "이해도 확인하러 가기" 버튼을 한때 이 화면(완료된 파트 카드)에 뒀었으나,
+  // 사용자가 "로드맵에 단계 칩처럼 옆에 두고 언제든 다시 풀 수 있게 하자"고 제안 — 그
+  // 파트 안(연습 화면 로드맵)으로 옮기고 상시 클릭 가능하게 바꿈(renderRoadmap 참고).
+  function showPartSelect(){
+    showScreen('partSelect');
+    partSelectList.innerHTML = PART_DEFS.map(function(p){
+      if (!p.ready){
+        return '<div class="part-card disabled">' +
+          '<span class="badge">파트 ' + p.part + ' · 준비 중</span>' +
+          '<h2>' + p.name + '</h2><p>' + p.pages + '</p></div>';
+      }
+      var stages = STAGE_DEFS.filter(function(s){ return s.part === p.part; });
+      var allDone = stages.every(function(s){ return completedStages[s.id]; });
+      var firstId = stages[0].id;
+      var locked = !allDone && firstId > maxUnlockedStage;
+      var statusLabel = allDone ? '완료' : (locked ? '잠김' : '진행 중');
+      var cls = 'part-card' + (locked ? ' disabled' : ' clickable') + (allDone ? ' done' : '');
+      var badgeCls = 'badge' + (allDone ? ' badge-done' : '');
+      return '<div class="' + cls + '" data-part="' + p.part + '">' +
+        '<span class="' + badgeCls + '">파트 ' + p.part + ' · ' + statusLabel + '</span>' +
+        '<h2>' + p.name + '</h2><p>' + p.pages + '</p></div>';
+    }).join('');
+    Array.prototype.slice.call(partSelectList.querySelectorAll('.part-card.clickable')).forEach(function(el){
+      el.addEventListener('click', function(){
+        enterPart(Number(el.getAttribute('data-part')));
+      });
+    });
+  }
+
+  function enterPart(partNum){
+    var partStages = STAGE_DEFS.filter(function(s){ return s.part === partNum; });
+    var resumeStage = partStages.filter(function(s){ return s.id === maxUnlockedStage; })[0];
+    var target = resumeStage || partStages[0];
+    stageIdx = STAGE_DEFS.indexOf(target);
+    showScreen('practice');
+    loadStage(stageIdx);
+  }
+
+  // 이미 이번 세션에 학번 확인을 마친 학생이 "처음으로"를 눌러도, 매번 분반·이름·학번을
+  // 다시 고르게 하면 번거롭다는 피드백 — currentCode가 남아있으면 "계속하기"만 누르면
+  // 바로 파트 선택으로 돌아가게 하고, 다른 학생이 같은 기기를 쓸 경우를 위해
+  // "다른 학생으로 로그인" 선택지도 함께 둔다.
+  function showStartScreen(){
+    if (currentCode){
+      resumeText.textContent = (currentName || currentCode) + '님, 이어서 진행하시겠어요?';
+      resumeBox.style.display = '';
+      instructionsBox.style.display = 'none';
+      // 저장된 로그인이 있으면 분반·이름·학번 폼 자체를 감춘다 — 폼이 같이 보이면
+      // 학생들이 위의 "이어서 진행하시겠어요?"를 무시하고 그냥 분반부터 다시 고르는
+      // 경우가 많다는 실사용 피드백 반영. 폼은 "다른 학생으로 로그인"을 눌러야 다시 나옴
+      loginFormBox.style.display = 'none';
+    } else {
+      resumeBox.style.display = 'none';
+      instructionsBox.style.display = '';
+      loginFormBox.style.display = '';
+    }
+    showScreen('start');
+  }
+
+  // 저장된 로그인을 새로고침 후(또는 다른 프로그램에서 돌아온 후) 복원한 경우, 진행
+  // 상태(completedStages/maxUnlockedStage)는 메모리에만 있어서 새로고침되면 같이
+  // 사라짐 — "계속하기"를 누르면 매번 enterProgram으로 진행 상태를 다시 불러오게 해서
+  // 안전하게 최신 상태를 반영한다(이미 로드된 세션 내 이동이면 다시 불러와도 무해함)
+  resumeBtn.addEventListener('click', function(){ enterProgram(currentCode, currentName); });
+
+  switchStudentBtn.addEventListener('click', function(){
+    currentCode = '';
+    currentName = '';
+    clearIdentity();
+    verifySuffix.value = '';
+    resumeBox.style.display = 'none';
+    instructionsBox.style.display = '';
+    loginFormBox.style.display = '';
+  });
+
+  // "처음으로"는 이 프로그램 안의 로그인 화면이 아니라 전체 프로그램 목록(랜딩 페이지)으로
+  // 돌아가는 버튼이어야 한다는 피드백 — 학생 전환은 이미 "다른 학생으로 로그인"이 따로 있음
+  homeLinkFromPartSelect.addEventListener('click', function(){ window.location.href = 'index.html'; });
+  toSummaryFromPartSelectBtn.addEventListener('click', function(){ showFinalSummary(); });
+  toHistoryFromPartSelectBtn.addEventListener('click', function(){ openHistory(); });
+
+  function verifyIdentity(code){
+    var expected = studentIdByCode[code];
+    var entered = verifySuffix.value.trim();
+    if (!expected || entered !== expected){
+      verifyError.style.display = 'block';
+      return false;
+    }
+    verifyError.style.display = 'none';
+    return true;
+  }
+
+  startBtn.addEventListener('click', async function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    if (!verifyIdentity(code)) return;
+    var name = nameSelect.options[nameSelect.selectedIndex].textContent;
+    await enterProgram(code, name);
+  });
+
+  historyBtn.addEventListener('click', function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    if (!verifyIdentity(code)) return;
+    currentCode = code;
+    currentName = nameSelect.options[nameSelect.selectedIndex].textContent;
+    saveIdentity(currentCode, currentName);
+    openHistory();
+  });
+
+  homeLink.addEventListener('click', function(){ showPartSelect(); });
+
+  /* ---------- 명단에 없는 학생 직접 등록 ---------- */
+  toggleSelfRegister.addEventListener('click', function(){
+    selfRegisterBox.classList.toggle('show');
+  });
+
+  selfRegisterBtn.addEventListener('click', async function(){
+    var section = selfSection.value;
+    var studentId = selfStudentId.value.trim();
+    var name = selfName.value.trim();
+    if (!section || !studentId || !name){
+      selfRegisterError.style.display = 'block';
+      return;
+    }
+    selfRegisterError.style.display = 'none';
+    selfRegisterBtn.disabled = true;
+    selfRegisterBtn.textContent = '등록 중...';
+
+    var code = section + '-S' + studentId;
+    try{
+      if (sb){
+        var ins = await sb.from('students').insert({
+          section: section,
+          student_id: studentId,
+          name: name,
+          participant_code: code,
+          self_registered: true
+        });
+        if (ins.error && ins.error.code !== '23505'){ throw ins.error; }
+        if (ins.error && ins.error.code === '23505'){
+          var found = await sb.from('students').select('participant_code, name')
+            .eq('student_id', studentId).maybeSingle();
+          if (found.data){ code = found.data.participant_code; name = found.data.name; }
+        }
+      }
+    } catch (err){
+      console.error('직접 등록 실패:', err);
+    }
+
+    selfRegisterBtn.disabled = false;
+    selfRegisterBtn.textContent = '직접 등록하고 시작하기';
+    await enterProgram(code, name);
+  });
+
+  /* ---------- 로드맵 (지금 보고 있는 파트의 단계만 표시 — 파트 간 이동은 "파트 선택으로") ---------- */
+  // 이해도 확인 칩(quiz-chip)을 어휘 단계 칩들 옆에 추가 — 예전엔 파트 선택 화면에
+  // "퀴즈 아직 안 봤을 때만" 뜨는 버튼이었는데, 사용자가 "단계 칩처럼 옆에 두고 언제든
+  // 다시 풀 수 있게 하자"고 제안해 위치·성격을 바꿈: 그 파트 어휘 단계를 모두 마치면
+  // 열리고, 그 뒤로는 처음 봤든 안 봤든 상관없이 계속 클릭해서 다시 풀어볼 수 있음
+  // (다시 풀 때마다 quiz_results에 새 기록이 쌓임 — 단계 연습을 "N회" 기록하는 것과 동일한 방식)
+  function renderRoadmap(){
+    partHeading.textContent = STAGE.partName;
+    var partStages = STAGE_DEFS.filter(function(s){ return s.part === STAGE.part; });
+    var html = '';
+    partStages.forEach(function(s){
+      var isDone = !!completedStages[s.id];
+      var isUnlocked = isDone || s.id <= maxUnlockedStage;
+      var isViewing = !!(STAGE && s.id === STAGE.id);
+      var cls = 'chip';
+      if (isViewing) cls += ' viewing';
+      else if (isDone) cls += ' done';
+      else if (s.id === maxUnlockedStage) cls += ' next';
+      else if (!isUnlocked) cls += ' locked';
+      if (isUnlocked) cls += ' clickable';
+      html += '<div class="' + cls + '" data-id="' + s.id + '">' + s.name + '</div>';
+    });
+    var allDone = partStages.every(function(s){ return completedStages[s.id]; });
+    // 지문 읽기는 원래 "어휘를 처음 다 마쳤을 때" 딱 한 번만 자동으로 뜨고 다시 볼 방법이
+    // 없었는데, 사용자가 "지문도 읽고 싶을 때 바로 읽어볼 수 있어야 한다"고 요청 — 퀴즈와
+    // 같은 방식(어휘 단계 다 마치면 잠금 해제, 그 뒤론 언제든 클릭)으로 칩을 추가함.
+    // 지문 콘텐츠가 없는 파트(1·3)에서는 애초에 칩 자체를 안 보여줌
+    var hasPassage = (contentByStage[stageContentKey({part: STAGE.part, key: 'passage'})] || []).length > 0;
+    if (hasPassage){
+      html += '<div class="chip' + (allDone ? ' clickable passage-chip' : ' locked passage-chip') + '">📖 지문 읽기</div>';
+    }
+    html += '<div class="chip' + (allDone ? ' clickable quiz-chip' : ' locked quiz-chip') + '" data-quiz-part="' + STAGE.part + '">📝 이해도 확인</div>';
+    roadmapEl.innerHTML = html;
+    Array.prototype.slice.call(roadmapEl.querySelectorAll('.chip.clickable:not(.quiz-chip):not(.passage-chip)')).forEach(function(el){
+      el.addEventListener('click', function(){
+        var id = Number(el.getAttribute('data-id'));
+        var idx = STAGE_DEFS.findIndex(function(s){ return s.id === id; });
+        if (idx < 0) return;
+        stageIdx = idx;
+        loadStage(stageIdx);
+      });
+    });
+    var passageChipEl = roadmapEl.querySelector('.passage-chip.clickable');
+    if (passageChipEl){
+      passageChipEl.addEventListener('click', function(){
+        // "다 읽었어요, 돌아가기"로 로드맵에만 돌아가게 했다가, 사용자가 "문제 풀러
+        // 가야 하는 거 아니야?"라고 지적 — 지문 다시 읽기도 결국 이해도 확인으로
+        // 이어지는 게 자연스러워서, 처음 자동으로 뜰 때와 동일하게 퀴즈로 연결함
+        showPassage(function(){ showQuiz(STAGE.part, showPartSelect); });
+      });
+    }
+    var quizChipEl = roadmapEl.querySelector('.quiz-chip.clickable');
+    if (quizChipEl){
+      quizChipEl.addEventListener('click', function(){
+        // 퀴즈를 마친 뒤 "계속하기"를 누르면 방금 전까지 보던 단계 화면(예: 이미 끝낸
+        // 핵심 개념어 타이핑 화면)이 그대로 다시 나와서 뜬금없어 보인다는 피드백 —
+        // 처음 자동으로 뜨는 퀴즈(showQuizIfNeeded)와 동일하게 파트 선택 화면으로 보낸다
+        showQuiz(STAGE.part, showPartSelect);
+      });
+    }
+  }
+
+  /* ---------- 연습 진행 ---------- */
+  function renderComboTarget(typed){
+    var target = comboQueue[comboIdx].text;
+    targetEl.innerHTML = '';
+    for (var i = 0; i < target.length; i++){
+      var span = document.createElement('span');
+      var isCorrectNow = i < typed.length && typed[i] === target[i];
+      var wasCorrectBefore = i < comboPrevVal.length && comboPrevVal[i] === target[i];
+      var cls = 'ch ' + (i < typed.length ? (isCorrectNow ? 'correct' : 'wrong') : 'pending');
+      if (isCorrectNow && !wasCorrectBefore) cls += ' pop';
+      if (target[i] === ' ') cls += ' space';
+      span.className = cls;
+      span.textContent = target[i];
+      targetEl.appendChild(span);
+    }
+    comboPrevVal = typed;
+  }
+
+  function loadComboItem(){
+    targetWrap.classList.remove('success', 'error');
+    advanceHint.classList.remove('show');
+    typeBadge.textContent = STAGE.partName + ' · ' + STAGE.name;
+    progLabel.textContent = (comboIdx + 1) + ' / ' + comboQueue.length;
+    progFill.style.width = Math.round(((comboIdx) / comboQueue.length) * 100) + '%';
+    targetEl.className = 'target-text' + (STAGE.key === 'sentence' ? ' sentence' : '');
+    comboPrevVal = '';
+    renderComboTarget('');
+
+    var item = comboQueue[comboIdx];
+    var glossLines = [];
+    if (item.gloss) glossLines.push('<div class="gloss-ko">' + item.gloss + '</div>');
+    if (item.glossEn) glossLines.push('<div class="gloss-en"><span class="gloss-tag">EN</span>' + item.glossEn + '</div>');
+    if (item.glossZh) glossLines.push('<div class="gloss-zh"><span class="gloss-tag">中</span>' + item.glossZh + '</div>');
+    glossBox.innerHTML = glossLines.join('');
+    glossBox.style.display = glossLines.length ? '' : 'none';
+
+    typeInput.placeholder = '위 글을 그대로 입력하세요';
+    typeInput.value = '';
+    typeInput.disabled = false;
+    typeInput.focus();
+    armIdleTimer();
+  }
+
+  function loadStage(idx){
+    STAGE = STAGE_DEFS[idx];
+    comboQueue = (contentByStage[stageContentKey(STAGE)] || []).slice();
+    comboIdx = 0;
+    stageStartTime = null;
+    stageEndTime = null;
+    totalAttempts = 0;
+    correctAttempts = 0;
+    typoCount = 0;
+    idleCount = 0;
+    idleTotalMs = 0;
+    isPaused = false;
+    clearTimeout(idleTimer);
+    idleOverlay.classList.remove('show');
+    awaitingAdvance = false;
+    pendingAdvanceFn = null;
+    advanceHint.classList.remove('show');
+    statAcc.textContent = '100%';
+    statFix.textContent = '0';
+    checkpointBox.classList.remove('show');
+    targetWrap.style.display = '';
+    typeInput.style.display = '';
+    renderRoadmap();
+    if (comboQueue.length === 0){
+      // 콘텐츠가 비어 있으면(있어서는 안 되지만) 조용히 빈 화면을 보여주지 않고 알린다.
+      contentError.style.display = 'block';
+      showScreen('start');
+      return;
+    }
+    loadComboItem();
+  }
+
+  function scheduleAdvance(fn){
+    awaitingAdvance = true;
+    pendingAdvanceFn = fn;
+    advanceHint.classList.add('show');
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (!awaitingAdvance) return;
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (!screens.practice.classList.contains('active')) return;
+    e.preventDefault();
+    awaitingAdvance = false;
+    advanceHint.classList.remove('show');
+    var fn = pendingAdvanceFn;
+    pendingAdvanceFn = null;
+    if (fn) fn();
+  });
+
+  function showCheckpoint(){
+    typeInput.style.display = 'none';
+    targetWrap.style.display = 'none';
+    advanceHint.classList.remove('show');
+    checkpointTitle.textContent = '🎉 ' + STAGE.partName + ' · ' + STAGE.name + ' 연습을 마쳤어요!';
+    checkpointBox.classList.add('show');
+    stageEndTime = Date.now();
+    isPaused = false;
+    clearTimeout(idleTimer);
+    idleOverlay.classList.remove('show');
+  }
+
+  moreBtn.addEventListener('click', function(){ loadStage(stageIdx); });
+
+  nextBtn.addEventListener('click', function(){
+    checkpointBox.classList.remove('show');
+    targetWrap.style.display = '';
+    typeInput.style.display = '';
+    finishStage();
+  });
+
+  typeInput.addEventListener('keydown', function(e){
+    if (e.key === 'Backspace'){
+      typoCount++;
+      statFix.textContent = typoCount;
+      playWrongSound();
+    }
+  });
+
+  typeInput.addEventListener('input', function(e){
+    if (typeInput.disabled) return;
+    var val = typeInput.value;
+    if (!val) return;
+    if (!stageStartTime) stageStartTime = Date.now();
+    armIdleTimer();
+
+    if (feedbackTimeout){ clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+
+    var comboTarget = comboQueue[comboIdx].text;
+    renderComboTarget(val);
+
+    // 한글 IME가 아직 조합 중(예: 받침이 붙을지, 다음 글자 초성이 될지 아직 확정 안 됨)이면
+    // 지금 값은 최종 값이 아닐 수 있다. 특히 정답 판정에서 이 상태를 무시하고 곧바로
+    // 입력창을 비활성화(disabled=true)하면, 그 타이밍에 IME가 조합 상태를 잃어버리면서
+    // 이미 확정돼 있던 앞 글자가 통째로 사라지는 문제가 실제로 있었음(정답·오답 판정
+    // 둘 다에서 발생 가능) — 브라우저가 알려주는 조합 상태(isComposing)를 확인해,
+    // 조합이 끝나기 전에는 정답이든 오답이든 판정(및 그에 따른 입력창 조작)을 미룬다.
+    // 실시간 초록/빨강 미리보기(renderComboTarget)는 조합 중에도 계속 갱신해 그대로 둔다.
+    if (e.isComposing) return;
+
+    if (val === comboTarget){
+      totalAttempts++;
+      correctAttempts++;
+      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+      statFix.textContent = typoCount;
+      targetWrap.classList.add('success');
+      typeInput.disabled = true;
+      speak(comboTarget);
+      scheduleAdvance(function(){
+        comboIdx++;
+        if (comboIdx < comboQueue.length){
+          loadComboItem();
+        } else {
+          progFill.style.width = '100%';
+          showCheckpoint();
+        }
+      });
+      return;
+    }
+
+    // 확정 오답 판정: "확정된"(마지막 글자 제외 — 아직 조합 중일 수 있음) 글자들 중
+    // 목표와 처음 어긋나는 지점을 찾는다.
+    var mismatchIdx = -1;
+    for (var ci = 0; ci < val.length - 1; ci++){
+      if (val[ci] !== comboTarget[ci]) { mismatchIdx = ci; break; }
+    }
+    if (mismatchIdx === -1 && val.length > comboTarget.length) mismatchIdx = comboTarget.length;
+    if (mismatchIdx !== -1){
+      totalAttempts++;
+      typoCount++;
+      statAcc.textContent = Math.round((correctAttempts / totalAttempts) * 100) + '%';
+      statFix.textContent = typoCount;
+      targetWrap.classList.add('error');
+      typeInput.disabled = true;
+      playWrongSound();
+      feedbackTimeout = setTimeout(function(){
+        targetWrap.classList.remove('error');
+        // 전체를 지우지 않고, 틀리기 직전까지 맞았던 부분은 남기고 오타 이후만 지운다 —
+        // 특히 문장처럼 긴 글에서 끝부분 오타 하나로 전체를 다시 치게 하면 학습자가
+        // 크게 좌절할 수 있음.
+        typeInput.value = val.slice(0, mismatchIdx);
+        typeInput.disabled = false;
+        typeInput.focus();
+        renderComboTarget(typeInput.value);
+      }, 320);
+    }
+  });
+
+  // 일부 브라우저·IME 조합에서는 조합이 끝나도 값이 안 바뀌면 별도의 input 이벤트를
+  // 안 보내는 경우가 있어, 조합 종료 시점에 한 번 더 명시적으로 판정 로직을 실행해
+  // 최종값을 놓치지 않게 한다(合성 input 이벤트는 isComposing이 false라 위 로직을
+  // 정상적으로 통과함).
+  typeInput.addEventListener('compositionend', function(){
+    typeInput.dispatchEvent(new Event('input', {bubbles: true}));
+  });
+
+  async function finishStage(){
+    var endTime = stageEndTime || Date.now();
+    var timeSec = stageStartTime ? (endTime - stageStartTime) / 1000 : 0;
+    var accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
+    var record = {
+      stageId: STAGE.id,
+      stageName: STAGE.partName + ' · ' + STAGE.name,
+      itemCount: comboQueue.length,
+      timeSec: Math.round(timeSec * 10) / 10,
+      accuracy: accuracy,
+      typoCount: typoCount,
+      totalAttempts: totalAttempts,
+      correctAttempts: correctAttempts,
+      idleCount: idleCount,
+      idleTotalSec: Math.round(idleTotalMs / 100) / 10,
+      date: new Date().toISOString()
+    };
+    clearTimeout(idleTimer);
+    completedStages[STAGE.id] = true;
+    lastCompletionWasForward = (STAGE.id + 1) > maxUnlockedStage;
+
+    await saveStageRecord(currentCode, record);
+    if (lastCompletionWasForward){
+      maxUnlockedStage = STAGE.id + 1;
+      var saved = await saveProgress(currentCode, {
+        completedStages: Object.keys(completedStages).map(Number),
+        nextStage: maxUnlockedStage
+      });
+      if (saved) saveWarning.classList.remove('show');
+      else saveWarning.classList.add('show');
+    }
+
+    proceedAfterStage();
+  }
+
+  // 처음 진행 중인지 이미 마친 파트를 복습 중인지와 무관하게 규칙은 동일하다 —
+  // 다음 단계가 있고 "같은 파트" 안이면 화면 이동 없이 바로 이어서 진행하고, 파트가
+  // 바뀌거나(이 파트를 다 마침) 더 이상 단계가 없으면 파트 선택 화면으로 보낸다.
+  // (예전엔 복습 중일 때만 무조건 파트 선택으로 보내서, 복습 중 그룹 하나를 마칠 때마다
+  // 매번 파트 선택 화면으로 튕겨나가는 문제가 있었음 — 수정함)
+  function proceedAfterStage(){
+    var nextIdx = STAGE_DEFS.findIndex(function(s){ return s.id === STAGE.id + 1; });
+    if (nextIdx >= 0 && STAGE_DEFS[nextIdx].part === STAGE.part){
+      stageIdx = nextIdx;
+      showScreen('practice');
+      loadStage(stageIdx);
+      return;
+    }
+    // 이 파트의 마지막 단계를 마쳤다. "처음 완료했는지"가 아니라 "이 참여자가 이 파트의
+    // quiz_results 기록이 아직 있는지"로 퀴즈 노출 여부를 정한다 — 이렇게 해야 퀴즈 기능이
+    // 추가되기 전에 이미 그 파트를 끝내둔 참여자(quiz_results 기록이 없음)도 한 번은 퀴즈를
+    // 보게 되고, 그 외의 복습에서는 매번 뜨지 않는다.
+    showQuizIfNeeded(STAGE.part);
+  }
+
+  async function showQuizIfNeeded(partNum){
+    var alreadyTaken = await hasQuizResult(partNum);
+    if (!alreadyTaken){
+      // 파트 2는 어휘 하나하나를 따로 타이핑만 해서는 문장이 어떻게 이어지는지(문법·흐름)까지
+      // 익히긴 어렵다는 점을 고려해, 퀴즈 전에 배운 어휘로 이루어진 지문 전체를 한 번 읽게 한다
+      // — 어휘 지식과 지문 전체 이해 사이의 간극을 메우기 위함(연구자 결정)
+      if (partNum === 2 && (contentByStage[stageContentKey({part:2, key:'passage'})] || []).length > 0){
+        showPassage(function(){ showQuiz(partNum, showPartSelect); });
+      } else {
+        showQuiz(partNum, showPartSelect);
+      }
+    } else {
+      showPartSelect();
+    }
+  }
+
+  function showPassage(onDone){
+    var paragraphs = contentByStage[stageContentKey({part:2, key:'passage'})] || [];
+    var html = paragraphs.map(function(p){ return '<p>' + p.text + '</p>'; }).join('');
+    html += '<p class="passage-credit">〈학생 글〉</p>';
+    passageText.innerHTML = html;
+    passageText.scrollTop = 0;
+    showScreen('passage');
+    passageOnDone = onDone;
+  }
+
+  async function hasQuizResult(partNum){
+    if (!sb) return true; // 연결이 없으면 반복 노출을 막기 위해 안전하게 "이미 봤다"로 간주
+    try{
+      var res = await sb.from('quiz_results')
+        .select('id')
+        .eq('unit', 'week23')
+        .eq('part', partNum)
+        .eq('participant_code', currentCode)
+        .limit(1);
+      if (res.error) throw res.error;
+      return (res.data || []).length > 0;
+    } catch (err){
+      console.error('퀴즈 응시 여부 확인 실패:', err);
+      return true; // 확인 실패 시에도 "이미 봤다"로 간주(반복 노출보다는 안전한 쪽)
+    }
+  }
+
+  // 뜻풀이를 한국어 하나로만 보여주지 않고 한국어·영어·중국어를 한꺼번에 보여준다 —
+  // 타이핑 중에도 세 언어를 다 보여줬는데 퀴즈에서 한국어만 쓰면 "단어를 아는가"가 아니라
+  // "한국어 뜻풀이 문장을 읽을 수 있는가"까지 같이 재게 돼 불공평함(사용자 지적). 어떤
+  // 언어로 알고 있든 "그 단어의 뜻을 아는 것"은 똑같이 유효하므로, 세 언어를 모두 노출해
+  // 언어와 무관하게 어휘 지식 자체를 재도록 함
+  function meaningHtml(item){
+    var lines = [];
+    if (item.gloss) lines.push('<div class="m-ko">' + item.gloss + '</div>');
+    if (item.glossEn) lines.push('<div class="m-en"><span class="m-tag">EN</span>' + item.glossEn + '</div>');
+    if (item.glossZh) lines.push('<div class="m-zh"><span class="m-tag">中</span>' + item.glossZh + '</div>');
+    return '<div class="quiz-meaning">' + lines.join('') + '</div>';
+  }
+  function meaningPlain(item){
+    var parts = [item.gloss];
+    if (item.glossEn) parts.push('EN: ' + item.glossEn);
+    if (item.glossZh) parts.push('中: ' + item.glossZh);
+    return parts.join(' / ');
+  }
+
+  // 이 파트의 어휘 목록(contentByStage)에서 문제를 자동으로 만든다.
+  // 오답은 같은 그룹(stage_key) 안에서 우선 뽑고, 부족하면 같은 파트의 다른 그룹에서 보충한다.
+  // 옵션은 {html, plain, isCorrect} 형태 — html은 화면 표시용, plain은 quiz_results 저장용.
+  function generateQuiz(partNum){
+    var partStages = STAGE_DEFS.filter(function(s){ return s.part === partNum; });
+    var groupPools = partStages.map(function(s){
+      return (contentByStage[stageContentKey(s)] || []).filter(function(item){ return !!item.gloss; });
+    });
+    var allItems = [];
+    groupPools.forEach(function(pool, gi){
+      pool.forEach(function(item){ allItems.push({item: item, groupIdx: gi}); });
+    });
+    var QUESTION_COUNT = Math.min(8, allItems.length);
+    var picked = shuffle(allItems.slice()).slice(0, QUESTION_COUNT);
+    return picked.map(function(entry){
+      var item = entry.item;
+      var groupPool = groupPools[entry.groupIdx];
+      var distractorPool = groupPool.filter(function(gi){ return gi.text !== item.text; });
+      if (distractorPool.length < 3){
+        var already = distractorPool;
+        var fallback = allItems.map(function(e){ return e.item; }).filter(function(gi){
+          return gi.text !== item.text && already.indexOf(gi) === -1;
+        });
+        distractorPool = distractorPool.concat(fallback);
+      }
+      var distractors = shuffle(distractorPool.slice()).slice(0, 3);
+      var direction = Math.random() < 0.5 ? 'word2meaning' : 'meaning2word';
+      var questionHtml, questionPlain, options, correctPlain;
+      if (direction === 'word2meaning'){
+        questionHtml = '다음 중 \'' + item.text + '\'의 뜻으로 알맞은 것은?';
+        questionPlain = questionHtml;
+        var candidates = shuffle([item].concat(distractors));
+        options = candidates.map(function(c){
+          return {html: meaningHtml(c), plain: meaningPlain(c), isCorrect: c === item};
+        });
+        correctPlain = meaningPlain(item);
+      } else {
+        questionHtml = '다음 뜻에 해당하는 단어는?' + meaningHtml(item);
+        questionPlain = '다음 뜻에 해당하는 단어는? ' + meaningPlain(item);
+        var wordCandidates = shuffle([item].concat(distractors));
+        options = wordCandidates.map(function(c){
+          return {html: c.text, plain: c.text, isCorrect: c === item};
+        });
+        correctPlain = item.text;
+      }
+      return {
+        type: 'vocab',
+        word: item.text,
+        questionHtml: questionHtml,
+        questionPlain: questionPlain,
+        options: options,
+        correctPlain: correctPlain
+      };
+    });
+  }
+
+  // 내용 이해 문항(있는 파트만) — 어휘 재인이 아니라 지문을 실제로 읽고 이해해야 풀 수 있는
+  // 문항. 파트마다 개수가 다르고, 무작위 샘플링 없이 준비된 문항을 전부 사용한다.
+  function generateComprehensionQuiz(partNum){
+    var pool = compQuestionsByPart[partNum] || [];
+    return pool.map(function(cq){
+      var candidates = shuffle([cq.correct].concat(cq.distractors));
+      var options = candidates.map(function(c){
+        return {html: c, plain: c, isCorrect: c === cq.correct};
+      });
+      return {
+        type: 'comprehension',
+        word: null,
+        questionHtml: cq.question,
+        questionPlain: cq.question,
+        options: options,
+        correctPlain: cq.correct
+      };
+    });
+  }
+
+  function showQuiz(partNum, onDone){
+    quizQuestions = generateQuiz(partNum).concat(generateComprehensionQuiz(partNum));
+    quizVocabCount = quizQuestions.filter(function(q){ return q.type === 'vocab'; }).length;
+    quizIdx = 0;
+    quizAnswers = [];
+    quizPendingPart = partNum;
+    quizOnDone = onDone;
+    // 글로스가 없어 문제를 만들 수 없으면(콘텐츠 로딩 실패 등) 퀴즈를 건너뛴다 —
+    // 진행을 막는 것보다 안전하다.
+    if (quizQuestions.length === 0){
+      if (onDone) onDone();
+      return;
+    }
+    var partDef = PART_DEFS.filter(function(p){ return p.part === partNum; })[0];
+    quizBadge.textContent = (partDef ? partDef.name : ('파트 ' + partNum)) + ' · 이해도 확인';
+    quizResultBox.style.display = 'none';
+    quizQuestionBox.style.display = '';
+    showScreen('quiz');
+    loadQuizQuestion();
+  }
+
+  function loadQuizQuestion(){
+    var q = quizQuestions[quizIdx];
+    // quizIdx는 "지금 보고 있는" 문제 위치, quizAnswers.length는 "실제로 답한" 문제 수 —
+    // 뒤로 가서 이미 답한 문제를 다시 볼 수 있게 되면서 둘이 달라질 수 있다(리뷰 모드).
+    var reviewMode = quizIdx < quizAnswers.length;
+    quizProgLabel.textContent = (quizIdx + 1) + ' / ' + quizQuestions.length;
+    quizProgFill.style.width = Math.round((quizAnswers.length / quizQuestions.length) * 100) + '%';
+    // 어휘 문제에서 내용 이해 문제로 넘어가는 첫 순간에만 구분 안내를 보여준다
+    quizSectionNote.style.display = (quizVocabCount > 0 && quizIdx === quizVocabCount) ? '' : 'none';
+    var recordedAnswer = reviewMode ? quizAnswers[quizIdx] : null;
+    // 정답/오답이 헷갈리지 않고 확실히 보이도록, 문제 위쪽에 색이 있는 큰 판정 배너를
+    // 띄운다(테두리 색만으로는 눈에 잘 안 띈다는 피드백 반영) — 아래 옵션 버튼의
+    // 초록/빨강 표시와 함께 이중으로 확인 가능하게 함
+    if (reviewMode){
+      quizReviewNote.style.display = '';
+      quizReviewNote.className = 'quiz-review-note ' + (recordedAnswer.isCorrect ? 'is-correct' : 'is-wrong');
+      quizReviewNote.innerHTML = (recordedAnswer.isCorrect
+        ? '✓ 정답이에요!'
+        : ('✗ 오답이에요 — 정답: ' + recordedAnswer.correctAnswer)) +
+        '<span class="qr-note-sub">확인만 가능하고 답은 바뀌지 않아요</span>';
+    } else {
+      quizReviewNote.style.display = 'none';
+    }
+    quizQuestion.innerHTML = q.questionHtml;
+    quizOptions.innerHTML = '';
+    q.options.forEach(function(opt){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quiz-option';
+      btn.innerHTML = opt.html;
+      if (reviewMode){
+        // 리뷰 모드에서는 결과 확인만 가능 — 이미 저장된 답을 다시 바꿀 수 없게 함
+        // (연구 데이터로 기록되는 응답이라, 뒤로 갔다고 답이 흔들리면 안 됨)
+        btn.disabled = true;
+        if (opt.isCorrect){
+          btn.classList.add('correct');
+          btn.insertAdjacentHTML('afterbegin', '<span class="qo-mark">✓</span>');
+        } else if (recordedAnswer && opt.plain === recordedAnswer.chosenAnswer){
+          btn.classList.add('wrong');
+          btn.insertAdjacentHTML('afterbegin', '<span class="qo-mark">✗</span>');
+        }
+      } else {
+        btn.addEventListener('click', function(){ answerQuiz(opt); });
+      }
+      quizOptions.appendChild(btn);
+    });
+    quizPrevBtn.style.visibility = (quizIdx > 0) ? 'visible' : 'hidden';
+    quizNextBtn.style.visibility = reviewMode ? 'visible' : 'hidden';
+  }
+
+  function answerQuiz(chosenOpt){
+    var q = quizQuestions[quizIdx];
+    var isCorrect = !!chosenOpt.isCorrect;
+    quizAnswers.push({type: q.type, word: q.word, question: q.questionPlain, correctAnswer: q.correctPlain, chosenAnswer: chosenOpt.plain, isCorrect: isCorrect});
+    // 예전엔 여기서 0.7초 뒤 자동으로 다음 문제로 넘어갔는데, 정답을 확인할 시간이
+    // 너무 짧다는 피드백 — 이제 답을 고르면 그 문제가 "리뷰 모드"로 바로 다시 그려져
+    // 정답·오답이 표시된 채로 멈춰 있고, "다음 문제" 버튼을 직접 눌러야 넘어간다
+    loadQuizQuestion();
+  }
+
+  // "다음 문제" 버튼 — 이미 답한 문제 사이를 앞으로 이동하는 용도(리뷰)와, 방금 막
+  // 답을 고른 문제에서 다음으로 진행하는 용도를 겸한다. 마지막 문제 다음이면 결과 화면으로.
+  function goToNextQuiz(){
+    if (quizIdx >= quizAnswers.length) return;
+    quizIdx++;
+    if (quizIdx < quizQuestions.length){
+      loadQuizQuestion();
+    } else {
+      finishQuiz();
+    }
+  }
+
+  async function finishQuiz(){
+    quizProgFill.style.width = '100%';
+    var score = quizAnswers.filter(function(a){ return a.isCorrect; }).length;
+    var total = quizAnswers.length;
+    quizQuestionBox.style.display = 'none';
+    quizResultTitle.textContent = '📝 ' + total + '문제 중 ' + score + '개 정답 (' + Math.round((score / total) * 100) + '%)';
+    // 정답인지 아닌지가 바로 표시되고 곧장 다음 문제로 넘어가서 정답을 확인하기
+    // 어렵다는 피드백 — 결과 화면에 문제별로 내 답·정답을 차분히 다시 볼 수 있는
+    // 목록을 둔다(시간 제한 없이, quizAnswers에 이미 다 기록돼 있는 값 그대로 사용)
+    quizReviewList.innerHTML = quizAnswers.map(function(a, i){
+      var cls = a.isCorrect ? 'is-correct' : 'is-wrong';
+      var mark = a.isCorrect ? '✓ 정답' : ('✗ 오답 · 정답: ' + a.correctAnswer);
+      return '<div class="quiz-review-row ' + cls + '">' +
+        '<p class="qr-q">' + (i + 1) + '. ' + a.question + '</p>' +
+        '<p class="qr-a">내 답: ' + a.chosenAnswer + ' — <span class="qr-mark">' + mark + '</span></p>' +
+      '</div>';
+    }).join('');
+    quizResultBox.style.display = '';
+    await saveQuizResult(currentCode, {
+      unit: 'week23',
+      part: quizPendingPart,
+      score: score,
+      total: total,
+      details: quizAnswers
+    });
+  }
+
+  async function saveQuizResult(code, payload){
+    if (!sb) return false;
+    try{
+      var res = await sb.from('quiz_results').insert({
+        unit: payload.unit,
+        part: payload.part,
+        participant_code: code,
+        score: payload.score,
+        total: payload.total,
+        details: payload.details
+      });
+      if (res.error) throw res.error;
+      return true;
+    } catch (err){
+      console.error('퀴즈 결과 저장 실패:', err);
+      return false;
+    }
+  }
+
+  async function showFinalSummary(){
+    var records = await fetchAllRecords(currentCode);
+    if (records.failed){
+      sumTableWrap.innerHTML = '<p class="empty-note">기록을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요.</p>';
+      showScreen('summary');
+      return;
+    }
+    var latestByStage = {};
+    records.forEach(function(r){
+      var prev = latestByStage[r.stageId];
+      if (!prev || new Date(r.date) > new Date(prev.date)) latestByStage[r.stageId] = r;
+    });
+    var list = STAGE_DEFS.map(function(s){ return latestByStage[s.id]; }).filter(Boolean);
+
+    // 이 단계를 몇 번 연습했는지(회차 수) — 회차별 상세(언제·얼마나 빨라졌는지)는
+    // "내 기록 보기"에서 볼 수 있다.
+    var attemptCounts = {};
+    records.forEach(function(r){ attemptCounts[r.stageId] = (attemptCounts[r.stageId] || 0) + 1; });
+
+    var totalTime = 0, totalCorrect = 0, totalAll = 0, totalTypo = 0;
+    list.forEach(function(r){
+      totalTime += r.timeSec;
+      totalCorrect += r.correctAttempts || 0;
+      totalAll += r.totalAttempts || 0;
+      totalTypo += r.typoCount;
+    });
+    var overallAcc = totalAll ? Math.round((totalCorrect / totalAll) * 100) : 100;
+
+    sumTime.textContent = totalTime.toFixed(1) + '초';
+    sumAcc.textContent = overallAcc + '%';
+    sumFix.textContent = totalTypo;
+    sumStages.textContent = list.length + ' / ' + STAGE_DEFS.length;
+
+    var rows = list.map(function(r){
+      var cnt = attemptCounts[r.stageId] || 1;
+      var cntBadge = cnt > 1 ? ' <span class="attempt-badge">' + cnt + '회</span>' : '';
+      return '<tr><td>' + r.stageName + cntBadge + '</td><td>' + r.accuracy + '%</td><td>' + r.typoCount + '</td><td>' + r.timeSec + '초</td></tr>';
+    }).join('');
+    sumTableWrap.innerHTML = list.length ?
+      '<table><thead><tr><th>단계</th><th>정확도</th><th>오타 수</th><th>시간</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p class="empty-note">각 단계를 몇 회 연습했는지, 회차마다 얼마나 빨라졌는지는 "내 기록 보기"에서 자세히 볼 수 있어요.</p>' :
+      '<p class="empty-note">기록이 없습니다.</p>';
+
+    showScreen('summary');
+  }
+
+  // "단계 골라서 다시 연습하기" — 진행 상태를 초기화하지 않는다. 파트 선택 화면으로
+  // 보내면, 완료된 파트는 자유롭게 다시 들어갈 수 있고 그 안의 완료(✓) 단계 칩도
+  // 자유롭게 골라 다시 연습할 수 있다(1주차 자판 자리 연습과 동일한 방식).
+  retryAllBtn.addEventListener('click', function(){
+    showPartSelect();
+  });
+
+  quizContinueBtn.addEventListener('click', function(){
+    var fn = quizOnDone;
+    quizOnDone = null;
+    if (fn) fn();
+  });
+
+  quizPrevBtn.addEventListener('click', function(){
+    if (quizIdx > 0){ quizIdx--; loadQuizQuestion(); }
+  });
+  quizNextBtn.addEventListener('click', goToNextQuiz);
+
+  passageContinueBtn.addEventListener('click', function(){
+    var fn = passageOnDone;
+    passageOnDone = null;
+    if (fn) fn();
+  });
+
+  toHistoryBtn.addEventListener('click', function(){ openHistory(); });
+  backFromHistoryBtn.addEventListener('click', function(){ window.location.href = 'index.html'; });
+
+  async function openHistory(){
+    historyCodeLabel.textContent = currentName || currentCode;
+    historyContent.innerHTML = '<p class="empty-note">기록을 불러오는 중입니다...</p>';
+    showScreen('history');
+    var records = await fetchAllRecords(currentCode);
+    if (records.failed){
+      historyContent.innerHTML = '<p class="empty-note">기록을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.</p>';
+      return;
+    }
+    if (records.length === 0){
+      historyContent.innerHTML = '<p class="empty-note">아직 저장된 연습 기록이 없습니다.</p>';
+      return;
+    }
+
+    // 같은 단계를 몇 번째로 연습했는지(회차)와, 직전 회차 대비 빨라졌는지를 계산.
+    // (1주차 자판 자리 연습의 "내 기록 보기"와 동일한 방식)
+    var byStage = {};
+    records.slice().sort(function(a, b){ return new Date(a.date) - new Date(b.date); })
+      .forEach(function(r){
+        var list = byStage[r.stageId] || (byStage[r.stageId] = []);
+        var activeSec = Math.max(0, r.timeSec - (r.idleTotalSec || 0));
+        var speed = activeSec > 0 ? (r.itemCount / activeSec) : 0;
+        var prev = list[list.length - 1];
+        r._attemptNo = list.length + 1;
+        r._speed = speed;
+        r._trend = !prev ? null : (speed > prev._speed ? 'up' : (speed < prev._speed ? 'down' : 'flat'));
+        list.push(r);
+      });
+
+    records.sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+
+    var rows = records.map(function(r){
+      var d = new Date(r.date);
+      var dateLabel = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      var trendMark = r._trend === 'up' ? ' <span class="trend-up">▲</span>' : (r._trend === 'down' ? ' <span class="trend-down">▼</span>' : '');
+      var idleLabel = r.idleCount ? (r.idleCount + '회·' + r.idleTotalSec + '초') : '-';
+      return '<tr>' +
+        '<td>' + dateLabel + '</td>' +
+        '<td>' + r.stageName + '<span class="attempt-badge">' + r._attemptNo + '회차</span></td>' +
+        '<td>' + r.accuracy + '%</td>' +
+        '<td>' + r.typoCount + '</td>' +
+        '<td>' + r.timeSec + '초</td>' +
+        '<td>' + idleLabel + '</td>' +
+        '<td>' + r._speed.toFixed(2) + '개/초' + trendMark + '</td>' +
+      '</tr>';
+    }).join('');
+
+    historyContent.innerHTML =
+      '<table>' +
+        '<thead><tr><th>날짜</th><th>단계</th><th>정확도</th><th>오타 수</th><th>총 시간</th><th>쉼</th><th>속도</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      '<p class="empty-note">쉼 = 20초 이상 입력이 없어 자동으로 멈췄던 횟수·시간. 속도 = 입력한 개수 ÷ (총 시간 − 쉰 시간). ▲는 이 단계를 직전에 연습했을 때보다 빨라졌다는 뜻입니다.</p>';
+  }
+
+})();
+</script>
+</body>
+</html>
