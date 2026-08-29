@@ -1240,11 +1240,24 @@
   var surveySubmitBtn = document.getElementById('surveySubmitBtn');
 
   var LIKERT_LABELS = ['전혀 그렇지 않다', '그렇지 않다', '보통이다', '그렇다', '매우 그렇다'];
+  // 배경 정보 — 사전 설문에만 1회 포함(사후엔 다시 안 물음). TOPIK 없는 참여자를 위해
+  // 급수 선택지에 "TOPIK 없음"을 두고, 그 아래 자유 응답(선택)으로 다른 기준을 적게 함.
+  // 자가평가 수준("초급/중급/고급")은 다들 후하게 평가하는 경향이 있어 뺐음(사용자 지적).
+  var SURVEY_ITEMS_BG = [
+    {id:'bg_nationality', type:'text', ko:'국적이 어디인가요?', en:'What is your nationality?'},
+    {id:'bg_native_lang', type:'text', ko:'모국어가 무엇인가요?', en:'What is your native language?'},
+    {id:'bg_korean_period', type:'select', ko:'한국어를 배운 기간은 얼마나 되나요?', en:'How long have you been learning Korean?',
+      options:['6개월 미만', '6개월~1년', '1~2년', '2년 이상']},
+    {id:'bg_topik', type:'select', ko:'한국어능력시험(TOPIK) 급수는?', en:'What is your TOPIK level?',
+      options:['1급', '2급', '3급', '4급', '5급', '6급', 'TOPIK 없음']},
+    {id:'bg_topik_other', type:'text', optional:true, ko:'TOPIK이 없다면, 다른 기준(예: 교내 배치고사 등)이 있으면 적어 주세요. (선택)', en:"If you don't have a TOPIK level, please describe another basis if any. (optional)"}
+  ];
   var SURVEY_ITEMS_AB = [
     {id:'a1', ko:'글쓰기 과제가 주어지면 어떤 내용을 쓸지 정할 수 있다.', en:'I can decide what to write when given a writing assignment.'},
     {id:'a2', ko:'글에 필요한 한국어 어휘와 표현을 떠올려 사용할 수 있다.', en:'I can recall and use the Korean vocabulary and expressions I need for my writing.'},
     {id:'a3', ko:'정해진 시간 안에 한국어 글쓰기 과제를 완성할 수 있다.', en:'I can finish a Korean writing assignment within a given time.'},
     {id:'a4', ko:'글쓰기 과제를 받으면 오래 걸리지 않고 글쓰기를 시작할 수 있다.', en:'I can start writing soon after receiving a writing assignment, without much delay.'},
+    {id:'a5', ko:'나는 한글 타이핑을 어려움 없이 할 수 있다.', en:'I can type in Korean without difficulty.'},
     {id:'b1', ko:'한국어 글쓰기 과제를 받으면 긴장된다.', en:'I feel tense when I receive a Korean writing assignment.'},
     {id:'b2', ko:'정해진 시간 안에 글을 다 쓰지 못할까봐 걱정된다.', en:"I worry that I won't be able to finish writing within the given time."},
     {id:'b3', ko:'한글 타이핑이 느려서 생각한 내용을 충분히 쓰지 못할까봐 걱정된다.', en:"I worry that slow Korean typing will keep me from fully writing down what I'm thinking."},
@@ -1264,6 +1277,22 @@
       '<span class="survey-q-en">' + item.en + '</span></p>' +
       '<textarea class="survey-textarea" data-id="' + item.id + '" rows="3"></textarea></div>';
   }
+  function renderTextItem(item, idx){
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p>' +
+      '<input type="text" data-id="' + item.id + '" /></div>';
+  }
+  function renderSelectItem(item, idx){
+    var opts = '<option value="">선택하세요</option>' + item.options.map(function(o){
+      return '<option value="' + o + '">' + o + '</option>';
+    }).join('');
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p>' +
+      '<select data-id="' + item.id + '">' + opts + '</select></div>';
+  }
+  function renderBgItem(item, idx){
+    return item.type === 'select' ? renderSelectItem(item, idx) : renderTextItem(item, idx);
+  }
   function collectLikertAnswers(items){
     var answers = {};
     for (var i = 0; i < items.length; i++){
@@ -1271,6 +1300,20 @@
       if (!checked) return null;
       answers[items[i].id] = Number(checked.value);
     }
+    return answers;
+  }
+  function collectPreSurveyAnswers(){
+    var answers = {};
+    for (var i = 0; i < SURVEY_ITEMS_BG.length; i++){
+      var item = SURVEY_ITEMS_BG[i];
+      var el = surveyBody.querySelector('[data-id="' + item.id + '"]');
+      var val = el ? el.value.trim() : '';
+      if (!item.optional && !val) return null;
+      answers[item.id] = val;
+    }
+    var likert = collectLikertAnswers(SURVEY_ITEMS_AB);
+    if (!likert) return null;
+    for (var k in likert) answers[k] = likert[k];
     return answers;
   }
 
@@ -1296,13 +1339,15 @@
   function showPreSurveyOverlay(code, onDone){
     surveyOverlay.style.display = 'flex';
     surveyTitle.textContent = '사전 설문 · Pre-Survey';
-    surveyIntro.textContent = '프로그램을 시작하기 전, 지금 한국어 글쓰기에 대해 어떻게 느끼는지 답해 주세요. 1(전혀 그렇지 않다)~5(매우 그렇다) 중 하나를 고르면 됩니다. 정답은 없어요.';
-    surveyBody.innerHTML = SURVEY_ITEMS_AB.map(renderLikertItem).join('');
+    surveyIntro.textContent = '프로그램을 시작하기 전에 몇 가지 답해 주세요. 처음 몇 문항은 간단한 배경 정보이고, 나머지는 1(전혀 그렇지 않다)~5(매우 그렇다) 중 하나를 고르면 됩니다. 정답은 없어요.';
+    var bgHtml = SURVEY_ITEMS_BG.map(function(item, i){ return renderBgItem(item, i); }).join('');
+    var likertHtml = SURVEY_ITEMS_AB.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_BG.length); }).join('');
+    surveyBody.innerHTML = bgHtml + likertHtml;
     surveyError.style.display = 'none';
     var done = false;
     surveySubmitBtn.onclick = function(){
       if (done) return;
-      var answers = collectLikertAnswers(SURVEY_ITEMS_AB);
+      var answers = collectPreSurveyAnswers();
       if (!answers){ surveyError.style.display = 'block'; return; }
       surveyError.style.display = 'none';
       done = true;
