@@ -615,6 +615,20 @@
     text-align:center;
   }
   .link-btn:hover{color:var(--teal);}
+  .resume-box{
+    background:var(--teal-light);
+    border:1.5px solid var(--teal);
+    border-radius:14px;
+    padding:18px 20px;
+    margin-bottom:20px;
+    text-align:center;
+  }
+  .resume-text{
+    font-size:14px;
+    color:var(--ink);
+    margin:0 0 12px;
+    font-weight:600;
+  }
   .home-link{
     display:inline-block;
     background:none;
@@ -797,7 +811,12 @@
   <!-- 시작 화면 -->
   <div id="screen-start" class="screen active">
     <div class="card">
-      <div class="instructions">
+      <div class="resume-box" id="resumeBox" style="display:none;">
+        <p class="resume-text" id="resumeText"></p>
+        <button type="button" class="btn btn-primary" id="resumeBtn">계속하기</button>
+        <button type="button" class="link-btn" id="switchStudentBtn">다른 학생으로 로그인</button>
+      </div>
+      <div class="instructions" id="instructionsBox">
         <div class="instructions-title">📋 이렇게 진행됩니다</div>
         1. 분반과 이름을 선택하고, 본인 학번 전체로 확인해 주세요.<br/>
         2. 키보드를 <b>한국어 입력 모드</b>로 전환해 주세요.<br/>
@@ -806,46 +825,48 @@
         5. 다음 수업 시작 전까지 미리 완료해 주세요.<br/>
         6. 정확도나 속도는 <b>성적에 반영되지 않아요</b>. 편하게 연습해 주세요.
       </div>
-      <div class="field">
-        <label for="sectionSelect">분반</label>
-        <select id="sectionSelect">
-          <option value="">분반을 선택하세요</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="nameSelect">이름</label>
-        <select id="nameSelect" disabled>
-          <option value="">먼저 분반을 선택하세요</option>
-        </select>
-      </div>
-      <div class="field" id="verifyField" style="display:none;">
-        <label for="verifySuffix">본인 확인 · 학번 전체</label>
-        <input type="text" id="verifySuffix" placeholder="예: 2026120137" autocomplete="off" inputmode="numeric" />
-      </div>
-      <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
-      <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
-      <div class="error-text" id="loadError">이전 진행 상태를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요. (진행 기록을 지키기 위해, 확인 없이는 처음부터 시작하지 않습니다.)</div>
-      <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
-      <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
-
-      <button type="button" class="link-btn" id="toggleSelfRegister">명단에 내 이름이 없어요</button>
-      <div class="self-register" id="selfRegisterBox">
+      <div id="loginFormBox">
         <div class="field">
-          <label for="selfSection">분반</label>
-          <select id="selfSection">
+          <label for="sectionSelect">분반</label>
+          <select id="sectionSelect">
             <option value="">분반을 선택하세요</option>
           </select>
         </div>
         <div class="field">
-          <label for="selfStudentId">학번</label>
-          <input type="text" id="selfStudentId" placeholder="예: 2026100001" autocomplete="off" inputmode="numeric" />
+          <label for="nameSelect">이름</label>
+          <select id="nameSelect" disabled>
+            <option value="">먼저 분반을 선택하세요</option>
+          </select>
         </div>
-        <div class="field">
-          <label for="selfName">이름</label>
-          <input type="text" id="selfName" placeholder="이름을 입력하세요" autocomplete="off" />
+        <div class="field" id="verifyField" style="display:none;">
+          <label for="verifySuffix">본인 확인 · 학번 전체</label>
+          <input type="text" id="verifySuffix" placeholder="예: 2026120137" autocomplete="off" inputmode="numeric" />
         </div>
-        <div class="error-text" id="selfRegisterError">분반 선택 후, 학번과 이름을 모두 입력해 주세요.</div>
-        <button type="button" class="btn btn-ghost" id="selfRegisterBtn">직접 등록하고 시작하기</button>
+        <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
+        <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
+        <div class="error-text" id="loadError">이전 진행 상태를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요. (진행 기록을 지키기 위해, 확인 없이는 처음부터 시작하지 않습니다.)</div>
+        <button class="btn btn-primary" id="startBtn">연습 시작하기</button>
+        <button class="btn btn-ghost" id="historyBtn">내 기록 보기</button>
+
+        <button type="button" class="link-btn" id="toggleSelfRegister">명단에 내 이름이 없어요</button>
+        <div class="self-register" id="selfRegisterBox">
+          <div class="field">
+            <label for="selfSection">분반</label>
+            <select id="selfSection">
+              <option value="">분반을 선택하세요</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="selfStudentId">학번</label>
+            <input type="text" id="selfStudentId" placeholder="예: 2026100001" autocomplete="off" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="selfName">이름</label>
+            <input type="text" id="selfName" placeholder="이름을 입력하세요" autocomplete="off" />
+          </div>
+          <div class="error-text" id="selfRegisterError">분반 선택 후, 학번과 이름을 모두 입력해 주세요.</div>
+          <button type="button" class="btn btn-ghost" id="selfRegisterBtn">직접 등록하고 시작하기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1050,6 +1071,12 @@
   var saveWarning = document.getElementById('saveWarning');
   var startBtn = document.getElementById('startBtn');
   var historyBtn = document.getElementById('historyBtn');
+  var instructionsBox = document.getElementById('instructionsBox');
+  var loginFormBox = document.getElementById('loginFormBox');
+  var resumeBox = document.getElementById('resumeBox');
+  var resumeText = document.getElementById('resumeText');
+  var resumeBtn = document.getElementById('resumeBtn');
+  var switchStudentBtn = document.getElementById('switchStudentBtn');
   var toggleSelfRegister = document.getElementById('toggleSelfRegister');
   var selfRegisterBox = document.getElementById('selfRegisterBox');
   var selfSection = document.getElementById('selfSection');
@@ -1108,6 +1135,29 @@
   /* ---------- 상태 ---------- */
   var currentCode = '';
   var currentName = '';
+
+  // 학번 확인을 매번(페이지를 새로고침하거나 다른 프로그램에서 돌아올 때마다) 다시 하게
+  // 하면 번거롭다는 피드백 — 참여자 코드·이름을 localStorage에 저장해 페이지를 새로
+  // 열어도 "이어서 진행하시겠어요?" 화면으로 바로 갈 수 있게 함. 키를 프로그램별로
+  // 나누지 않은 건, 같은 학생이 1주차·2~3주차·4~5주차를 오갈 때도 동일 인물이라 굳이
+  // 다시 확인할 필요가 없기 때문(실제 배포 시 같은 도메인이라 공유됨). 원래 2~3주차·
+  // 4~5주차에만 있었는데, 1주차에도 없어서 첫 로그인 후 다음 프로그램에서까지 재입력이
+  // 필요했던 것을 뒤늦게 발견 — 동일 패턴으로 추가함
+  var IDENTITY_STORAGE_KEY = 'hangul_typing_identity';
+  function saveIdentity(code, name){
+    try{ localStorage.setItem(IDENTITY_STORAGE_KEY, JSON.stringify({code: code, name: name})); } catch (e){}
+  }
+  function clearIdentity(){
+    try{ localStorage.removeItem(IDENTITY_STORAGE_KEY); } catch (e){}
+  }
+  function loadSavedIdentity(){
+    try{
+      var raw = localStorage.getItem(IDENTITY_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return (parsed && parsed.code) ? parsed : null;
+    } catch (e){ return null; }
+  }
 
   /* ---------- 연구 참여 동의 (research_consent 테이블, 참여자 코드당 1회) ----------
      1주차/2~3주차/4~5주차 중 어디서 먼저 로그인하든 공유되는 테이블이라 한 번만 물어봄.
@@ -1545,6 +1595,40 @@
   }
   loadStudents();
 
+  // 저장된 로그인이 있으면 복원 — 진행 상태 자체는 "계속하기"를 눌러야 다시 불러오지만,
+  // 화면에 "OO님, 이어서 진행하시겠어요?"를 바로 보여줘서 분반·이름·학번 재입력을 건너뛴다
+  var savedIdentity = loadSavedIdentity();
+  if (savedIdentity){
+    currentCode = savedIdentity.code;
+    currentName = savedIdentity.name || '';
+  }
+  showStartScreen();
+
+  function showStartScreen(){
+    if (currentCode){
+      resumeText.textContent = (currentName || currentCode) + '님, 이어서 진행하시겠어요?';
+      resumeBox.style.display = '';
+      instructionsBox.style.display = 'none';
+      loginFormBox.style.display = 'none';
+    } else {
+      resumeBox.style.display = 'none';
+      instructionsBox.style.display = '';
+      loginFormBox.style.display = '';
+    }
+  }
+
+  resumeBtn.addEventListener('click', function(){ enterProgram(currentCode, currentName); });
+
+  switchStudentBtn.addEventListener('click', function(){
+    currentCode = '';
+    currentName = '';
+    clearIdentity();
+    verifySuffix.value = '';
+    resumeBox.style.display = 'none';
+    instructionsBox.style.display = '';
+    loginFormBox.style.display = '';
+  });
+
   // ※ 중요: 불러오기 실패(네트워크 오류·Supabase 일시정지 후 깨어나는 중 등)를
   // "진행 기록이 아예 없는 신규 학생"과 절대 같은 것으로 취급하면 안 된다 — 그렇게
   // 취급하면 이미 여러 단계를 마친 학생이 처음부터 다시 시작하게 되고, 그 상태로
@@ -1721,6 +1805,7 @@
     loadError.style.display = 'none';
     currentCode = code;
     currentName = name;
+    saveIdentity(code, name);
 
     completedStages = {};
     (progress.completedStages || []).forEach(function(id){ completedStages[id] = true; });
@@ -1781,6 +1866,7 @@
     if (!verifyIdentity(code)) return;
     currentCode = code;
     currentName = nameSelect.options[nameSelect.selectedIndex].textContent;
+    saveIdentity(currentCode, currentName);
     openHistory();
   });
 
