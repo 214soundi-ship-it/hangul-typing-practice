@@ -680,6 +680,28 @@
     display:flex; gap:10px; padding:16px 24px 22px; border-top:1px solid var(--border);
   }
   .consent-actions .btn{ flex:1; margin-top:0; font-size:14px; }
+
+  /* ---------- 연구 설문(사전/사후) 오버레이 ---------- */
+  .survey-hint{
+    padding:10px 24px 0; font-size:12.5px; color:var(--ink-soft);
+  }
+  .survey-item{
+    margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border);
+  }
+  .survey-item:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .survey-q{ font-size:14px; color:var(--ink); margin:0 0 10px; line-height:1.55; }
+  .survey-q-en{ display:block; font-size:12px; color:var(--ink-soft); font-style:italic; margin-top:3px; }
+  .likert-row{ display:flex; align-items:center; gap:18px; }
+  .likert-opt{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .likert-opt input{ width:18px; height:18px; accent-color:var(--teal); cursor:pointer; }
+  .survey-textarea{
+    width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+    font-family:inherit; font-size:13.5px; resize:vertical; box-sizing:border-box; color:var(--ink);
+  }
+  .survey-error{ color:var(--brick, #b3402f); font-size:13px; text-align:center; }
 </style>
 </head>
 <body>
@@ -750,6 +772,19 @@
     <div class="consent-actions">
       <button type="button" class="btn btn-ghost" id="consentDeclineBtn">동의하지 않습니다 · I do not agree</button>
       <button type="button" class="btn btn-primary" id="consentAgreeBtn">동의합니다 · I agree</button>
+    </div>
+  </div>
+</div>
+<div class="consent-overlay" id="surveyOverlay">
+  <div class="consent-box">
+    <div class="consent-lang-tabs">
+      <h3 id="surveyTitle" style="margin:0; font-family:'Noto Serif KR', serif; color:var(--teal); font-size:17px;">설문</h3>
+    </div>
+    <p class="survey-hint" id="surveyIntro"></p>
+    <div class="consent-scroll" id="surveyBody"></div>
+    <div class="consent-actions" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <div class="survey-error" id="surveyError" style="display:none;">아직 답하지 않은 문항이 있어요. 전부 답해 주세요.</div>
+      <button type="button" class="btn btn-primary" id="surveySubmitBtn" style="width:100%; margin-top:0;">제출하기</button>
     </div>
   </div>
 </div>
@@ -1127,6 +1162,91 @@
     }
     consentAgreeBtn.onclick = function(){ finish(true); };
     consentDeclineBtn.onclick = function(){ finish(false); };
+  }
+
+  /* ---------- 연구 설문(RQ2 사전-사후, research_survey 테이블) ----------
+     참여자가 3개 프로그램 중 어디로 처음 들어오든 "사전 설문"은 딱 한 번만 뜬다(참여자
+     코드당 phase='pre' 1행). "사후 설문"(효능감/부담감 재측정 + 프로그램 인지된 도움 +
+     개방형)은 4~5주차(요약을 활용한 글쓰기) 전 과정을 마쳤을 때만 그쪽 파일에서 뜬다 —
+     1주차 파일에는 사전 설문만 존재. */
+  var surveyOverlay = document.getElementById('surveyOverlay');
+  var surveyTitle = document.getElementById('surveyTitle');
+  var surveyIntro = document.getElementById('surveyIntro');
+  var surveyBody = document.getElementById('surveyBody');
+  var surveyError = document.getElementById('surveyError');
+  var surveySubmitBtn = document.getElementById('surveySubmitBtn');
+
+  var LIKERT_LABELS = ['전혀 그렇지 않다', '그렇지 않다', '보통이다', '그렇다', '매우 그렇다'];
+  var SURVEY_ITEMS_AB = [
+    {id:'a1', ko:'글쓰기 과제가 주어지면 어떤 내용을 쓸지 정할 수 있다.', en:'I can decide what to write when given a writing assignment.'},
+    {id:'a2', ko:'글에 필요한 한국어 어휘와 표현을 떠올려 사용할 수 있다.', en:'I can recall and use the Korean vocabulary and expressions I need for my writing.'},
+    {id:'a3', ko:'정해진 시간 안에 한국어 글쓰기 과제를 완성할 수 있다.', en:'I can finish a Korean writing assignment within a given time.'},
+    {id:'a4', ko:'글쓰기 과제를 받으면 오래 걸리지 않고 글쓰기를 시작할 수 있다.', en:'I can start writing soon after receiving a writing assignment, without much delay.'},
+    {id:'b1', ko:'한국어 글쓰기 과제를 받으면 긴장된다.', en:'I feel tense when I receive a Korean writing assignment.'},
+    {id:'b2', ko:'정해진 시간 안에 글을 다 쓰지 못할까봐 걱정된다.', en:"I worry that I won't be able to finish writing within the given time."},
+    {id:'b3', ko:'한글 타이핑이 느려서 생각한 내용을 충분히 쓰지 못할까봐 걱정된다.', en:"I worry that slow Korean typing will keep me from fully writing down what I'm thinking."},
+    {id:'b4', ko:'한국어 글쓰기를 시작하는 것이 부담스럽다.', en:'Starting a Korean writing task feels burdensome to me.'}
+  ];
+
+  function renderLikertItem(item, idx){
+    var opts = LIKERT_LABELS.map(function(label, i){
+      var v = i + 1;
+      return '<label class="likert-opt"><input type="radio" name="' + item.id + '" value="' + v + '"><span>' + v + '</span></label>';
+    }).join('');
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p><div class="likert-row">' + opts + '</div></div>';
+  }
+  function renderOpenItem(item, idx){
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p>' +
+      '<textarea class="survey-textarea" data-id="' + item.id + '" rows="3"></textarea></div>';
+  }
+  function collectLikertAnswers(items){
+    var answers = {};
+    for (var i = 0; i < items.length; i++){
+      var checked = surveyBody.querySelector('input[name="' + items[i].id + '"]:checked');
+      if (!checked) return null;
+      answers[items[i].id] = Number(checked.value);
+    }
+    return answers;
+  }
+
+  async function checkSurveyDone(code, phase){
+    if (!sb) return true;
+    try{
+      var res = await sb.from('research_survey').select('participant_code').eq('participant_code', code).eq('phase', phase).maybeSingle();
+      if (res.error) throw res.error;
+      return !!res.data;
+    } catch (err){
+      console.error('설문 여부 확인 실패:', err);
+      return true; // 확인 실패 시 억지로 다시 묻지 않음(다음 접속 때 다시 확인됨)
+    }
+  }
+  async function saveSurvey(code, phase, answers){
+    if (!sb) return;
+    try{
+      var res = await sb.from('research_survey').insert({ participant_code: code, phase: phase, answers: answers });
+      if (res.error) throw res.error;
+    } catch (err){ console.error('설문 저장 실패:', err); }
+  }
+
+  function showPreSurveyOverlay(code, onDone){
+    surveyOverlay.style.display = 'flex';
+    surveyTitle.textContent = '사전 설문 · Pre-Survey';
+    surveyIntro.textContent = '프로그램을 시작하기 전, 지금 한국어 글쓰기에 대해 어떻게 느끼는지 답해 주세요. 1(전혀 그렇지 않다)~5(매우 그렇다) 중 하나를 고르면 됩니다. 정답은 없어요.';
+    surveyBody.innerHTML = SURVEY_ITEMS_AB.map(renderLikertItem).join('');
+    surveyError.style.display = 'none';
+    var done = false;
+    surveySubmitBtn.onclick = function(){
+      if (done) return;
+      var answers = collectLikertAnswers(SURVEY_ITEMS_AB);
+      if (!answers){ surveyError.style.display = 'block'; return; }
+      surveyError.style.display = 'none';
+      done = true;
+      surveyOverlay.style.display = 'none';
+      saveSurvey(code, 'pre', answers);
+      onDone();
+    };
   }
 
   var studentsBySection = {};
@@ -1617,12 +1737,21 @@
       loadStage(stageIdx);
     }
 
+    async function afterConsent(){
+      var preSurveyDone = await checkSurveyDone(code, 'pre');
+      if (!preSurveyDone){
+        showPreSurveyOverlay(code, proceedIntoProgram);
+        return;
+      }
+      proceedIntoProgram();
+    }
+
     var alreadyConsented = await checkConsentAnswered(code);
     if (!alreadyConsented){
-      showConsentOverlay(code, proceedIntoProgram);
+      showConsentOverlay(code, afterConsent);
       return;
     }
-    proceedIntoProgram();
+    afterConsent();
   }
 
   function verifyIdentity(code){

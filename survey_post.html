@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>사후 설문 · Post-Survey</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --paper:#F6F1E7;
+    --card:#FFFDF8;
+    --ink:#1E2A38;
+    --ink-soft:#57657A;
+    --teal:#2C6E63;
+    --teal-light:#E4F0EC;
+    --brick:#A6432F;
+    --border:rgba(30,42,56,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+    font-family:'Noto Sans KR', -apple-system, sans-serif;
+    display:flex; justify-content:center; padding:32px 16px 64px;
+  }
+  .app{width:100%; max-width:640px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:.04em;
+    color:var(--ink-soft); text-transform:uppercase; margin-bottom:6px;
+  }
+  h1{ font-family:'Noto Serif KR', serif; font-weight:700; font-size:32px; color:var(--teal); margin:0 0 8px; }
+  .lede{ font-size:15px; color:var(--ink-soft); line-height:1.6; margin:0 0 28px; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:30px 32px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  input[type="text"]{
+    width:100%; font-family:'IBM Plex Mono', monospace; font-size:15px; padding:11px 13px;
+    border-radius:10px; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); outline:none;
+  }
+  input[type="text"]:focus{ border-color:var(--teal); }
+  select{
+    width:100%; font-family:'Noto Sans KR', sans-serif; font-weight:600; font-size:15px; padding:11px 13px;
+    border-radius:10px; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); outline:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2357657A'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 13px center; background-size:16px; padding-right:36px;
+  }
+  select:focus{ border-color:var(--teal); }
+  select:disabled{ opacity:.55; cursor:not-allowed; }
+  select:not(:disabled){ cursor:pointer; }
+  .error-text{ font-size:12px; color:var(--brick); margin-top:6px; display:none; }
+  .btn{
+    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:16px; padding:16px 20px;
+    border-radius:12px; border:none; cursor:pointer; width:100%; transition:transform .1s ease, box-shadow .15s ease;
+  }
+  .btn-primary{ background:var(--teal); color:#fff; box-shadow:0 4px 14px rgba(44,110,99,.28); }
+  .btn-primary:hover{ background:#245a51; transform:translateY(-1px); box-shadow:0 6px 18px rgba(44,110,99,.34); }
+  .btn-primary:active{ transform:translateY(0); }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  .instructions{
+    background:var(--teal-light); border-radius:12px; padding:14px 16px; margin-bottom:20px;
+    font-size:13px; color:var(--ink); line-height:1.7;
+  }
+
+  .survey-item{ margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .survey-item:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .survey-q{ font-size:14.5px; color:var(--ink); margin:0 0 10px; line-height:1.55; }
+  .survey-q-en{ display:block; font-size:12px; color:var(--ink-soft); font-style:italic; margin-top:3px; }
+  .likert-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .likert-opt{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .likert-opt input{ width:18px; height:18px; accent-color:var(--teal); cursor:pointer; }
+  .survey-textarea{
+    width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+    font-family:inherit; font-size:13.5px; resize:vertical; box-sizing:border-box; color:var(--ink);
+  }
+  .survey-group-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--teal); margin:26px 0 4px;
+  }
+  .survey-group-label:first-child{ margin-top:0; }
+  .survey-error{ color:var(--brick); font-size:13px; text-align:center; margin-bottom:10px; }
+
+  .done-icon{ font-size:40px; text-align:center; margin-bottom:10px; }
+  .done-title{ font-family:'Noto Serif KR', serif; font-weight:700; font-size:20px; color:var(--teal); text-align:center; margin:0 0 8px; }
+  .done-sub{ font-size:14px; color:var(--ink-soft); text-align:center; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">연구 설문 · Research Survey</div>
+  <h1>사후 설문</h1>
+  <p class="lede">타이핑 기반 사전학습 프로그램(4~5주차)과, 그 지문으로 진행한 수업·글쓰기에 대한 설문입니다. 본인 확인 후 응답해 주세요.</p>
+
+  <div id="screen-login" class="screen active">
+    <div class="card">
+      <div class="instructions">본인 학번 전체로 확인 후 설문을 진행합니다. 이미 제출하셨다면 자동으로 안내됩니다.</div>
+      <div class="field">
+        <label for="sectionSelect">분반</label>
+        <select id="sectionSelect"><option value="">분반을 선택하세요</option></select>
+      </div>
+      <div class="field">
+        <label for="nameSelect">이름</label>
+        <select id="nameSelect" disabled><option value="">먼저 분반을 선택하세요</option></select>
+      </div>
+      <div class="field" id="verifyField" style="display:none;">
+        <label for="verifySuffix">본인 확인 · 학번 전체</label>
+        <input type="text" id="verifySuffix" placeholder="예: 2026120137" autocomplete="off" inputmode="numeric" />
+      </div>
+      <div class="error-text" id="codeError">분반과 이름을 선택해 주세요.</div>
+      <div class="error-text" id="verifyError">학번이 일치하지 않습니다. 본인 이름이 맞는지 다시 확인해 주세요.</div>
+      <button class="btn btn-primary" id="startBtn">설문 시작하기</button>
+    </div>
+  </div>
+
+  <div id="screen-survey" class="screen">
+    <div class="card">
+      <div class="survey-error" id="surveyError" style="display:none;">아직 답하지 않은 문항이 있어요. 전부 답해 주세요.</div>
+      <div id="surveyBody"></div>
+      <button class="btn btn-primary" id="surveySubmitBtn" style="margin-top:10px;">제출하기</button>
+    </div>
+  </div>
+
+  <div id="screen-done" class="screen">
+    <div class="card">
+      <div class="done-icon">✅</div>
+      <p class="done-title" id="doneTitle">제출 완료, 감사합니다!</p>
+      <p class="done-sub" id="doneSub">응답해 주셔서 감사합니다. 이 창은 닫으셔도 됩니다.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://lkimtjqooxzvlbnigqyk.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP';
+  var sb = (window.supabase && SUPABASE_URL.indexOf('YOUR_') !== 0)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  var sectionSelect = document.getElementById('sectionSelect');
+  var nameSelect = document.getElementById('nameSelect');
+  var verifyField = document.getElementById('verifyField');
+  var verifySuffix = document.getElementById('verifySuffix');
+  var codeError = document.getElementById('codeError');
+  var verifyError = document.getElementById('verifyError');
+  var startBtn = document.getElementById('startBtn');
+  var surveyBody = document.getElementById('surveyBody');
+  var surveyError = document.getElementById('surveyError');
+  var surveySubmitBtn = document.getElementById('surveySubmitBtn');
+  var doneTitle = document.getElementById('doneTitle');
+  var doneSub = document.getElementById('doneSub');
+
+  function showScreen(name){
+    ['login', 'survey', 'done'].forEach(function(n){
+      document.getElementById('screen-' + n).classList.toggle('active', n === name);
+    });
+  }
+
+  var studentsBySection = {};
+  var studentIdByCode = {};
+
+  async function loadStudents(){
+    if (!sb){
+      sectionSelect.innerHTML = '<option value="">명단을 불러올 수 없습니다</option>';
+      return;
+    }
+    try{
+      var res = await sb.from('students').select('section, name, participant_code, student_id').order('name');
+      if (res.error) throw res.error;
+      var rows = res.data || [];
+      studentsBySection = {};
+      studentIdByCode = {};
+      rows.forEach(function(r){
+        if (!studentsBySection[r.section]) studentsBySection[r.section] = [];
+        studentsBySection[r.section].push({name: r.name, code: r.participant_code});
+        studentIdByCode[r.participant_code] = String(r.student_id);
+      });
+      var sections = Object.keys(studentsBySection).sort();
+      if (sections.length === 0){
+        sectionSelect.innerHTML = '<option value="">등록된 분반이 없습니다</option>';
+        return;
+      }
+      sectionSelect.innerHTML = '<option value="">분반을 선택하세요</option>' +
+        sections.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
+    } catch (err){
+      console.error('학생 명단 불러오기 실패:', err);
+      sectionSelect.innerHTML = '<option value="">명단을 불러오지 못했습니다</option>';
+    }
+  }
+  loadStudents();
+
+  sectionSelect.addEventListener('change', function(){
+    var section = sectionSelect.value;
+    var list = studentsBySection[section] || [];
+    verifyField.style.display = 'none';
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
+    if (!section || list.length === 0){
+      nameSelect.innerHTML = '<option value="">먼저 분반을 선택하세요</option>';
+      nameSelect.disabled = true;
+      return;
+    }
+    nameSelect.innerHTML = '<option value="">이름을 선택하세요</option>' +
+      list.map(function(s){ return '<option value="' + s.code + '">' + s.name + '</option>'; }).join('');
+    nameSelect.disabled = false;
+  });
+  nameSelect.addEventListener('change', function(){
+    verifySuffix.value = '';
+    verifyError.style.display = 'none';
+    verifyField.style.display = nameSelect.value ? 'block' : 'none';
+  });
+
+  function getCode(){ return nameSelect.value; }
+  function verifyIdentity(code){
+    var expected = studentIdByCode[code];
+    var entered = verifySuffix.value.trim();
+    if (!expected || entered !== expected){
+      verifyError.style.display = 'block';
+      return false;
+    }
+    verifyError.style.display = 'none';
+    return true;
+  }
+
+  /* ---------- 사후 설문 문항 (week4_5_summary.html §87~88과 동일) ---------- */
+  var LIKERT_LABELS = ['전혀 그렇지 않다', '그렇지 않다', '보통이다', '그렇다', '매우 그렇다'];
+  var SURVEY_ITEMS_AB = [
+    {id:'a1', ko:'글쓰기 과제가 주어지면 어떤 내용을 쓸지 정할 수 있다.', en:'I can decide what to write when given a writing assignment.'},
+    {id:'a2', ko:'글에 필요한 한국어 어휘와 표현을 떠올려 사용할 수 있다.', en:'I can recall and use the Korean vocabulary and expressions I need for my writing.'},
+    {id:'a3', ko:'정해진 시간 안에 한국어 글쓰기 과제를 완성할 수 있다.', en:'I can finish a Korean writing assignment within a given time.'},
+    {id:'a4', ko:'글쓰기 과제를 받으면 오래 걸리지 않고 글쓰기를 시작할 수 있다.', en:'I can start writing soon after receiving a writing assignment, without much delay.'},
+    {id:'b1', ko:'한국어 글쓰기 과제를 받으면 긴장된다.', en:'I feel tense when I receive a Korean writing assignment.'},
+    {id:'b2', ko:'정해진 시간 안에 글을 다 쓰지 못할까봐 걱정된다.', en:"I worry that I won't be able to finish writing within the given time."},
+    {id:'b3', ko:'한글 타이핑이 느려서 생각한 내용을 충분히 쓰지 못할까봐 걱정된다.', en:"I worry that slow Korean typing will keep me from fully writing down what I'm thinking."},
+    {id:'b4', ko:'한국어 글쓰기를 시작하는 것이 부담스럽다.', en:'Starting a Korean writing task feels burdensome to me.'}
+  ];
+  var SURVEY_ITEMS_C = [
+    {id:'c1', ko:'이 프로그램은 다음 수업에서 다룰 지문의 주요 내용을 미리 이해하는 데 도움이 되었다.', en:'This program helped me understand in advance the main content of the reading for the next class.'},
+    {id:'c2', ko:'이 프로그램은 다음 수업의 핵심 어휘와 표현을 미리 익히는 데 도움이 되었다.', en:'This program helped me learn in advance the key vocabulary and expressions for the next class.'},
+    {id:'c3', ko:'프로그램에서 미리 본 내용 덕분에 수업 시간에 설명을 이해하기가 더 쉬웠다.', en:'Because of what I had already seen in the program, it was easier to follow the explanation in class.'},
+    {id:'c4', ko:'프로그램을 사용한 뒤 한글 타이핑이 이전보다 편해졌다.', en:'After using this program, typing in Korean became easier for me than before.'},
+    {id:'c5', ko:'프로그램에서 미리 타이핑한 어휘와 표현이 실제 글쓰기에 도움이 되었다.', en:'The vocabulary and expressions I had typed in the program helped me in my actual writing.'},
+    {id:'c6', ko:'프로그램을 사용한 뒤 수업 시간에 글의 내용을 생각하는 데 더 집중할 수 있었다.', en:'After using this program, I was able to focus more on the content of my writing during class.'}
+  ];
+  var SURVEY_ITEMS_D = [
+    {id:'d1', ko:'프로그램 사용 방법은 쉬웠다.', en:'The program was easy to use.'},
+    {id:'d2', ko:'한 번의 프로그램 활동 분량은 적절했다.', en:"The amount of each session's activity was appropriate."},
+    {id:'d3', ko:'앞으로도 이 프로그램을 이용해 수업을 준비하고 싶다.', en:'I would like to keep using this program to prepare for class in the future.'}
+  ];
+  var SURVEY_ITEMS_OPEN = [
+    {id:'open1', ko:'이 프로그램에서 가장 도움이 된 것은 무엇인가요? 수업이나 글쓰기에서 도움이 된 예가 있으면 함께 써 주세요.', en:'What helped you the most in this program? Please include an example related to class or writing if you can.'},
+    {id:'open2', ko:'프로그램을 사용할 때 어렵거나 불편했던 점은 무엇인가요? 어떻게 바꾸면 좋을까요?', en:'What was difficult or inconvenient when using the program? How could it be improved?'},
+    {id:'open3', ko:'프로그램을 사용하기 전과 비교해 수업 준비나 수업 내용 이해에서 달라진 점이 있나요?', en:'Compared to before using the program, has anything changed in how you prepare for class or understand class content?'},
+    {id:'open4', ko:'프로그램에서 미리 타이핑한 어휘나 표현을 실제 글쓰기에서 사용한 적이 있나요? 있다면 예를 써 주세요.', en:'Have you used any vocabulary or expressions you typed in the program in your actual writing? If so, please give an example.'}
+  ];
+
+  function renderLikertItem(item, idx){
+    var opts = LIKERT_LABELS.map(function(label, i){
+      var v = i + 1;
+      return '<label class="likert-opt"><input type="radio" name="' + item.id + '" value="' + v + '"><span>' + v + '</span></label>';
+    }).join('');
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p><div class="likert-row">' + opts + '</div></div>';
+  }
+  function renderOpenItem(item, idx){
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p>' +
+      '<textarea class="survey-textarea" data-id="' + item.id + '" rows="3"></textarea></div>';
+  }
+  function collectLikertAnswers(items){
+    var answers = {};
+    for (var i = 0; i < items.length; i++){
+      var checked = surveyBody.querySelector('input[name="' + items[i].id + '"]:checked');
+      if (!checked) return null;
+      answers[items[i].id] = Number(checked.value);
+    }
+    return answers;
+  }
+
+  async function checkSurveyDone(code, phase){
+    if (!sb) return false;
+    try{
+      var res = await sb.from('research_survey').select('participant_code').eq('participant_code', code).eq('phase', phase).maybeSingle();
+      if (res.error) throw res.error;
+      return !!res.data;
+    } catch (err){
+      console.error('설문 여부 확인 실패:', err);
+      return false;
+    }
+  }
+  async function saveSurvey(code, phase, answers){
+    if (!sb) return true;
+    try{
+      var res = await sb.from('research_survey').insert({ participant_code: code, phase: phase, answers: answers });
+      if (res.error) throw res.error;
+      return true;
+    } catch (err){ console.error('설문 저장 실패:', err); return false; }
+  }
+
+  var likertItems = SURVEY_ITEMS_AB.concat(SURVEY_ITEMS_C).concat(SURVEY_ITEMS_D);
+
+  function renderSurveyForm(){
+    var html = '<div class="survey-group-label">A · 수업 내 한국어 쓰기 효능감 / B · 쓰기 수행 부담</div>' +
+      SURVEY_ITEMS_AB.map(function(item, i){ return renderLikertItem(item, i); }).join('') +
+      '<div class="survey-group-label">C · 프로그램의 인지된 도움</div>' +
+      SURVEY_ITEMS_C.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_AB.length); }).join('') +
+      '<div class="survey-group-label">D · 만족도</div>' +
+      SURVEY_ITEMS_D.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_AB.length + SURVEY_ITEMS_C.length); }).join('') +
+      '<div class="survey-group-label">서술형 · Open-ended</div>' +
+      SURVEY_ITEMS_OPEN.map(function(item, i){ return renderOpenItem(item, i); }).join('');
+    surveyBody.innerHTML = html;
+  }
+
+  var currentCode = '';
+  startBtn.addEventListener('click', async function(){
+    var code = getCode();
+    if (!code){ codeError.style.display = 'block'; return; }
+    codeError.style.display = 'none';
+    if (!verifyIdentity(code)) return;
+    currentCode = code;
+    startBtn.disabled = true;
+    startBtn.textContent = '확인 중...';
+    var already = await checkSurveyDone(code, 'post');
+    startBtn.disabled = false;
+    startBtn.textContent = '설문 시작하기';
+    if (already){
+      doneTitle.textContent = '이미 참여하셨습니다';
+      doneSub.textContent = '이 참여자 코드는 이미 사후 설문을 제출한 기록이 있어요. 응답해 주셔서 감사합니다.';
+      showScreen('done');
+      return;
+    }
+    renderSurveyForm();
+    surveyError.style.display = 'none';
+    showScreen('survey');
+  });
+
+  var submitting = false;
+  surveySubmitBtn.addEventListener('click', async function(){
+    if (submitting) return;
+    var answers = collectLikertAnswers(likertItems);
+    if (!answers){ surveyError.style.display = 'block'; window.scrollTo(0, 0); return; }
+    surveyError.style.display = 'none';
+    var merged = {};
+    for (var k in answers) merged[k] = answers[k];
+    Array.prototype.slice.call(surveyBody.querySelectorAll('textarea')).forEach(function(t){
+      merged[t.getAttribute('data-id')] = t.value.trim();
+    });
+    submitting = true;
+    surveySubmitBtn.disabled = true;
+    surveySubmitBtn.textContent = '제출 중...';
+    var ok = await saveSurvey(currentCode, 'post', merged);
+    if (!ok){
+      submitting = false;
+      surveySubmitBtn.disabled = false;
+      surveySubmitBtn.textContent = '제출하기';
+      surveyError.textContent = '제출에 실패했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+      surveyError.style.display = 'block';
+      window.scrollTo(0, 0);
+      return;
+    }
+    doneTitle.textContent = '제출 완료, 감사합니다!';
+    doneSub.textContent = '설문에 응답해 주셔서 감사합니다. 이 창은 닫으셔도 됩니다.';
+    showScreen('done');
+  });
+})();
+</script>
+</body>
+</html>
