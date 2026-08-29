@@ -52,7 +52,7 @@
 <div class="app">
   <div class="eyebrow">연구자 전용 · 학생 화면 아님</div>
   <h1>연구 데이터 내보내기</h1>
-  <p class="lede">1주차·2~3주차·4~5주차 프로그램의 참여자 기록을 CSV로 내려받습니다. 참여자 코드 기준이며 실명은 포함하지 않습니다(익명성 유지 원칙 그대로 적용).</p>
+  <p class="lede">1주차·2~3주차·4~5주차 프로그램의 참여자 기록과 동의·설문 응답을 CSV로 내려받습니다. 참여자 코드 기준이며 실명은 포함하지 않습니다(가명 처리 원칙 그대로 적용).</p>
 
   <div class="note">
     ⚠️ 이 페이지는 랜딩 페이지(index.html)에 연결돼 있지 않습니다 — 학생에게 이 URL을 공유하지 마세요.
@@ -71,7 +71,7 @@
   </div>
 
   <div class="card">
-    <h2>2~3주차 · 성찰적 글</h2>
+    <h2>2~3주차 · 성찰적 글쓰기</h2>
     <p>참여자별 단계(파트×그룹) 연습 기록 (week23_records) — 회차마다 한 행</p>
     <div class="btn-row">
       <button class="btn" id="btnWeek23Records">기록(records) CSV</button>
@@ -97,6 +97,24 @@
       <button class="btn" id="btnQuizResults">퀴즈 결과(quiz_results) CSV</button>
     </div>
     <div class="status" id="statusQuiz"></div>
+  </div>
+
+  <div class="card">
+    <h2>연구 참여 동의</h2>
+    <p>참여자별 동의 여부 (research_consent) — 참여자 코드당 1행, agreed(true/false)·응답 시각. 3개 프로그램 어디서 응답하든 공유되는 테이블</p>
+    <div class="btn-row">
+      <button class="btn" id="btnConsent">동의 여부(research_consent) CSV</button>
+    </div>
+    <div class="status" id="statusConsent"></div>
+  </div>
+
+  <div class="card">
+    <h2>RQ2·RQ3 설문 (사전·사후)</h2>
+    <p>참여자별 설문 응답 (research_survey) — phase='pre'(첫 로그인 시, A·B 8문항)/phase='post'(사후 설문 페이지에서 제출, 21문항). answers 컬럼은 문항ID→응답 JSON(리커트는 숫자 1~5, 서술형은 텍스트)</p>
+    <div class="btn-row">
+      <button class="btn" id="btnSurvey">설문 응답(research_survey) CSV</button>
+    </div>
+    <div class="status" id="statusSurvey"></div>
   </div>
 </div>
 
@@ -170,6 +188,8 @@
   wire('btnWeek45Records', 'statusWeek45', 'week45_records', 'week45_records');
   wire('btnWeek45Progress', 'statusWeek45', 'week45_progress', 'week45_progress');
   wire('btnQuizResults', 'statusQuiz', 'quiz_results', 'quiz_results');
+  wire('btnConsent', 'statusConsent', 'research_consent', 'research_consent');
+  wire('btnSurvey', 'statusSurvey', 'research_survey', 'research_survey');
 })();
 </script>
 </body>
