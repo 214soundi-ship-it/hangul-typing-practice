@@ -1244,6 +1244,9 @@
   // 급수 선택지에 "TOPIK 없음"을 두고, 그 아래 자유 응답(선택)으로 다른 기준을 적게 함.
   // 자가평가 수준("초급/중급/고급")은 다들 후하게 평가하는 경향이 있어 뺐음(사용자 지적).
   var SURVEY_ITEMS_BG = [
+    {id:'bg_year', type:'select', ko:'현재 학년이 어떻게 되나요?', en:'What year are you currently in?',
+      options:['1학년', '2학년', '3학년', '4학년', '기타']},
+    {id:'bg_major', type:'text', ko:'전공이 무엇인가요?', en:'What is your major?'},
     {id:'bg_nationality', type:'text', ko:'국적이 어디인가요?', en:'What is your nationality?'},
     {id:'bg_native_lang', type:'text', ko:'모국어가 무엇인가요?', en:'What is your native language?'},
     {id:'bg_korean_period', type:'select', ko:'한국어를 배운 기간은 얼마나 되나요?', en:'How long have you been learning Korean?',
