@@ -13,8 +13,12 @@
     --ink:#1E2A38;
     --ink-soft:#57657A;
     --teal:#2C6E63;
+    --teal-dark:#215249;
     --teal-light:#E4F0EC;
     --border:rgba(30,42,56,0.14);
+    --modal-bg:#FFFEFC;
+    --info-bg:#EBF5F1;
+    --outcome-bg:#EEF6F1;
   }
   *{box-sizing:border-box;}
   body{
@@ -121,99 +125,174 @@
 
   /* 첫 방문 소개 모달 */
   .intro-backdrop{
-    position:fixed; inset:0; background:rgba(30,42,56,.45);
+    position:fixed; inset:0; background:rgba(30,42,56,.48);
     display:flex; align-items:center; justify-content:center;
-    padding:20px; z-index:100;
+    padding:12px; z-index:100;
   }
+  .intro-backdrop.is-closing .intro-modal{opacity:0; transform:scale(.97);}
   .intro-modal{
-    position:relative; width:100%; max-width:480px;
-    background:var(--card); border-radius:20px; border:1.5px solid var(--border);
-    padding:36px 32px 28px; box-shadow:0 20px 60px rgba(30,42,56,.25);
-    max-height:88vh; overflow-y:auto;
+    position:relative; width:calc(100vw - 24px); max-width:520px;
+    max-height:calc(100vh - 24px); overflow-y:auto;
+    background:var(--modal-bg); border-radius:20px; border:1px solid var(--border);
+    padding:32px 32px 28px; box-shadow:0 24px 64px rgba(30,42,56,.22);
+    opacity:1; transform:scale(1);
+    transition:opacity .16s ease, transform .16s ease;
+  }
+  @media (max-width:520px){
+    .intro-modal{padding:22px 20px 20px; border-radius:18px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .intro-modal{transition:none;}
   }
   .intro-close{
-    position:absolute; top:16px; right:18px; background:none; border:none;
-    font-size:20px; color:var(--ink-soft); cursor:pointer; line-height:1; padding:4px;
+    position:absolute; top:14px; right:14px; width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; border-radius:8px;
+    color:var(--ink-soft); cursor:pointer; padding:0;
   }
-  .intro-icon{font-size:36px; text-align:center; margin-bottom:14px;}
+  .intro-close:hover{background:var(--paper); color:var(--ink);}
+  .intro-close:focus-visible{outline:2.5px solid var(--teal); outline-offset:2px;}
+  .intro-close svg{width:18px; height:18px;}
+
+  .intro-icon-wrap{
+    width:42px; height:42px; border-radius:12px; background:var(--teal-light);
+    display:flex; align-items:center; justify-content:center; margin:0 0 16px;
+  }
+  .intro-icon-wrap svg{width:24px; height:24px; color:var(--teal);}
+
+  .intro-eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600;
+    letter-spacing:.04em; color:var(--teal); text-transform:uppercase; margin:0 0 8px;
+  }
   .intro-title{
-    font-family:'Noto Serif KR', serif; font-weight:700; font-size:22px;
-    text-align:center; margin:0 0 6px; color:var(--ink); text-wrap:balance;
+    font-family:'Noto Serif KR', serif; font-weight:700; font-size:27px;
+    margin:0 0 12px; color:var(--ink); text-wrap:balance; word-break:keep-all;
   }
   .intro-sub{
-    text-align:center; font-size:14.5px; color:var(--teal); font-weight:600;
-    margin:0 0 22px; line-height:1.55; text-wrap:balance; word-break:keep-all;
+    font-size:16.5px; font-weight:600; color:var(--ink);
+    margin:0 0 16px; line-height:1.5; word-break:keep-all;
   }
-  .intro-body p{font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 14px;}
+  .intro-body{font-size:15px; color:var(--ink-soft); line-height:1.65; margin:0 0 24px; word-break:keep-all;}
+
   .intro-steps{
-    display:flex; flex-direction:column; gap:10px; margin:0 0 18px;
+    display:flex; flex-direction:column; gap:10px; margin:0 0 20px;
   }
   .intro-step{
-    display:flex; gap:12px; align-items:flex-start;
-    background:var(--paper); border-radius:12px; padding:12px 14px;
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px 16px;
   }
+  .intro-step.is-outcome{background:var(--outcome-bg); border-color:transparent;}
   .intro-step-num{
-    flex:none; width:24px; height:24px; border-radius:50%;
+    flex:none; width:26px; height:26px; border-radius:50%;
     background:var(--teal); color:#fff; font-family:'IBM Plex Mono', monospace;
-    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;
     margin-top:1px;
   }
-  .intro-step-text{font-size:13.5px; color:var(--ink); line-height:1.55;}
+  .intro-step-body{min-width:0;}
+  .intro-step-when{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    font-weight:600; letter-spacing:.03em; color:var(--ink-soft);
+    text-transform:uppercase; margin:0 0 3px;
+  }
+  .intro-step-title{display:block; font-size:15.5px; font-weight:700; color:var(--ink); margin:0 0 4px; word-break:keep-all;}
+  .intro-step-desc{display:block; font-size:14px; color:var(--ink-soft); line-height:1.55; word-break:keep-all;}
+
   .intro-note{
-    background:var(--teal-light); border-radius:10px; padding:11px 13px;
-    font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 22px;
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--info-bg); border-radius:14px; padding:16px 16px;
+    margin:0 0 22px;
   }
-  .intro-footer{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-  }
+  .intro-note-icon{flex:none; width:20px; height:20px; color:var(--teal); margin-top:1px;}
+  .intro-note-icon svg{width:20px; height:20px;}
+  .intro-note-text{min-width:0;}
+  .intro-note-title{display:block; font-size:14.5px; font-weight:700; color:var(--ink); margin:0 0 5px;}
+  .intro-note-body{display:block; font-size:14px; color:var(--ink-soft); line-height:1.6; margin:0; word-break:keep-all;}
+
   .intro-dismiss{
-    display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft);
-    cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink);
+    cursor:pointer; user-select:none; margin:0 0 14px;
   }
-  .intro-dismiss input{margin:0;}
+  .intro-dismiss input{margin:0; width:16px; height:16px; accent-color:var(--teal); flex:none;}
+
   .intro-start{
-    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:14px;
-    padding:11px 22px; border-radius:10px; border:1.5px solid var(--teal);
-    background:var(--teal); color:#fff; cursor:pointer; white-space:nowrap;
+    display:block; width:100%; min-height:48px;
+    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:15.5px;
+    padding:12px 20px; border-radius:11px; border:none;
+    background:var(--teal); color:#fff; cursor:pointer;
+    transition:background .12s ease, transform .08s ease;
   }
-  .intro-start:hover{background:#245a51;}
+  .intro-start:hover{background:var(--teal-dark);}
+  .intro-start:active{background:var(--teal-dark); transform:translateY(1px);}
+  .intro-start:focus-visible{outline:2.5px solid var(--teal-dark); outline-offset:2px;}
 </style>
 </head>
 <body>
 
 <div class="intro-backdrop" id="introBackdrop">
-  <div class="intro-modal">
-    <button class="intro-close" id="introClose" aria-label="닫기">✕</button>
-    <div class="intro-icon">⌨️</div>
-    <h2 class="intro-title">타이핑 기반 사전학습 프로그램</h2>
-    <p class="intro-sub">다음 수업 내용을 미리 타이핑해 보면서 한글&nbsp;타이핑도 익히고 내용도 함께 익히는 프로그램이에요</p>
-    <div class="intro-body">
-      <p>글쓰기 수업 중 한글 자판이 서툴러서 생각을 옮기는 데 시간이 오래 걸리거나, 지문을 미리 읽어보지 못해서 수업을 따라가기 어려웠던 적 있으신가요? 이 프로그램은 그 두 가지 부담을 함께 줄여주기 위해 만들어졌어요.</p>
+  <div class="intro-modal" role="dialog" aria-modal="true" aria-labelledby="introTitle" aria-describedby="introDesc" tabindex="-1">
+    <button class="intro-close" id="introClose" aria-label="안내 닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+
+    <div class="intro-icon-wrap" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="6" width="19" height="13" rx="2.3"/>
+        <path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M9.5 13.5h.01M13 13.5h.01M16.5 13.5h.01"/>
+        <path d="M6.5 16.7h11"/>
+      </svg>
     </div>
+
+    <p class="intro-eyebrow">글쓰기 수업 준비</p>
+    <h2 class="intro-title" id="introTitle">타이핑 기반 사전학습</h2>
+    <p class="intro-sub">다음 수업의 핵심 내용을 미리 타이핑하며,<br/>한글 입력과 수업 이해를 함께 준비합니다.</p>
+    <p class="intro-body" id="introDesc">글쓰기 수업에서는 생각한 내용을 한국어로 입력하는 능력과, 수업에서 다룰 지문과 핵심 개념을 이해하는 준비가 모두 필요합니다. 이 프로그램은 다음 수업에서 실제로 다룰 내용을 타이핑하며 두 가지 준비를 함께 할 수 있도록 구성했습니다.</p>
+
     <div class="intro-steps">
       <div class="intro-step">
         <span class="intro-step-num">1</span>
-        <span class="intro-step-text"><strong>1주차</strong> — 한글 자판 위치를 먼저 익혀요</span>
+        <span class="intro-step-body">
+          <span class="intro-step-when">1주차</span>
+          <span class="intro-step-title">한글 자판 익히기</span>
+          <span class="intro-step-desc">자판 위치, 받침, 띄어쓰기와 문장부호를 연습합니다.</span>
+        </span>
       </div>
       <div class="intro-step">
         <span class="intro-step-num">2</span>
-        <span class="intro-step-text"><strong>2주차부터</strong> — 다음 수업 지문·어휘를 직접 타이핑하며 미리 읽어봐요</span>
+        <span class="intro-step-body">
+          <span class="intro-step-when">2주차부터</span>
+          <span class="intro-step-title">수업 내용 미리 익히기</span>
+          <span class="intro-step-desc">다음 수업의 핵심 개념과 지문 속 어휘·표현·문장을 직접 타이핑합니다.</span>
+        </span>
       </div>
-      <div class="intro-step">
+      <div class="intro-step is-outcome">
         <span class="intro-step-num">3</span>
-        <span class="intro-step-text">덕분에 실제 수업에서는 타자와 내용 이해에 대한 부담 없이 글쓰기에만 집중할 수 있어요</span>
+        <span class="intro-step-body">
+          <span class="intro-step-when">수업 시간</span>
+          <span class="intro-step-title">글쓰기 활동에 연결하기</span>
+          <span class="intro-step-desc">미리 익힌 내용과 타이핑 경험을 바탕으로 수업 설명을 이해하고 글쓰기 활동을 보다 원활하게 시작합니다.</span>
+        </span>
       </div>
     </div>
+
     <div class="intro-note">
-      완료 여부는 참여 점수에 반영돼요. 프로그램에 들어가면 별도로 연구 참여 동의를 여쭤보는데, 동의 여부와 관계없이 프로그램 이용과 점수는 동일하게 적용됩니다.
+      <span class="intro-note-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </span>
+      <span class="intro-note-text">
+        <span class="intro-note-title">수업 및 연구 참여 안내</span>
+        <span class="intro-note-body">사전학습 완료 기록은 수업 참여 점수에 반영됩니다. 연구 참여 동의는 프로그램 안에서 별도로 안내되며, 동의 여부는 프로그램 이용과 참여 점수에 영향을 주지 않습니다.</span>
+      </span>
     </div>
-    <div class="intro-footer">
-      <label class="intro-dismiss">
-        <input type="checkbox" id="introDismissCheck" />
-        다시 보지 않기
-      </label>
-      <button class="intro-start" id="introStart">시작하기</button>
-    </div>
+
+    <label class="intro-dismiss">
+      <input type="checkbox" id="introDismissCheck" />
+      이 안내 다시 보지 않기
+    </label>
+    <button class="intro-start" id="introStart">학습 시작하기</button>
   </div>
 </div>
 
@@ -260,6 +339,7 @@
 (function(){
   var DISMISS_KEY = 'hangul_typing_intro_dismissed';
   var backdrop = document.getElementById('introBackdrop');
+  var modal = backdrop.querySelector('.intro-modal');
   var closeBtn = document.getElementById('introClose');
   var startBtn = document.getElementById('introStart');
   var dismissCheck = document.getElementById('introDismissCheck');
@@ -267,15 +347,49 @@
   var alreadyDismissed = false;
   try { alreadyDismissed = localStorage.getItem(DISMISS_KEY) === '1'; } catch (e){}
 
-  if (alreadyDismissed){
-    backdrop.style.display = 'none';
+  var prefersReducedMotion = false;
+  try { prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e){}
+
+  // 모달이 열리기 전 포커스를 갖고 있던 요소 — 닫을 때 여기로 되돌린다.
+  var previouslyFocused = null;
+  var isOpen = false;
+
+  function getFocusable(){
+    return Array.prototype.slice.call(
+      modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter(function(el){ return !el.disabled && el.offsetParent !== null; });
+  }
+
+  function openIntro(){
+    isOpen = true;
+    previouslyFocused = document.activeElement;
+    backdrop.style.display = 'flex';
+    backdrop.classList.remove('is-closing');
+    // 모달 자체(또는 첫 포커스 가능 요소)로 포커스 이동
+    var focusables = getFocusable();
+    (focusables[0] || modal).focus();
   }
 
   function hideIntro(){
+    if (!isOpen) return;
     if (dismissCheck.checked){
       try { localStorage.setItem(DISMISS_KEY, '1'); } catch (e){}
     }
-    backdrop.style.display = 'none';
+    isOpen = false;
+    var finish = function(){
+      backdrop.style.display = 'none';
+      backdrop.classList.remove('is-closing');
+      // 원래 포커스가 있던 요소로 복귀
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function'){
+        previouslyFocused.focus();
+      }
+    };
+    if (prefersReducedMotion){
+      finish();
+    } else {
+      backdrop.classList.add('is-closing');
+      setTimeout(finish, 160);
+    }
   }
 
   closeBtn.addEventListener('click', hideIntro);
@@ -283,6 +397,34 @@
   backdrop.addEventListener('click', function(e){
     if (e.target === backdrop) hideIntro();
   });
+
+  // Escape로 닫기 + Tab 포커스가 모달 안에서만 순환하도록 처리
+  document.addEventListener('keydown', function(e){
+    if (!isOpen) return;
+    if (e.key === 'Escape'){
+      hideIntro();
+      return;
+    }
+    if (e.key === 'Tab'){
+      var focusables = getFocusable();
+      if (focusables.length === 0) return;
+      var first = focusables[0];
+      var last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first){
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last){
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  if (alreadyDismissed){
+    backdrop.style.display = 'none';
+  } else {
+    openIntro();
+  }
 })();
 </script>
 </body>
