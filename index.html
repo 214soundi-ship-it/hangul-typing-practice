@@ -117,9 +117,105 @@
     margin:32px 0 12px;
   }
   .section-label:first-of-type{margin-top:0;}
+
+  /* 첫 방문 소개 모달 */
+  .intro-backdrop{
+    position:fixed; inset:0; background:rgba(30,42,56,.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:100;
+  }
+  .intro-modal{
+    position:relative; width:100%; max-width:480px;
+    background:var(--card); border-radius:20px; border:1.5px solid var(--border);
+    padding:36px 32px 28px; box-shadow:0 20px 60px rgba(30,42,56,.25);
+    max-height:88vh; overflow-y:auto;
+  }
+  .intro-close{
+    position:absolute; top:16px; right:18px; background:none; border:none;
+    font-size:20px; color:var(--ink-soft); cursor:pointer; line-height:1; padding:4px;
+  }
+  .intro-icon{font-size:36px; text-align:center; margin-bottom:14px;}
+  .intro-title{
+    font-family:'Noto Serif KR', serif; font-weight:700; font-size:22px;
+    text-align:center; margin:0 0 6px; color:var(--ink); text-wrap:balance;
+  }
+  .intro-sub{
+    text-align:center; font-size:14.5px; color:var(--teal); font-weight:600;
+    margin:0 0 22px; line-height:1.55; text-wrap:balance;
+  }
+  .intro-body p{font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 14px;}
+  .intro-steps{
+    display:flex; flex-direction:column; gap:10px; margin:0 0 18px;
+  }
+  .intro-step{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--paper); border-radius:12px; padding:12px 14px;
+  }
+  .intro-step-num{
+    flex:none; width:24px; height:24px; border-radius:50%;
+    background:var(--teal); color:#fff; font-family:'IBM Plex Mono', monospace;
+    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    margin-top:1px;
+  }
+  .intro-step-text{font-size:13.5px; color:var(--ink); line-height:1.55;}
+  .intro-note{
+    background:var(--teal-light); border-radius:10px; padding:11px 13px;
+    font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 22px;
+  }
+  .intro-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .intro-dismiss{
+    display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft);
+    cursor:pointer; user-select:none;
+  }
+  .intro-dismiss input{margin:0;}
+  .intro-start{
+    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:14px;
+    padding:11px 22px; border-radius:10px; border:1.5px solid var(--teal);
+    background:var(--teal); color:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .intro-start:hover{background:#245a51;}
 </style>
 </head>
 <body>
+
+<div class="intro-backdrop" id="introBackdrop">
+  <div class="intro-modal">
+    <button class="intro-close" id="introClose" aria-label="닫기">✕</button>
+    <div class="intro-icon">⌨️</div>
+    <h2 class="intro-title">타이핑 기반 사전학습 프로그램</h2>
+    <p class="intro-sub">다음 수업에서 배울 내용을, 먼저 타이핑하며 익혀두는 프로그램이에요</p>
+    <div class="intro-body">
+      <p>글쓰기 수업 중 한글 자판이 서툴러서 생각을 옮기는 데 시간이 오래 걸리거나, 지문 내용을 미리 몰라서 수업을 따라가기 어려웠던 적 있으신가요? 이 프로그램은 그 두 가지 부담을 함께 줄여주기 위해 만들어졌어요.</p>
+    </div>
+    <div class="intro-steps">
+      <div class="intro-step">
+        <span class="intro-step-num">1</span>
+        <span class="intro-step-text"><strong>1주차</strong> — 한글 자판 위치를 먼저 익혀요</span>
+      </div>
+      <div class="intro-step">
+        <span class="intro-step-num">2</span>
+        <span class="intro-step-text"><strong>2주차부터</strong> — 다음 수업 지문·어휘를 직접 타이핑하며 미리 읽어봐요</span>
+      </div>
+      <div class="intro-step">
+        <span class="intro-step-num">3</span>
+        <span class="intro-step-text">덕분에 실제 수업에서는 타자와 내용 이해에 대한 부담 없이 글쓰기에만 집중할 수 있어요</span>
+      </div>
+    </div>
+    <div class="intro-note">
+      완료 여부는 참여 점수에 반영돼요. 프로그램에 들어가면 별도로 연구 참여 동의를 여쭤보는데, 동의 여부와 관계없이 프로그램 이용과 점수는 동일하게 적용됩니다.
+    </div>
+    <div class="intro-footer">
+      <label class="intro-dismiss">
+        <input type="checkbox" id="introDismissCheck" />
+        다시 보지 않기
+      </label>
+      <button class="intro-start" id="introStart">시작하기</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <div class="eyebrow">연구용 웹 프로그램</div>
   <h1>타이핑 기반 사전학습 프로그램</h1>
@@ -158,5 +254,35 @@
     <p>교재 p45~64</p>
   </a>
 </div>
+
+<script>
+(function(){
+  var DISMISS_KEY = 'hangul_typing_intro_dismissed';
+  var backdrop = document.getElementById('introBackdrop');
+  var closeBtn = document.getElementById('introClose');
+  var startBtn = document.getElementById('introStart');
+  var dismissCheck = document.getElementById('introDismissCheck');
+
+  var alreadyDismissed = false;
+  try { alreadyDismissed = localStorage.getItem(DISMISS_KEY) === '1'; } catch (e){}
+
+  if (alreadyDismissed){
+    backdrop.style.display = 'none';
+  }
+
+  function hideIntro(){
+    if (dismissCheck.checked){
+      try { localStorage.setItem(DISMISS_KEY, '1'); } catch (e){}
+    }
+    backdrop.style.display = 'none';
+  }
+
+  closeBtn.addEventListener('click', hideIntro);
+  startBtn.addEventListener('click', hideIntro);
+  backdrop.addEventListener('click', function(e){
+    if (e.target === backdrop) hideIntro();
+  });
+})();
+</script>
 </body>
 </html>

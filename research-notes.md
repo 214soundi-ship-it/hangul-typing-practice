@@ -200,6 +200,11 @@
     - **미완료자 성격 구분이 중요했음**: 단순히 "완료/미완료"가 아니라, (a) 등록조차 안 한 경우(LIU RUNTING — 최종 명단엔 있으나 시스템엔 학번 조회로도 전혀 안 잡힘, 가장 우려되는 케이스) (b) 동의서까지만 하고 프로그램 진행은 0인 경우 (c) 1주차는 진행 중이나 파트1은 미착수인 경우를 나눠서 대응 — 진행 중인 학생은 "조금만 더 하면 됨"이라 독려 메시지로 충분하고, 아예 미접속인 학생만 개별로 강하게 챙기는 식으로 우선순위를 나눔.
     - **최종 명단(엑셀, 정정기간 이후 확정본) vs 시스템 대조**: 사용자가 최종 확정 출석부(`출석부_C3 (2).xlsx`, `출석부_C4 (2).xlsx`, 둘 다 Downloads 폴더)를 제공 — python 없는 로컬 환경이라 PowerShell로 xlsx를 zip으로 복사·압축해제 후 `sharedStrings.xml`+`sheet1.xml`을 `System.Xml.XmlDocument`의 `SelectNodes`+`InnerText`로 직접 파싱(초기 시도에서 `$si.t -is [string]` 캐스팅이 실패해 "tt"만 반복 출력되는 버그 발생 → XPath 기반 `InnerText` 추출로 전환해 해결)해서 CSV형 텍스트로 재구성. 대조 결과 최종 61명(C3 31+C4 30) 중 학번 기준으로 정확히 일치하지 않는 건 LIU RUNTING(최종명단에만 있음, 시스템 미등록) 단 1건, 반대로 시스템에만 있고 최종명단엔 없는 것도 1건(학번 "861018"="소리나" 본인의 예전 자가등록 테스트 계정, 실제 학생 아님)뿐이었음 — 나머지는 전부 정확히 일치(이름 표기가 로마자/한글로 다른 몇 건은 학번 동일로 동일 인물 확인됨, 예: SHIJINYUAN=사금원, HU JUNZHUO=후준탁, LIU MEIJING=유미정). **CHEN XINGYI**는 처음엔 명단에 없는 줄 알았으나(구버전 SQL 스냅샷 기준 확인이라 착오), 최종 확정본엔 원래부터 포함된 정식 수강생이었음이 이 대조로 밝혀짐 — 이미 스스로 자가등록해 1주차까지 완료한 상태였음.
 
+96. **[9/9 마감 시간 기준 참여 점수 감점 대상 확정 — "1주차는 감점 비대상" 원칙 수립]** §95에서 확정한 분반별 마감(C3 9/9 오후 3시, C4 9/9 오후 4시 30분)이 실제로 도래한 시점에, `stage0_records`/`week23_records`의 개별 단계별 `recorded_at` 타임스탬프(단순 `progress` 테이블의 `updated_at`이 아니라 — 재연습 시 최신 시각으로 덮어써져 "언제 처음 그 지점을 통과했는지"를 놓칠 수 있어 `records` 테이블의 특정 stage_id 최초 기록 시각을 조회하는 방식으로 정확히 판정) 기준으로 각 학생의 1주차 완료(stage_id=10)·파트1 완료(stage_id=2) 시각을 마감과 정밀 대조. 그 결과 마감을 못 지킨 경우가 처음엔 5건(WEI JOTIAN 1주차, CHEN XINGYI·등호천·리쟈판·LIU RUNTING 파트1, 리쟈판·LIU RUNTING은 1주차도) 나왔으나, 사용자가 WEI JOTIAN 건(1주차 마지막 단계를 마감 8분 초과로 완료)을 보고 "이건 수업 내용이 안 들어가니까 감점 없다"고 판단 — 이후 사용자가 "그럼 이 원칙을 전원에게 동일 적용할지" 재확인 요청, 어시스턴트가 (1)이유 논리 유지 (2)해당자가 사실상 1명뿐이라 실익 적음 (3)나중에 이의제기 시 방어 논리로도 더 설득력 있음을 근거로 "1주차 감점 없음" 유지를 권고 → 채택됨.
+    - **확정 원칙**: **1주차(자판 자리 연습)는 실제 수업 지문·내용과 무관한 순수 타자 기능 연습이라, "사전학습 미이행→수업 내용 이해 저하"라는 감점 논리 자체가 성립하지 않음 — 따라서 1주차는 마감을 넘겨도 참여 점수 감점 비대상으로 전원 동일 적용.** 2~3주차 이후(파트1부터)는 실제 수업 지문·어휘를 다루는 내용 기반 사전학습이라 마감 논리가 그대로 적용되며, 이 구분은 특정 학생을 봐주기 위한 예외가 아니라 프로그램 성격 자체에 따른 일반 원칙임.
+    - **최종 확정 참여 점수 감점 대상(4명)**: CHEN XINGYI(C3, 파트1 미완료), 등호천(C4, 파트1 미완료), 리쟈판(C4, 파트1 미완료 — 1주차도 미완료지만 그건 감점 사유 아님), LIU RUNTING(C4, 파트1 미완료 — 동일)
+    - 사용자 판단으로 "1주차 감점 없음" 원칙을 학생들에게 사전 공지하지 않고 내부 기준으로만 조용히 적용하기로 함(형평성 논란 예방 목적)
+
 ## 6. 아직 정해지지 않은 것 (2026-08-29 전면 정리 — 그 이전 버전은 대부분 해결되어 삭제함, 상세 이력은 §5 로그 참고)
 
 이 섹션은 한동안 갱신이 안 돼서, 이미 끝난 항목(IRB 방향 확정·동의서·RQ2/RQ3 설계·4~5주차 제작·배포·`research_export.html` 버튼 등)이 "미정"으로 잘못 남아있었음 — 전부 정리하고 **진짜로 아직 안 정한 것**만 남김.
@@ -313,3 +318,49 @@
    - 활용법: **RQ2 이론적 배경에서 가장 강력하게 쓸 수 있는 논문 — 본 연구 가설 경로의 이론적 원형.** 본 연구의 논리를 이 모델에 그대로 대입하면: "타이핑 미숙 → (자판을 찾고 오타를 고치느라) 인지부하 증가 → 불안 증가 → 쓰기 수행 저하"가 되고, 본 연구의 개입(타이핑 사전학습)은 "타이핑 유창성을 높여 인지부하를 줄임으로써 → 불안을 줄이고 → 쓰기 효능감·수행을 높인다"는 역방향 경로로 설명할 수 있음. 이론적 배경 문단을 쓸 때 "Wang et al.(2024)이 밝힌 인지부하-불안-쓰기수행의 매개 경로에 근거해, 본 연구는 타이핑 유창성 향상이 인지적 부담을 줄여 쓰기 효능감에 긍정적 영향을 줄 것이라 가정한다"는 문장으로 이론적 배경의 결론부에 쓰면 아주 잘 맞음.
 
 **미다운로드 15편**: 국내 학술지(1-6, 13-18)는 KCI/DBpia/RISS에서, 해외 저널(8, 9, 19)은 Cambridge/ScienceDirect에서 학교 도서관 계정으로 열람 가능 — 정확한 링크는 대화 중 이미 안내함.
+
+### F. 기존 20편의 참고문헌에서 스노볼링으로 발견한 6편 (2026-09-13 추가)
+
+기존에 확보한 논문들(특히 Izumi 2002·Kang 2010·Hanaoka & Izumi 2012·Wu Qie Wang 2023·Barkaoui & Knouzi 2018·Wang et al. 2024)의 참고문헌 목록을 직접 훑어보며, 소리나 님 논문에 바로 쓸 수 있는 것들을 추가로 검증·선별함(전부 WebSearch로 실재 확인).
+
+22. **Truscott, J. (1998)**. "Noticing in second language acquisition: a critical review." *Second Language Research*, 14(2), 103-135. (원문 확보 — [선행연구_PDF/22_Truscott(1998)...pdf](../선행연구_PDF/22_Truscott(1998).%20Noticing%20in%20second%20language%20acquisition%20-%20a%20critical%20review.pdf))
+    - 요약: Noticing Hypothesis(주의를 기울여야 배운다는 이론)에 정면으로 반박하는 논문. "그 이론은 인지심리학적 근거가 약하고, 검증 가능한 형태로 만들기도 어렵다"고 주장함.
+    - 활용법: 이론적 배경에서 noticing 가설만 일방적으로 소개하지 않고 "물론 이 가설에 대한 비판도 있다(Truscott 1998)"는 한 문장을 넣어주면, 이론을 균형있게 다뤘다는 인상을 줄 수 있음.
+
+23. **Hanaoka, O. (2007)**. "Output, noticing, and learning: An investigation into the role of spontaneous attention to form in a four-stage writing task." *Language Teaching Research*, 11(4), 459-479. (유료 — SAGE)
+    - 요약: 이미 갖고 계신 04번(Kang 2010)·05번(Hanaoka & Izumi 2012) 논문이 둘 다 "이 연구를 그대로 복제·확장했다"고 밝힌 **원조 연구**. 일본 대학생들에게 그림보고 글쓰기→모범글 비교→다시쓰기의 4단계 과제를 시켜, 학습자가 무엇을 알아채고(noticing) 어떻게 반영하는지 확인.
+    - 활용법: **04·05번을 인용할 때 반드시 같이 언급해야 하는 논문** — "Hanaoka(2007)가 처음 밝힌 현상을, Kang(2010)과 Hanaoka & Izumi(2012)가 각각 노트테이킹·모범글 대 재구성문 비교로 확장했다"는 식으로 계보를 완성시켜줌. 지금처럼 04·05번만 인용하면 계보가 중간부터 시작하는 셈이 됨.
+
+24. **Qi, D. S., & Lapkin, S. (2001)**. "Exploring the role of noticing in a three-stage second language writing task." *Journal of Second Language Writing*, 10, 277-303. (유료 — Elsevier)
+    - 요약: 중국어권 성인 ESL 학습자 2명을 대상으로 한 사례연구. 쓰기(1단계)→재구성문과 비교(2단계)→다시쓰기(3단계) 구조에서 noticing이 실제 개선으로 이어지는 과정을 추적.
+    - 활용법: 23번(Hanaoka 2007)과 함께 "L2 쓰기에서 noticing을 연구한 초기 계보"로 짝지어 인용. 이 분야 연구가 어디서부터 시작됐는지 보여주는 용도.
+
+25. **Teimouri, Y., Goetze, J., & Plonsky, L. (2019)**. "Second language anxiety and achievement: A meta-analysis." *Studies in Second Language Acquisition*, 41, 363-387. (유료 — Cambridge)
+    - 요약: 97개 연구·105개 표본(총 19,933명)을 종합한 메타분석. L2 불안과 언어 성취 사이에 중간 정도의 부적 상관(r=-.36)이 있음을 확인 — "불안이 높으면 성취가 낮다"는 걸 대규모로 재확인한 연구.
+    - 활용법: RQ2(쓰기불안) 이론적 배경에서 "불안이 학습 성과를 저해한다는 것은 메타분석으로도 확인된 바 있다(Teimouri et al. 2019)"는 식으로, 개별 연구가 아니라 메타분석 수준의 강력한 근거로 인용 가능.
+
+26. **Manchón, R. M. (Ed.). (2011)**. *Learning-to-write and writing-to-learn in an additional language*. John Benjamins. (유료 — 단행본)
+    - 요약: "쓰기를 배우는 것(learning to write)"과 "쓰기를 통해 배우는 것(writing to learn)"을 구분해서 다룬 편저서. Hanaoka & Izumi(2012)가 이 책의 프레임을 그대로 가져와 씀.
+    - 활용법: 본 연구의 핵심 프레이밍("타이핑 자체가 목적이 아니라, 타이핑이라는 output 활동을 통해 내용을 배운다")과 개념적으로 정확히 일치 — 이론적 배경 서두에서 이 구분을 소개하는 용도로 인용하면 좋음.
+
+27. **Jin, Y., & Yan, X. (2017)**. "Computer literacy and the construct validity of a high-stakes computer-based writing assessment." *Language Assessment Quarterly*, 14(2), 101-119. (유료 — Taylor & Francis)
+    - 요약: 중국 대학생 대상 대규모 영어 시험(CET)에서, 컴퓨터 친숙도가 높은 학생이 컴퓨터 기반 쓰기시험에서 더 유리했다는 것을 실증. 컴퓨터 기반 채점이 종이 기반과 인지적으로 비슷한 과정을 요구한다는 것도 확인.
+    - 활용법: 03번(Barkaoui & Knouzi 2018)과 같은 결의 추가 실증 근거 — "이런 현상이 한 연구에서만 나타난 게 아니라 다른 대규모 연구(Jin & Yan 2017)에서도 반복 확인됐다"는 식으로 근거를 보강할 때 사용.
+
+**정리**: 원 20편 + 참고용 2편 + 스노볼링 6편 = 28편.
+
+### G. 이론적 원전 2편 추가 확보 (2026-09-13) — "간접 인용만 하고 있었다"는 문제 해결
+
+사용자가 "이론서는 없어?"라고 직접 지적 — 28편 전부 Noticing Hypothesis·Output Hypothesis를 계속 언급하면서도, 정작 그 이론을 처음 제시한 원전은 목록에 없이 **다른 논문이 인용한 걸 재인용만 하고 있었음**(예: Izumi 2002가 Schmidt 1990을 인용한 것을 본 연구가 다시 인용). 논문 심사에서 원전 미확인 지적을 받을 수 있는 지점이라 즉시 검증·보완.
+
+29. **Schmidt, R. (1990)**. "The role of consciousness in second language learning." *Applied Linguistics*, 11(2), 129-158. (원문 확보 — [선행연구_PDF/23_Schmidt(1990)...pdf](../선행연구_PDF/23_Schmidt(1990).%20The%20role%20of%20consciousness%20in%20second%20language%20learning.pdf), nflrc.hawaii.edu에 무료 공개)
+    - 요약: **Noticing Hypothesis의 원전.** 잠재의식 상태의 학습(subliminal learning)은 불가능하며, "알아차림(noticing)"이 입력을 습득 가능한 상태(intake)로 바꾸는 필요충분조건이라고 주장.
+    - 활용법: 이론적 배경에서 Noticing Hypothesis를 처음 소개하는 문장에 **직접 인용**. "Schmidt(1990)의 Noticing Hypothesis에 따르면, 학습자가 언어 형태에 의식적으로 주의를 기울여야(noticing) 습득이 일어난다" — 이제 이 문장을 Izumi(2002)를 거치지 않고 원전으로 바로 뒷받침 가능.
+
+30. **Swain, M. (1985)**. "Communicative competence: Some roles of comprehensible input and comprehensible output in its development." In S. Gass & C. Madden (Eds.), *Input in Second Language Acquisition* (pp. 235-253). Newbury House. (유료 — 단행본 챕터, 도서관 필요)
+    - 요약: **Output Hypothesis의 원전.** Krashen의 입력가설(comprehensible input)만으로는 습득이 충분히 설명 안 된다며, 학습자가 직접 산출(output)하는 것도 습득에 중요한 역할을 한다고 주장(가설검증·자동화·noticing 기능).
+    - 활용법: "왜 타이핑(직접 산출 행위)이 단순히 지문을 읽는 것보다 나은가"를 설명하는 이론적 배경의 출발점. Kang(2010) 등이 인용하는 Output Hypothesis를 이제 원전으로 직접 인용 가능.
+
+(참고: Schmidt(1995)의 "Consciousness and foreign language learning: A tutorial..." — Noticing Hypothesis를 63쪽 분량으로 확장한 후속 단행본 챕터도 확인했으나, 위 두 편이 가장 핵심적인 원전이라 이 둘을 우선 추가함. 필요시 도서관에서 추가 확보 가능)
+
+**최종 정리**: 원 20편 + 참고용 2편 + 스노볼링 6편 + 이론적 원전 2편 = **총 30편**(선행연구_전체목록_표.md에 표로 별도 정리함). Truscott(1998)·Schmidt(1990) 무료 확보, 나머지는 학교 도서관 계정으로 열람 필요.
