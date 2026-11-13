@@ -1,20 +1,41 @@
 name: Supabase Keep-Alive
 
-# Supabase 무료 플랜은 7일간 API 요청이 없으면 프로젝트가 자동 일시정지됩니다.
-# 이 워크플로우가 3일마다 가벼운 조회 요청을 보내서 프로젝트가 계속 살아있게 합니다.
+# Supabase 무료 플랜은 일주일 동안 '충분한 데이터베이스 활동'이 없으면 프로젝트가 자동 일시정지됩니다.
+# (2026-11 실제로 정지됨: 읽기 요청만 3일마다 보내던 이전 방식으로는 막지 못했음)
+# 그래서 매일 ① 테이블 읽기 ② keepalive_heartbeat 테이블에 시각 기록(쓰기)을 같이 합니다.
+# ②는 supabase_keepalive_heartbeat.sql 을 한 번 실행해야 동작합니다(없으면 경고만 표시).
+# ①이 실패하면(=프로젝트가 정지됐거나 연결 불가) 이 워크플로우가 빨간 X로 실패 처리됩니다.
 
 on:
   schedule:
-    - cron: '0 3 */3 * *'   # 3일마다 (UTC 03:00, 한국시간 낮 12시경)
+    - cron: '17 3 * * *'     # 매일 (UTC 03:17, 한국시간 낮 12시 17분경)
   workflow_dispatch: {}      # Actions 탭에서 수동 실행도 가능
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      SB_URL: https://lkimtjqooxzvlbnigqyk.supabase.co
+      SB_KEY: sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP
     steps:
-      - name: Ping Supabase REST API
+      - name: 1) 테이블 읽기 (실패 시 워크플로우 실패 처리)
         run: |
-          curl -sS -o /dev/null -w "HTTP %{http_code}\n" \
-            "https://lkimtjqooxzvlbnigqyk.supabase.co/rest/v1/stage0_progress?select=participant_code&limit=1" \
-            -H "apikey: sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP" \
-            -H "Authorization: Bearer sb_publishable_d2iXq0ymtRBfmEdqgw_lWQ_mRSPiLfP"
+          curl -fsS --retry 3 --retry-delay 10 --retry-all-errors \
+            -o /dev/null -w "읽기 HTTP %{http_code}\n" \
+            "$SB_URL/rest/v1/stage0_progress?select=participant_code&limit=1" \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY"
+
+      - name: 2) 하트비트 기록 (쓰기 — 테이블이 없으면 경고만)
+        run: |
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          RESP=$(curl -sS --retry 3 --retry-delay 10 --retry-all-errors \
+            -X PATCH "$SB_URL/rest/v1/keepalive_heartbeat?id=eq.1" \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+            -H "Content-Type: application/json" -H "Prefer: return=representation" \
+            -d "{\"pinged_at\":\"$NOW\"}" || true)
+          echo "응답: $RESP"
+          if echo "$RESP" | grep -q "pinged_at"; then
+            echo "하트비트 기록 완료: $NOW"
+          else
+            echo "::warning::하트비트 기록 실패 — supabase_keepalive_heartbeat.sql 을 아직 실행하지 않았거나 정책 문제입니다."
+          fi
