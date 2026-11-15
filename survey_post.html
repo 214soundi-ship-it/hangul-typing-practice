@@ -231,7 +231,8 @@
   }
 
   /* ---------- 사후 설문 문항 (A·B는 사전 설문과 동일 문항 — 비교용이라 수정 금지.
-     C·D·서술형 open1~4는 기존, E(뜻풀이 1문항)·open5(추가 기능)는 2026-11-15 추가) ---------- */
+     C·D는 기존. E(뜻풀이 2문항: 한국어 뜻풀이 / 영어·중국어 번역, 단독 문항 — C군 신뢰도에 섞지 않음)와
+     서술형 4문항은 2026-11-15 개정) ---------- */
   var LIKERT_LABELS = ['전혀 그렇지 않다', '그렇지 않다', '보통이다', '그렇다', '매우 그렇다'];
   var SURVEY_ITEMS_AB = [
     {id:'a1', ko:'글쓰기 과제가 주어지면 어떤 내용을 쓸지 정할 수 있다.', en:'I can decide what to write when given a writing assignment.'},
@@ -258,14 +259,16 @@
     {id:'d3', ko:'앞으로도 이 프로그램을 이용해 수업을 준비하고 싶다.', en:'I would like to keep using this program to prepare for class in the future.'}
   ];
   var SURVEY_ITEMS_E = [
-    {id:'e1', ko:'화면에 함께 제시된 뜻풀이(한국어·영어·중국어)가 어휘를 이해하는 데 도움이 되었다.', en:'The meanings shown together on the screen (Korean, English, Chinese) helped me understand the vocabulary.'}
+    {id:'e1', ko:'화면에 제시된 한국어 뜻풀이는 어휘를 이해하는 데 도움이 되었다.', en:'The Korean definitions shown on the screen helped me understand the vocabulary.'},
+    {id:'e2', ko:'화면에 제시된 영어 또는 중국어 번역(내가 본 것 기준)은 어휘를 이해하는 데 도움이 되었다.', en:'The English or Chinese translations shown on the screen (based on the one I looked at) helped me understand the vocabulary.'}
   ];
+  /* 서술형 4문항 (2026-11-15 개편: 사후 응답이 시작되기 전에 정리 — 기존 5문항 중
+     "도움이 된 점"과 "달라진 점"은 내용이 겹쳐 통합, "추가 기능"은 "개선" 질문과 합침) */
   var SURVEY_ITEMS_OPEN = [
-    {id:'open1', ko:'이 프로그램에서 가장 도움이 된 것은 무엇인가요? 수업이나 글쓰기에서 도움이 된 예가 있으면 함께 써 주세요.', en:'What helped you the most in this program? Please include an example related to class or writing if you can.'},
-    {id:'open2', ko:'프로그램을 사용할 때 어렵거나 불편했던 점은 무엇인가요? 어떻게 바꾸면 좋을까요?', en:'What was difficult or inconvenient when using the program? How could it be improved?'},
-    {id:'open3', ko:'프로그램을 사용하기 전과 비교해 수업 준비나 수업 내용 이해에서 달라진 점이 있나요?', en:'Compared to before using the program, has anything changed in how you prepare for class or understand class content?'},
-    {id:'open4', ko:'프로그램에서 미리 타이핑한 어휘나 표현을 실제 글쓰기에서 사용한 적이 있나요? 있다면 예를 써 주세요.', en:'Have you used any vocabulary or expressions you typed in the program in your actual writing? If so, please give an example.'},
-    {id:'open5', ko:'이 프로그램에 추가되면 좋겠다고 생각하는 기능이 있나요? 있다면 자유롭게 써 주세요.', en:'Is there any feature you would like to be added to this program? If so, please describe it freely.'}
+    {id:'open1', ko:'이 프로그램을 사용하면서 수업 이해나 글쓰기에 가장 도움이 된 점은 무엇인가요? 예가 있으면 함께 써 주세요.', en:'What helped you the most with understanding class or with writing while using this program? Please include an example if you can.'},
+    {id:'open2', ko:'프로그램에서 연습한 어휘나 표현을 실제 글쓰기에 사용해 본 경험이 있나요? 있다면 어떤 표현이었는지, 또는 어떻게 도움이 되었는지 써 주세요.', en:'Have you used any vocabulary or expressions you practiced in the program in your actual writing? If so, please write which expressions, or how it helped.'},
+    {id:'open3', ko:'프로그램을 사용할 때 어렵거나 불편했던 점은 무엇인가요?', en:'What was difficult or inconvenient when using the program?'},
+    {id:'open4', ko:'프로그램에 추가되거나 바뀌면 좋겠다고 생각하는 기능이나 내용이 있나요?', en:'Is there any feature or content you would like to be added or changed in this program?'}
   ];
 
   function renderLikertItem(item, idx){
