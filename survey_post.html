@@ -75,6 +75,10 @@
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft); cursor:pointer;
   }
   .likert-opt input{ width:18px; height:18px; accent-color:var(--teal); cursor:pointer; }
+  .choice-list{ display:flex; flex-direction:column; gap:8px; }
+  .choice-opt{ display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:var(--ink); line-height:1.5; cursor:pointer; }
+  .choice-opt input{ width:18px; height:18px; margin-top:2px; flex:none; accent-color:var(--teal); cursor:pointer; }
+  .choice-opt .choice-en{ display:block; font-size:12px; color:var(--ink-soft); font-style:italic; }
   .survey-textarea{
     width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 10px;
     font-family:inherit; font-size:13.5px; resize:vertical; box-sizing:border-box; color:var(--ink);
@@ -262,6 +266,37 @@
     {id:'e1', ko:'화면에 제시된 한국어 뜻풀이는 어휘를 이해하는 데 도움이 되었다.', en:'The Korean definitions shown on the screen helped me understand the vocabulary.'},
     {id:'e2', ko:'화면에 제시된 영어 또는 중국어 번역(내가 본 것 기준)은 어휘를 이해하는 데 도움이 되었다.', en:'The translation I looked at on the screen (English or Chinese) helped me understand the vocabulary.'}
   ];
+  /* 배경(2026-11-15 추가): 한글 타이핑 경험·사용 빈도·타이핑 학습 기회 요구. 사전 설문에는 없던 문항이라 사후에
+     회상형으로 받는다(분석 시 "사후 회상으로 수집한 배경 변인"으로 밝힐 것). 값은 선택지 한국어 문구로 저장.
+     사용 빈도 선택지는 박진철(2026)의 타자 사용 빈도 구간과 맞춰 비교할 수 있게 함. */
+  var SURVEY_ITEMS_BG_CHOICE = [
+    {id:'bg_prior_typing', ko:'이 프로그램을 사용하기 전에, 한국어를 공부하면서 한글 타이핑을 해 본 경험이 얼마나 있었나요?',
+      en:'Before using this program, how much experience did you have typing in Korean while studying Korean?',
+      options:[
+        {ko:'펜이나 손으로만 썼고, 타이핑은 거의 하지 않았다', en:'I wrote only by hand and hardly typed'},
+        {ko:'타이핑을 가끔 했다', en:'I typed sometimes'},
+        {ko:'타이핑을 자주 했다', en:'I typed often'},
+        {ko:'거의 매일 타이핑했다', en:'I typed almost every day'}
+      ]},
+    {id:'bg_typing_freq', ko:'요즘 대학 수업이나 과제를 위해 한글 타이핑을 얼마나 자주 하나요?',
+      en:'These days, how often do you type in Korean for your university classes or assignments?',
+      options:[
+        {ko:'거의 하지 않는다', en:'Hardly ever'},
+        {ko:'주 1~2회', en:'1-2 times a week'},
+        {ko:'주 3~4회', en:'3-4 times a week'},
+        {ko:'거의 매일', en:'Almost every day'}
+      ]}
+  ];
+  /* 타이핑 "교육"의 필요성(학습 기회 요구)을 직접 묻는 문항 — 논문의 "타이핑 교육이 필요하다"는 문제 제기를
+     학습자 인식으로 뒷받침하기 위함. 필요성 자체는 사용 빈도(행동)·사전 A5·B3·타이핑 경험 문항이 받쳐 줌 */
+  var SURVEY_ITEMS_BG_LIKERT = [
+    {id:'need_typing_edu', ko:'수업에서 한글 타이핑을 배우고 연습할 기회가 더 있으면 좋겠다.', en:'I wish there were more opportunities in class to learn and practice typing in Korean.'}
+  ];
+  /* F: 한글 타이핑 익숙함 인식(2026-11-15 추가). C4와 함께 "타이핑 익숙함 인식"으로 따로 묶어 보고할 수 있음 */
+  var SURVEY_ITEMS_F = [
+    {id:'f1', ko:'프로그램을 사용한 뒤 한글 타이핑 속도가 이전보다 빨라졌다고 느낀다.', en:'After using this program, I feel that my Korean typing has become faster than before.'},
+    {id:'f2', ko:'프로그램을 사용한 뒤 한글 자판에서 글자를 찾는 것이 이전보다 익숙해졌다.', en:'After using this program, finding letters on the Korean keyboard has become more familiar to me than before.'}
+  ];
   /* 서술형 4문항 (2026-11-15 개편: 사후 응답이 시작되기 전에 정리 — 기존 5문항 중
      "도움이 된 점"과 "달라진 점"은 내용이 겹쳐 통합, "추가 기능"은 "개선" 질문과 합침) */
   var SURVEY_ITEMS_OPEN = [
@@ -278,6 +313,23 @@
     }).join('');
     return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
       '<span class="survey-q-en">' + item.en + '</span></p><div class="likert-row">' + opts + '</div></div>';
+  }
+  function renderChoiceItem(item, idx){
+    var opts = item.options.map(function(o){
+      return '<label class="choice-opt"><input type="radio" name="' + item.id + '" value="' + o.ko + '"><span>' + o.ko +
+        '<span class="choice-en">' + o.en + '</span></span></label>';
+    }).join('');
+    return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
+      '<span class="survey-q-en">' + item.en + '</span></p><div class="choice-list">' + opts + '</div></div>';
+  }
+  function collectChoiceAnswers(items){
+    var answers = {};
+    for (var i = 0; i < items.length; i++){
+      var checked = surveyBody.querySelector('input[name="' + items[i].id + '"]:checked');
+      if (!checked) return null;
+      answers[items[i].id] = checked.value;
+    }
+    return answers;
   }
   function renderOpenItem(item, idx){
     return '<div class="survey-item"><p class="survey-q"><b>' + (idx + 1) + '.</b> ' + item.ko +
@@ -314,17 +366,24 @@
     } catch (err){ console.error('설문 저장 실패:', err); return false; }
   }
 
-  var likertItems = SURVEY_ITEMS_AB.concat(SURVEY_ITEMS_C).concat(SURVEY_ITEMS_D).concat(SURVEY_ITEMS_E);
+  var likertItems = SURVEY_ITEMS_BG_LIKERT.concat(SURVEY_ITEMS_AB).concat(SURVEY_ITEMS_C).concat(SURVEY_ITEMS_D)
+    .concat(SURVEY_ITEMS_E).concat(SURVEY_ITEMS_F);
 
+  /* 순서: 배경(사전 설문처럼 맨 앞) → A·B → C → D → E → F → 서술형. 번호는 서술형 전까지 이어서 매김. */
   function renderSurveyForm(){
-    var html = '<div class="survey-group-label">A · 수업 내 한국어 쓰기 효능감 / B · 쓰기 수행 부담</div>' +
-      SURVEY_ITEMS_AB.map(function(item, i){ return renderLikertItem(item, i); }).join('') +
-      '<div class="survey-group-label">C · 프로그램의 인지된 도움</div>' +
-      SURVEY_ITEMS_C.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_AB.length); }).join('') +
-      '<div class="survey-group-label">D · 만족도</div>' +
-      SURVEY_ITEMS_D.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_AB.length + SURVEY_ITEMS_C.length); }).join('') +
-      '<div class="survey-group-label">E · 뜻풀이</div>' +
-      SURVEY_ITEMS_E.map(function(item, i){ return renderLikertItem(item, i + SURVEY_ITEMS_AB.length + SURVEY_ITEMS_C.length + SURVEY_ITEMS_D.length); }).join('') +
+    var n = 0;
+    function group(label, items, renderFn){
+      var h = '<div class="survey-group-label">' + label + '</div>';
+      items.forEach(function(item){ h += renderFn(item, n); n++; });
+      return h;
+    }
+    var html = group('배경 · 한글 타이핑 경험과 요구', SURVEY_ITEMS_BG_CHOICE, renderChoiceItem) +
+      SURVEY_ITEMS_BG_LIKERT.map(function(item){ var h = renderLikertItem(item, n); n++; return h; }).join('') +
+      group('A · 수업 내 한국어 쓰기 효능감 / B · 쓰기 수행 부담', SURVEY_ITEMS_AB, renderLikertItem) +
+      group('C · 프로그램의 인지된 도움', SURVEY_ITEMS_C, renderLikertItem) +
+      group('D · 만족도', SURVEY_ITEMS_D, renderLikertItem) +
+      group('E · 뜻풀이', SURVEY_ITEMS_E, renderLikertItem) +
+      group('F · 한글 타이핑 익숙함', SURVEY_ITEMS_F, renderLikertItem) +
       '<div class="survey-group-label">서술형 · Open-ended</div>' +
       SURVEY_ITEMS_OPEN.map(function(item, i){ return renderOpenItem(item, i); }).join('');
     surveyBody.innerHTML = html;
@@ -357,10 +416,12 @@
   surveySubmitBtn.addEventListener('click', async function(){
     if (submitting) return;
     var answers = collectLikertAnswers(likertItems);
-    if (!answers){ surveyError.style.display = 'block'; window.scrollTo(0, 0); return; }
+    var choiceAnswers = collectChoiceAnswers(SURVEY_ITEMS_BG_CHOICE);
+    if (!answers || !choiceAnswers){ surveyError.style.display = 'block'; window.scrollTo(0, 0); return; }
     surveyError.style.display = 'none';
     var merged = {};
     for (var k in answers) merged[k] = answers[k];
+    for (var k2 in choiceAnswers) merged[k2] = choiceAnswers[k2];
     Array.prototype.slice.call(surveyBody.querySelectorAll('textarea')).forEach(function(t){
       merged[t.getAttribute('data-id')] = t.value.trim();
     });
