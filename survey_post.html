@@ -271,6 +271,14 @@
   /* 배경(2026-11-15 추가): 한글 타이핑 경험·사용 빈도·타이핑 학습 기회 요구. 사전 설문에는 없던 문항이라 사후에
      회상형으로 받는다(분석 시 "사후 회상으로 수집한 배경 변인"으로 밝힐 것). 값은 선택지 한국어 문구로 저장.
      사용 빈도 선택지는 박진철(2026)의 타자 사용 빈도 구간과 맞춰 비교할 수 있게 함. */
+  var DEVICE_OPTS = [
+    {ko:'거의 항상 컴퓨터(노트북 포함)', en:'Almost always on a computer (including laptops)'},
+    {ko:'컴퓨터(노트북 포함)를 휴대폰보다 더 자주', en:'More often on a computer (including laptops) than on a phone'},
+    {ko:'컴퓨터와 휴대폰을 비슷하게', en:'About equally on a computer and a phone'},
+    {ko:'휴대폰을 컴퓨터보다 더 자주', en:'More often on a phone than on a computer'},
+    {ko:'거의 항상 휴대폰', en:'Almost always on a phone'},
+    {ko:'기타 기기(태블릿 등)', en:'On another device (tablet, etc.)'}
+  ];
   var SURVEY_ITEMS_BG_CHOICE = [
     {id:'bg_prior_typing', ko:'이 프로그램을 사용하기 전에, 한국어를 공부하면서 컴퓨터로 한글 타이핑을 해 본 경험이 얼마나 있었나요?',
       en:'Before using this program, how much experience did you have typing in Korean on a computer while studying Korean?',
@@ -280,19 +288,22 @@
         {ko:'컴퓨터로 타이핑을 자주 했다', en:'I typed on a computer often'},
         {ko:'거의 매일 컴퓨터로 타이핑했다', en:'I typed on a computer almost every day'}
       ]},
-    {id:'bg_typing_freq', ko:'이 수업 외에, 대학의 다른 수업이나 과제에서 컴퓨터로 한글 타이핑을 얼마나 자주 하나요?',
-      en:'Outside this class, how often do you type in Korean on a computer for your other university classes or assignments?',
-      options:[
-        {ko:'거의 하지 않는다', en:'Hardly ever'},
-        {ko:'주 1~2회', en:'1-2 times a week'},
-        {ko:'주 3~4회', en:'3-4 times a week'},
-        {ko:'거의 매일', en:'Almost every day'}
-      ]}
+    /* a: 대학 다른 수업의 과제 작성 기기(이 수업 제외 — 이 수업은 설계상 컴퓨터 과제라 포함하면 비율이 부풀기 때문).
+       이 수업 외에 한국어로 쓰는 과제가 없는 학생을 위해 "해당 없음" 포함. 분석 시 해당 없음은 분모에서 빼고 따로 보고 */
+    {id:'bg_device_class', ko:'대학에 입학한 뒤, 이 수업 말고 다른 대학 수업에서 보고서나 과제를 쓸 때, 한국어 글자를 입력하는 데 주로 어떤 기기를 사용했나요? (사용 횟수를 생각해 답해 주세요.)',
+      en:'Since entering university, when writing reports or assignments for your other university classes (besides this class), which device did you mainly use to type in Korean? (Please think about how often you used each.)',
+      options: DEVICE_OPTS.concat([
+        {ko:'해당 없음 (이 수업 외에 한국어로 쓰는 과제가 없다)', en:'Not applicable (I have no assignments written in Korean other than this class)'}
+      ])},
+    /* b: 수업 밖 일상 한국어 글쓰기 기기 — a와 대비해 "일상 vs 대학 과제" 기기 차이를 보기 위함 */
+    {id:'bg_device_daily', ko:'대학에 입학한 뒤, 수업 밖에서 한국어 메시지나 SNS 글을 쓸 때, 주로 어떤 기기를 사용했나요? (사용 횟수를 생각해 답해 주세요.)',
+      en:'Since entering university, when writing Korean messages or social media posts outside of class, which device did you mainly use? (Please think about how often you used each.)',
+      options: DEVICE_OPTS}
   ];
   /* 타이핑 "교육"의 필요성(학습 기회 요구)을 직접 묻는 문항 — 논문의 "타이핑 교육이 필요하다"는 문제 제기를
      학습자 인식으로 뒷받침하기 위함. 필요성 자체는 사용 빈도(행동)·사전 A5·B3·타이핑 경험 문항이 받쳐 줌 */
   var SURVEY_ITEMS_BG_LIKERT = [
-    {id:'need_typing_edu', ko:'수업에서 한글 타이핑을 배우고 연습할 기회가 더 있으면 좋겠다.', en:'I wish there were more opportunities in class to learn and practice typing in Korean.'}
+    {id:'need_typing_edu', ko:'수업에서 컴퓨터로 한글 타이핑을 배우고 연습할 기회가 더 있으면 좋겠다.', en:'I wish there were more opportunities in class to learn and practice typing in Korean on a computer.'}
   ];
   /* F: 한글 타이핑 익숙함 인식(2026-11-15 추가). C4와 함께 "타이핑 익숙함 인식"으로 따로 묶어 보고할 수 있음 */
   var SURVEY_ITEMS_F = [
