@@ -260,7 +260,9 @@
   var SURVEY_ITEMS_D = [
     {id:'d1', ko:'프로그램 사용 방법은 쉬웠다.', en:'The program was easy to use.'},
     /* d2("활동 분량이 적절했다")는 양방향 해석 문제로 2026-11-15 삭제 — 저장 키 d1·d3는 그대로 유지(번호 재부여 안 함) */
-    {id:'d3', ko:'앞으로도 이 프로그램을 이용해 수업을 준비하고 싶다.', en:'I would like to keep using this program to prepare for class in the future.'}
+    /* d3는 2026-11-18에 의미를 바꿈(사후 응답 0건 시점): 원래 "앞으로도 이용하고 싶다"였으나 학생들이 이 수업을 다시
+       듣지 않아 답하기 애매하고, "다른 수업에서도"는 교재 연계 프로그램 특성상 해석이 갈려 전반적 만족도 문항으로 교체 */
+    {id:'d3', ko:'전반적으로 이 프로그램에 만족한다.', en:'Overall, I am satisfied with this program.'}
   ];
   var SURVEY_ITEMS_E = [
     {id:'e1', ko:'화면에 제시된 한국어 뜻풀이는 어휘를 이해하는 데 도움이 되었다.', en:'The Korean definitions shown on the screen helped me understand the vocabulary.'},
